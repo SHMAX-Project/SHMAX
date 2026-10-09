@@ -1,1 +1,142 @@
-[]
+[
+  {
+    "File": "backend/tests/test_backup_api.py",
+    "StartLine": 45,
+    "RuleID": "generic-api-key",
+    "Commit": "09694bf27fd483cd932aa49e502c5558f35f1ad3",
+    "Fingerprint": "09694bf27fd483cd932aa49e502c5558f35f1ad3:backend/tests/test_backup_api.py:generic-api-key:45",
+    "classification": "Fixed synthetic credential in isolated local test setup or redaction/SecretStore assertion; source context reviewed independently",
+    "Secret": "REDACTED",
+    "Match": "REDACTED"
+  },
+  {
+    "File": "backend/tests/test_first_verify_saved_network.py",
+    "StartLine": 143,
+    "RuleID": "generic-api-key",
+    "Commit": "09694bf27fd483cd932aa49e502c5558f35f1ad3",
+    "Fingerprint": "09694bf27fd483cd932aa49e502c5558f35f1ad3:backend/tests/test_first_verify_saved_network.py:generic-api-key:143",
+    "classification": "Fixed synthetic credential in isolated local test setup or redaction/SecretStore assertion; source context reviewed independently",
+    "Secret": "REDACTED",
+    "Match": "REDACTED"
+  },
+  {
+    "File": "backend/tests/test_finish_canonical_contract.py",
+    "StartLine": 63,
+    "RuleID": "generic-api-key",
+    "Commit": "09694bf27fd483cd932aa49e502c5558f35f1ad3",
+    "Fingerprint": "09694bf27fd483cd932aa49e502c5558f35f1ad3:backend/tests/test_finish_canonical_contract.py:generic-api-key:63",
+    "classification": "Fixed synthetic credential in isolated local test setup or redaction/SecretStore assertion; source context reviewed independently",
+    "Secret": "REDACTED",
+    "Match": "REDACTED"
+  },
+  {
+    "File": "backend/tests/test_pair_code_listener.py",
+    "StartLine": 120,
+    "RuleID": "generic-api-key",
+    "Commit": "09694bf27fd483cd932aa49e502c5558f35f1ad3",
+    "Fingerprint": "09694bf27fd483cd932aa49e502c5558f35f1ad3:backend/tests/test_pair_code_listener.py:generic-api-key:120",
+    "classification": "Fixed synthetic credential in isolated local test setup or redaction/SecretStore assertion; source context reviewed independently",
+    "Secret": "REDACTED",
+    "Match": "REDACTED"
+  },
+  {
+    "File": "backend/tests/test_setup_complete_enforcement.py",
+    "StartLine": 52,
+    "RuleID": "generic-api-key",
+    "Commit": "09694bf27fd483cd932aa49e502c5558f35f1ad3",
+    "Fingerprint": "09694bf27fd483cd932aa49e502c5558f35f1ad3:backend/tests/test_setup_complete_enforcement.py:generic-api-key:52",
+    "classification": "Fixed synthetic credential in isolated local test setup or redaction/SecretStore assertion; source context reviewed independently",
+    "Secret": "REDACTED",
+    "Match": "REDACTED"
+  },
+  {
+    "File": "backend/tests/test_setup_dismissal.py",
+    "StartLine": 25,
+    "RuleID": "generic-api-key",
+    "Commit": "09694bf27fd483cd932aa49e502c5558f35f1ad3",
+    "Fingerprint": "09694bf27fd483cd932aa49e502c5558f35f1ad3:backend/tests/test_setup_dismissal.py:generic-api-key:25",
+    "classification": "Fixed synthetic credential in isolated local test setup or redaction/SecretStore assertion; source context reviewed independently",
+    "Secret": "REDACTED",
+    "Match": "REDACTED"
+  },
+  {
+    "File": "backend/tests/test_member_sync.py",
+    "StartLine": 196,
+    "RuleID": "generic-api-key",
+    "Commit": "09694bf27fd483cd932aa49e502c5558f35f1ad3",
+    "Fingerprint": "09694bf27fd483cd932aa49e502c5558f35f1ad3:backend/tests/test_member_sync.py:generic-api-key:196",
+    "classification": "Fixed synthetic credential in isolated local test setup or redaction/SecretStore assertion; source context reviewed independently",
+    "Secret": "REDACTED",
+    "Match": "REDACTED"
+  },
+  {
+    "File": "backend/tests/test_secret_store.py",
+    "StartLine": 16,
+    "RuleID": "generic-api-key",
+    "Commit": "09694bf27fd483cd932aa49e502c5558f35f1ad3",
+    "Fingerprint": "09694bf27fd483cd932aa49e502c5558f35f1ad3:backend/tests/test_secret_store.py:generic-api-key:16",
+    "classification": "Fixed synthetic credential in isolated local test setup or redaction/SecretStore assertion; source context reviewed independently",
+    "Secret": "REDACTED",
+    "Match": "REDACTED"
+  },
+  {
+    "File": "backend/tests/test_telegram_network_bootstrap.py",
+    "StartLine": 47,
+    "RuleID": "generic-api-key",
+    "Commit": "09694bf27fd483cd932aa49e502c5558f35f1ad3",
+    "Fingerprint": "09694bf27fd483cd932aa49e502c5558f35f1ad3:backend/tests/test_telegram_network_bootstrap.py:generic-api-key:47",
+    "classification": "Fixed synthetic credential in isolated local test setup or redaction/SecretStore assertion; source context reviewed independently",
+    "Secret": "REDACTED",
+    "Match": "REDACTED"
+  },
+  {
+    "File": "backend/tests/test_support_bundle_allowlist.py",
+    "StartLine": 85,
+    "RuleID": "generic-api-key",
+    "Commit": "09694bf27fd483cd932aa49e502c5558f35f1ad3",
+    "Fingerprint": "09694bf27fd483cd932aa49e502c5558f35f1ad3:backend/tests/test_support_bundle_allowlist.py:generic-api-key:85",
+    "classification": "Fixed synthetic credential in isolated local test setup or redaction/SecretStore assertion; source context reviewed independently",
+    "Secret": "REDACTED",
+    "Match": "REDACTED"
+  },
+  {
+    "File": "backend/tests/test_support_bundle_allowlist.py",
+    "StartLine": 196,
+    "RuleID": "generic-api-key",
+    "Commit": "09694bf27fd483cd932aa49e502c5558f35f1ad3",
+    "Fingerprint": "09694bf27fd483cd932aa49e502c5558f35f1ad3:backend/tests/test_support_bundle_allowlist.py:generic-api-key:196",
+    "classification": "Fixed synthetic credential in isolated local test setup or redaction/SecretStore assertion; source context reviewed independently",
+    "Secret": "REDACTED",
+    "Match": "REDACTED"
+  },
+  {
+    "File": "frontend/e2e/wizard.spec.ts",
+    "StartLine": 62,
+    "RuleID": "generic-api-key",
+    "Commit": "09694bf27fd483cd932aa49e502c5558f35f1ad3",
+    "Fingerprint": "09694bf27fd483cd932aa49e502c5558f35f1ad3:frontend/e2e/wizard.spec.ts:generic-api-key:62",
+    "classification": "Fixed synthetic credential in isolated local test setup or redaction/SecretStore assertion; source context reviewed independently",
+    "Secret": "REDACTED",
+    "Match": "REDACTED"
+  },
+  {
+    "File": "backend/tests/test_xray_endpoints.py",
+    "StartLine": 52,
+    "RuleID": "generic-api-key",
+    "Commit": "09694bf27fd483cd932aa49e502c5558f35f1ad3",
+    "Fingerprint": "09694bf27fd483cd932aa49e502c5558f35f1ad3:backend/tests/test_xray_endpoints.py:generic-api-key:52",
+    "classification": "Fixed synthetic credential in isolated local test setup or redaction/SecretStore assertion; source context reviewed independently",
+    "Secret": "REDACTED",
+    "Match": "REDACTED"
+  },
+  {
+    "File": "backend/tests/test_xray_endpoints.py",
+    "StartLine": 552,
+    "RuleID": "generic-api-key",
+    "Commit": "09694bf27fd483cd932aa49e502c5558f35f1ad3",
+    "Fingerprint": "09694bf27fd483cd932aa49e502c5558f35f1ad3:backend/tests/test_xray_endpoints.py:generic-api-key:552",
+    "classification": "Fixed synthetic credential in isolated local test setup or redaction/SecretStore assertion; source context reviewed independently",
+    "Secret": "REDACTED",
+    "Match": "REDACTED"
+  }
+]

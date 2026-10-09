@@ -1,1 +1,15 @@
-# Exact public-history test-fixture fingerprints will be independently reviewed.
+# Exact independently reviewed synthetic fixture fingerprints in public history.
+09694bf27fd483cd932aa49e502c5558f35f1ad3:backend/tests/test_backup_api.py:generic-api-key:45
+09694bf27fd483cd932aa49e502c5558f35f1ad3:backend/tests/test_finish_canonical_contract.py:generic-api-key:63
+09694bf27fd483cd932aa49e502c5558f35f1ad3:backend/tests/test_first_verify_saved_network.py:generic-api-key:143
+09694bf27fd483cd932aa49e502c5558f35f1ad3:backend/tests/test_member_sync.py:generic-api-key:196
+09694bf27fd483cd932aa49e502c5558f35f1ad3:backend/tests/test_pair_code_listener.py:generic-api-key:120
+09694bf27fd483cd932aa49e502c5558f35f1ad3:backend/tests/test_secret_store.py:generic-api-key:16
+09694bf27fd483cd932aa49e502c5558f35f1ad3:backend/tests/test_setup_complete_enforcement.py:generic-api-key:52
+09694bf27fd483cd932aa49e502c5558f35f1ad3:backend/tests/test_setup_dismissal.py:generic-api-key:25
+09694bf27fd483cd932aa49e502c5558f35f1ad3:backend/tests/test_support_bundle_allowlist.py:generic-api-key:196
+09694bf27fd483cd932aa49e502c5558f35f1ad3:backend/tests/test_support_bundle_allowlist.py:generic-api-key:85
+09694bf27fd483cd932aa49e502c5558f35f1ad3:backend/tests/test_telegram_network_bootstrap.py:generic-api-key:47
+09694bf27fd483cd932aa49e502c5558f35f1ad3:backend/tests/test_xray_endpoints.py:generic-api-key:52
+09694bf27fd483cd932aa49e502c5558f35f1ad3:backend/tests/test_xray_endpoints.py:generic-api-key:552
+09694bf27fd483cd932aa49e502c5558f35f1ad3:frontend/e2e/wizard.spec.ts:generic-api-key:62
