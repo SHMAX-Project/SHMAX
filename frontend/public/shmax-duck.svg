@@ -1,0 +1,20 @@
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<!-- Original SHMAX duck: SVG geometry authored by Codex for SHMAX, 2026-10-09.
+     No tracing, downloaded image, icon pack or third-party graphic input. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="SHMAX duck">
+  <g stroke-linecap="round" stroke-linejoin="round">
+    <path d="M177 433q-31 4-47 22q-8 12 12 15h75q19-2 9-17l-19-20M309 433q31 4 47 22q8 12-12 15h-75q-19-2-9-17l19-20" fill="#ff9638" stroke="#fff9eb" stroke-width="14"/>
+    <path d="M147 256C104 219 119 134 172 101q-8-26 8-42q28 4 42 25q6-30 28-38q25 17 19 45c78-5 137 49 137 116q0 34-23 60c26 23 45 57 36 93c-12 50-61 78-157 78c-91 0-146-30-154-81c-5-40 14-72 39-101Z" fill="#ffd95a" stroke="#fff9eb" stroke-width="22"/>
+    <path d="M147 256C104 219 119 134 172 101q-8-26 8-42q28 4 42 25q6-30 28-38q25 17 19 45c78-5 137 49 137 116q0 34-23 60c26 23 45 57 36 93c-12 50-61 78-157 78c-91 0-146-30-154-81c-5-40 14-72 39-101Z" fill="none" stroke="#493622" stroke-width="5"/>
+    <path d="M138 299q-15 56 53 76q-34-42-26-71M373 299q15 56-53 76q34-42 26-71" fill="#ffc43d" stroke="#d79b27" stroke-width="5"/>
+    <ellipse cx="199" cy="194" rx="14" ry="20" fill="#292b35"/>
+    <ellipse cx="318" cy="194" rx="14" ry="20" fill="#292b35"/>
+    <circle cx="195" cy="187" r="4" fill="#fff9eb"/>
+    <circle cx="314" cy="187" r="4" fill="#fff9eb"/>
+    <ellipse cx="172" cy="224" rx="18" ry="10" fill="#ffbc7b"/>
+    <ellipse cx="344" cy="224" rx="18" ry="10" fill="#ffbc7b"/>
+    <path d="M217 226q40-24 82 0q-3 35-41 35q-38 0-41-35Z" fill="#ff9638" stroke="#ae5b27" stroke-width="5"/>
+    <path d="M226 237q32 13 64 0" fill="none" stroke="#ae5b27" stroke-width="4"/>
+    <path d="M209 389q48 16 93 0" fill="none" stroke="#ffeaa0" stroke-width="13"/>
+  </g>
+</svg>

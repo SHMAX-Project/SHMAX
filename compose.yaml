@@ -1,0 +1,78 @@
+# ============================================================
+# SHMAX Docker Compose — DEV WRAPPER
+#
+# This file is a development convenience. Production installs
+# use ``deploy/compose/compose.yaml`` (single source of truth).
+# The two MUST stay in sync on:
+#
+#   - service contract (single service, hostd socket, no Docker socket)
+#   - persistent subdirectories
+#   - healthcheck (http://127.0.0.1:8787/health)
+#   - UID/GID (default 8787:8787)
+#   - port (8787 inside the container)
+#
+# If you change one, change the other. ``tests/test_compose_contract.py``
+# enforces this.
+#
+# Local dev override:
+#   export SHMAX_DATA_DIR=./.dev-data
+#   docker compose up
+#
+# Application is disposable.
+# User data is persistent. Every user-owned directory is
+# bind-mounted so a `docker compose down && docker compose up`
+# loses nothing.
+# ============================================================
+
+name: shmax
+
+services:
+  shmax:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: shmax:${SHMAX_VERSION:-0.1.0}
+    container_name: shmax
+    restart: unless-stopped
+    init: true
+    ports:
+      # P0 #14 appliance model: default bind is loopback so the
+      # service is never accidentally published on WAN interfaces.
+      # The installer writes SHMAX_BIND_ADDR=<LAN IP> into .env to
+      # make the appliance reachable from the owner's LAN machine.
+      - "${SHMAX_BIND_ADDR:-127.0.0.1}:${SHMAX_PORT:-8787}:8787"
+    environment:
+      SHMAX_HOST: "0.0.0.0"
+      SHMAX_PORT: "${SHMAX_PORT:-8787}"
+      SHMAX_HOSTD_SOCKET: /run/shmax/hostd/hostd.sock
+      SHMAX_DATA_DIR: /data
+      SHMAX_LOG_LEVEL: "${SHMAX_LOG_LEVEL:-INFO}"
+      SHMAX_VERSION: "${SHMAX_VERSION:-0.1.0}"
+    volumes:
+      # Persistent subdirectories — bind mounts, NOT anonymous volumes,
+      # so the operator can `ls /var/lib/shmax` outside the container.
+      - ${SHMAX_DATA_DIR:-/var/lib/shmax}/db:/data/db
+      - ${SHMAX_DATA_DIR:-/var/lib/shmax}/config:/data/config
+      - ${SHMAX_DATA_DIR:-/var/lib/shmax}/secrets:/data/secrets
+      # BLOCKER 21 — MTProto session lives under
+      # ``/data/sessions/telegram/<name>.session``, not
+      # ``/data/tg_mtproto.session``. Mount the parent directory
+      # so the Telegram adapter can manage per-account files.
+      - ${SHMAX_DATA_DIR:-/var/lib/shmax}/sessions/max:/data/sessions/max
+      - ${SHMAX_DATA_DIR:-/var/lib/shmax}/sessions/telegram:/data/sessions/telegram
+      - ${SHMAX_DATA_DIR:-/var/lib/shmax}/state:/data/state
+      - ${SHMAX_DATA_DIR:-/var/lib/shmax}/backups:/data/backups
+      - ${SHMAX_DATA_DIR:-/var/lib/shmax}/cache:/data/cache
+      # hostd socket ONLY (never the Docker socket).
+      - /run/shmax:/run/shmax/hostd:ro
+    user: "${SHMAX_UID:-8787}:${SHMAX_GID:-8787}"
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      # Process health only — external integrations report
+      # NOT_CONFIGURED in the dashboard, not via Docker.
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8787/health', timeout=3).status == 200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

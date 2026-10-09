@@ -1,0 +1,26 @@
+[
+  {
+    "file": "frontend/public/favicon.png",
+    "sha256": "3a4abe3541797370e804fb4a4973d5d74da2da94c9a50d937497e96652490638",
+    "license": "AGPL-3.0-or-later",
+    "method": "Original SVG geometry authored for SHMAX; PNG derivatives rendered from that master"
+  },
+  {
+    "file": "frontend/public/shmax-duck.svg",
+    "sha256": "107abb369a0591a0db9c2527cae2eee2af54f0fe0f541dd6ca0071653703d121",
+    "license": "AGPL-3.0-or-later",
+    "method": "Original SVG geometry authored for SHMAX; PNG derivatives rendered from that master"
+  },
+  {
+    "file": "frontend/public/shmax-icon-256.png",
+    "sha256": "37faf882bb5054098316ded8b35fb954f9b9e2676aeb762355303c80881fa345",
+    "license": "AGPL-3.0-or-later",
+    "method": "Original SVG geometry authored for SHMAX; PNG derivatives rendered from that master"
+  },
+  {
+    "file": "frontend/public/shmax-icon.png",
+    "sha256": "84d9add92d64c1ad058ed403f0c9c6ec45e8a80e3afe6fcf3b807fcc68c6d0d3",
+    "license": "AGPL-3.0-or-later",
+    "method": "Original SVG geometry authored for SHMAX; PNG derivatives rendered from that master"
+  }
+]

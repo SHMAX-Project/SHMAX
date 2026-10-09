@@ -1,0 +1,65 @@
+# ============================================================
+# SHMAX .dockerignore
+# Application is disposable. User data is persistent.
+# Nothing user-owned should ever enter the build context.
+# ============================================================
+
+# VCS / noise
+.git
+.gitignore
+.gitattributes
+
+# Local dev data (must NEVER be baked into the image)
+.dev-data
+.env
+.env.*
+!.env.example
+
+# Python
+**/__pycache__
+**/*.py[cod]
+**/.pytest_cache
+**/.mypy_cache
+**/.ruff_cache
+.venv
+venv
+env
+backend/.venv
+
+# Tests + tooling artifacts
+backend/tests
+.coverage
+htmlcov
+
+# Frontend: keep source + lock, exclude heavy/derived dirs
+frontend/node_modules
+frontend/dist
+frontend/.vite
+frontend/coverage
+
+# Docs (not needed at runtime)
+docs
+
+# IDE / OS
+.idea
+.vscode
+.DS_Store
+# macOS resource forks / xattr sidecar files. ``._*`` files
+# contain binary AppleDouble metadata that crashes CPython
+# if a build step glob-matches them as Python source.
+._*
+
+# Backups / sessions / secrets (would be a disaster if leaked)
+sessions
+secrets
+backups
+*.sqlite
+*.sqlite3
+*.db
+*.log
+logs
+
+# Build output
+deploy/dist
+installer/dist
+scripts/__pycache__

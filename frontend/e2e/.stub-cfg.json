@@ -1,0 +1,1 @@
+{"inbounds":[{"tag":"socks-in","protocol":"socks","listen":"127.0.0.1","port":10899,"settings":{"auth":"noauth","udp":false}}],"outbounds":[]}

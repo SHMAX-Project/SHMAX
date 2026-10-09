@@ -1,0 +1,2 @@
+blank_issues_enabled: false
+# Private vulnerability contact requires owner configuration; never point to public issues.

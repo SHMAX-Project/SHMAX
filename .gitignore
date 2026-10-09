@@ -1,0 +1,116 @@
+# ============================================================
+# SHMAX .gitignore
+# Application is disposable. User data is persistent.
+# ============================================================
+
+# --- Secrets / env / credentials ---
+.env
+.env.*
+!.env.example
+*.env.local
+
+# --- Local dev data (override of /var/lib/shmax on macOS) ---
+.dev-data/
+.dev-data/**
+
+# --- Node ---
+node_modules/
+package-lock.json
+tsconfig.tsbuildinfo
+*.tsbuildinfo
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.venv/
+venv/
+env/
+backend/.venv/
+backend/venv/
+
+# --- Build / dist ---
+build/
+dist/
+*.egg-info/
+*.egg
+
+# --- IDE / editor ---
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# --- OS ---
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+ehthumbs.db
+Desktop.ini
+
+# --- Logs ---
+*.log
+logs/
+
+# --- Docker / compose overrides ---
+compose.override.yaml
+compose.override.yml
+docker-compose.override.yml
+
+# --- Backups / dumps ---
+*.sql
+*.sqlite
+*.sqlite3
+*.db
+*.dump
+backups/
+
+# --- Sessions and tokens ---
+sessions/
+*.session
+*.session-journal
+secrets/
+tokens/
+
+# --- Installer temporary files ---
+*.swp
+.deb
+.cache/
+
+# --- uv temporary files (when uv init accidentally drops
+#     a stray project file in the repo root) ---
+.python-version.uv-tmp
+pyproject.toml.uv-tmp
+
+# --- uv-managed Python version pin (regenerated on every clone) ---
+.python-version
+backend/.python-version
+
+# --- Playwright artefacts ---
+test-results/
+playwright-report/
+playwright/.cache/
+frontend/test-results/
+frontend/e2e/.shots/
+frontend/e2e/.e2e-state.json
+frontend/playwright-report/
+
+# Release staging and sensitive portable/runtime material
+dist-release/
+release-staging/
+*.shmax
+*.pem
+*.key
+master.key

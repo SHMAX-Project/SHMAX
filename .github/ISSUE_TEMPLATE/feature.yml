@@ -1,0 +1,13 @@
+name: Feature request / Предложение
+description: Describe a user problem and expected outcome.
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem and proposed behavior / Проблема и ожидаемое поведение
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives and limitations / Альтернативы и ограничения

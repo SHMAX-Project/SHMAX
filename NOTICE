@@ -1,0 +1,17 @@
+SHMAX — Self-hosted MAX <-> Telegram gateway
+Copyright (C) 2026 SHMAX contributors
+
+This program is licensed under AGPL-3.0-or-later (see LICENSE).
+
+Notable third-party components (see THIRD_PARTY_NOTICES.md for
+the full audit):
+
+- Xray-core (Xray-core development team) — used as an external
+  binary downloaded at install time; MPL 2.0.
+- aiogram, Telethon, FastAPI, SQLAlchemy, Alembic, PyMax
+  (maxapi-python) and other Python packages retain their own
+  licenses (see the pinned dependency inventory and preserved license texts).
+- React, Vite, Playwright and other Node packages retain their
+  own licenses (MIT/Apache-2.0 class unless noted otherwise).
+- Original SHMAX duck SVG/PNG artwork — AGPL-3.0-or-later; see TRADEMARKS.md
+  and release/v0.1.0/DUCK_ASSETS.md for authoring provenance.

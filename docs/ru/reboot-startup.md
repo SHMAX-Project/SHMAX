@@ -1,0 +1,32 @@
+# Перезагрузка и boot-оркестрация
+
+Проблема (воспроизведена на реальном Debian 13): Docker поднимал
+контейнер раньше, чем появлялся LAN-адрес → порт не публиковался
+(`cannot assign requested address`, Exited(128)); позже простой
+`docker start` давал "healthy" контейнер БЕЗ опубликованного
+порта.
+
+## Решение: shmax-boot.service
+
+`/opt/shmax/boot/shmax-boot.sh` (systemd: After=docker.service,
+network-online.target; Restart=on-failure, RestartSec=15):
+
+1. ждёт (ограниченно, с опросом) фактического появления
+   настроенного bind-адреса на интерфейсе — `network-online.target`
+   этого НЕ гарантирует;
+2. пересоздаёт контейнер (`docker compose up -d --force-recreate`),
+   если он не запущен или публикация порта отсутствует;
+3. проверяет публикацию (`docker port shmax-web-1`) — внутренний
+   healthcheck НЕ считается достаточным;
+4. хост-side readiness: `curl http://<bind>:<порт>/health/ready`;
+5. при неудаче — ненулевой выход, systemd повторяет с паузой.
+
+Интернет для boot-оркестрации и открытия локального UI не требуется. Для
+доставки сообщений нужны доступные MAX и Telegram. Данные не затрагиваются.
+
+Boot зависит также от `shmax-hostd.service`: helper должен создать сокет до запуска
+контейнера. Boot читает `SHMAX_BIND_ADDR` и `SHMAX_PORT` из `/opt/shmax/.env`
+без выполнения shell-команд. Для явного `0.0.0.0` проверка HTTP идёт через loopback;
+обычный LAN bind не расширяется до wildcard. После появления адреса проверяются
+точная публикация порта и host readiness; неверный/отсутствующий mapping вызывает
+recreate. Ожидание и повторные проверки ограничены, ошибки повторяет systemd с паузой.

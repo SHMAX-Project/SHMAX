@@ -1,0 +1,79 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "shmax"
+version = "0.1.0"
+description = "Self-hosted MAX <-> Telegram gateway"
+requires-python = ">=3.12"
+license = { text = "AGPL-3.0-or-later" }
+authors = [{ name = "SHMAX contributors" }]
+
+dependencies = [
+    # --- HTTP / API ---
+    "fastapi>=0.111,<1.0",
+    "uvicorn[standard]>=0.30,<1.0",
+    "pydantic>=2.6,<3.0",
+    "pydantic-settings>=2.2,<3.0",
+    "python-multipart>=0.0.9",
+
+    # --- MAX transport (Stage 1) ---
+    "maxapi-python>=2.4,<3.0",
+
+    # --- Telegram transports ---
+    "aiogram>=3.10,<4.0",
+    "telethon>=1.36,<2.0",
+
+    # --- Database / migrations ---
+    "SQLAlchemy[asyncio]>=2.0,<3.0",
+    "alembic>=1.13,<2.0",
+    "aiosqlite>=0.20",
+    "greenlet>=3.0",
+
+    # --- Crypto / secrets ---
+    "cryptography>=42.0",
+
+    # --- Auth ---
+    "argon2-cffi>=23.0",
+    "itsdangerous>=2.1",
+
+    # --- Misc ---
+    "qrcode[pil]>=7.4",
+    "Pillow>=12.3,<13",  # bounded photo/sticker validation, existing ARMv7 codec stack
+    # --- Phone number parsing/normalization ---
+    # Used by MAX auth phone input + Telegram contact
+    # matching. libphonenumber is the authoritative parser;
+    # the Python port is maintained by Google.
+    "phonenumbers>=8.13,<9.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "httpx>=0.27",
+]
+# PyMax "[video]" extra is optional and only needed if we ever
+# auto-detect Voice/VideoNote duration. We do not need it.
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["shmax*"]
+exclude = ["tests*", "tools*"]
+
+# Live acceptance A2: VERSION is the ONE canonical version source —
+# it must ship inside the wheel or a fresh install reports 0.0.0-dev.
+[tool.setuptools.package-data]
+shmax = ["VERSION"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-ra -q"
+markers = [
+    "unit: offline unit tests (default selection)",
+    "integration: cross-component offline integration tests",
+    "live_max: requires real MAX account + network",
+    "live_telegram: requires real Telegram bot + network",
+]

@@ -1,0 +1,22 @@
+name: Bug / Ошибка
+description: Report a reproducible non-security defect without secrets.
+body:
+  - type: markdown
+    attributes:
+      value: 'For vulnerabilities read SECURITY.md. Never post tokens, phone numbers, session files, subscription URLs, backup archives or exploit details.'
+  - type: input
+    id: version
+    attributes:
+      label: SHMAX version and platform / Версия и платформа
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps, expected and actual behavior / Шаги, ожидаемое и фактическое поведение
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Sanitized diagnostics / Диагностика без секретов

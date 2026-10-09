@@ -1,0 +1,64 @@
+# ============================================================
+# SHMAX production compose
+#
+# Single-service V1. The web container is **disposable**: data
+# lives on the host bind-mounted at /var/lib/shmax/* and is
+# never copied into the image.
+#
+# The web container NEVER receives /var/run/docker.sock.
+# Updates / rollback / destructive actions go through
+# `shmax-hostd` on the host (out of scope for the web service).
+# ============================================================
+
+name: shmax
+
+services:
+  web:
+    image: ${SHMAX_IMAGE:-shmax:0.1.0}
+    restart: unless-stopped
+    ports:
+      # P0 #14 appliance model: default bind is loopback so the
+      # service is never accidentally published on WAN interfaces.
+      # The installer writes SHMAX_BIND_ADDR=<LAN IP> into .env to
+      # make the appliance reachable from the owner's LAN machine.
+      - "${SHMAX_BIND_ADDR:-127.0.0.1}:${SHMAX_PORT:-8787}:8787"
+    environment:
+      SHMAX_HOSTD_SOCKET: /run/shmax/hostd/hostd.sock
+      SHMAX_DATA_DIR: /data
+      SHMAX_HOST: 0.0.0.0
+      SHMAX_PORT: "8787"
+      SHMAX_LOG_LEVEL: ${SHMAX_LOG_LEVEL:-info}
+      # Pinned in the bake file; surface here so the operator
+      # can confirm at a glance.
+      SHMAX_VERSION: ${SHMAX_VERSION:-0.1.0}
+    volumes:
+      # Persistent layout created by the installer. Each
+      # subdir gets explicit permissions in the installer.
+      - /var/lib/shmax/db:/data/db
+      - /var/lib/shmax/config:/data/config
+      - /var/lib/shmax/secrets:/data/secrets
+      # BLOCKER 21 — mount per-adapter session subdirectories
+      # explicitly. The Telegram adapter creates
+      # ``/data/sessions/telegram/<account>.session``; mounting
+      # the parent lets PyMax / Telethon manage multiple
+      # accounts without colliding on a single file.
+      - /var/lib/shmax/sessions/max:/data/sessions/max
+      - /var/lib/shmax/sessions/telegram:/data/sessions/telegram
+      - /var/lib/shmax/state:/data/state
+      - /var/lib/shmax/backups:/data/backups
+      - /var/lib/shmax/cache:/data/cache
+      # hostd socket ONLY — never the Docker socket.
+      - /run/shmax:/run/shmax/hostd:ro
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8787/health', timeout=3).status == 200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+    # Drop capabilities, no new privileges, read-only fs is
+    # intentionally NOT enabled because we need to write to
+    # /data; the bind-mounted directories are owned by the
+    # shmax user via the installer.
+    security_opt:
+      - no-new-privileges:true
+    user: "${SHMAX_UID:-8787}:${SHMAX_GID:-8787}"

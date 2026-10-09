@@ -1,0 +1,39 @@
+[Unit]
+Description=SHMAX host helper daemon (restricted socket)
+Documentation=https://github.com/example/shmax
+After=network-online.target docker.service
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=simple
+ExecStart=/opt/shmax-hostd/.venv/bin/python -P -m shmax.host.server --socket /run/shmax/hostd.sock --log-level INFO
+Restart=on-failure
+RestartSec=5
+User=root
+Group=shmax
+# Dedicated host runtime installed by the clean installer.
+WorkingDirectory=/opt/shmax-hostd
+Environment=PYTHONPATH=/opt/shmax-hostd/lib
+Environment=PATH=/opt/shmax-hostd/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=SHMAX_DATA_DIR=/var/lib/shmax
+EnvironmentFile=-/opt/shmax/.env
+RuntimeDirectory=shmax
+RuntimeDirectoryMode=0750
+# Preserve the directory inode used by the read-only container bind on restarts.
+RuntimeDirectoryPreserve=yes
+# Hardening:
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/run/shmax /opt /var/lib/shmax
+# Limit syscalls to the docker compose / docker CLI family.
+SystemCallArchitectures=native
+# We do NOT mount Docker socket into the daemon; it
+# reaches Docker through the host's docker CLI which
+# itself speaks to the socket on the host's namespace.
+CapabilityBoundingSet=CAP_CHOWN CAP_DAC_OVERRIDE CAP_FOWNER
+
+[Install]
+WantedBy=multi-user.target

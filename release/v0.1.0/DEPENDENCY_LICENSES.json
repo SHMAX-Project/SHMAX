@@ -1,0 +1,621 @@
+[
+  {
+    "name": "Mako",
+    "version": "1.4.3",
+    "locked_version": "1.4.3",
+    "license": "MIT",
+    "license_files": [
+      "mako-1.4.3.dist-info/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "MarkupSafe",
+    "version": "3.0.3",
+    "locked_version": "3.0.3",
+    "license": "BSD-3-Clause",
+    "license_files": [
+      "markupsafe-3.0.3.dist-info/licenses/LICENSE.txt"
+    ]
+  },
+  {
+    "name": "PyYAML",
+    "version": "6.0.3",
+    "locked_version": "6.0.3",
+    "license": "MIT",
+    "license_files": [
+      "pyyaml-6.0.3.dist-info/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "Pygments",
+    "version": "2.21.0",
+    "locked_version": "2.21.0",
+    "license": "BSD-2-Clause",
+    "license_files": [
+      "pygments-2.21.0.dist-info/licenses/AUTHORS",
+      "pygments-2.21.0.dist-info/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "SQLAlchemy",
+    "version": "2.1.1",
+    "locked_version": "2.1.1",
+    "license": "MIT",
+    "license_files": [
+      "sqlalchemy-2.1.1.dist-info/licenses/AUTHORS",
+      "sqlalchemy-2.1.1.dist-info/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "Telethon",
+    "version": "1.45.0",
+    "locked_version": "1.45.0",
+    "license": "MIT",
+    "license_files": [
+      "telethon-1.45.0.dist-info/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "aiofiles",
+    "version": "25.1.0",
+    "locked_version": "25.1.0",
+    "license": "Apache-2.0",
+    "license_files": [
+      "aiofiles-25.1.0.dist-info/licenses/LICENSE",
+      "aiofiles-25.1.0.dist-info/licenses/NOTICE"
+    ]
+  },
+  {
+    "name": "aiogram",
+    "version": "3.31.0",
+    "locked_version": "3.31.0",
+    "license": "MIT",
+    "license_files": [
+      "aiogram-3.31.0.dist-info/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "aiohappyeyeballs",
+    "version": "2.7.1",
+    "locked_version": "2.7.1",
+    "license": "PSF-2.0",
+    "license_files": [
+      "aiohappyeyeballs-2.7.1.dist-info/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "aiohttp",
+    "version": "3.13.5",
+    "locked_version": "3.13.5",
+    "license": "Apache-2.0 AND MIT",
+    "license_files": [
+      "aiohttp-3.13.5.dist-info/licenses/LICENSE.txt",
+      "aiohttp-3.13.5.dist-info/licenses/vendor/llhttp/LICENSE"
+    ]
+  },
+  {
+    "name": "aiohttp_socks",
+    "version": "0.12.0",
+    "locked_version": "0.12.0",
+    "license": "Apache-2.0",
+    "license_files": [
+      "aiohttp_socks-0.12.0.dist-info/licenses/LICENSE.txt"
+    ]
+  },
+  {
+    "name": "aiosignal",
+    "version": "1.4.0",
+    "locked_version": "1.4.0",
+    "license": "Apache 2.0",
+    "license_files": [
+      "aiosignal-1.4.0.dist-info/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "aiosqlite",
+    "version": "0.22.1",
+    "locked_version": "0.22.1",
+    "license": "MIT License",
+    "license_files": [
+      "aiosqlite-0.22.1.dist-info/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "alembic",
+    "version": "1.20.0",
+    "locked_version": "1.20.0",
+    "license": "MIT",
+    "license_files": [
+      "alembic-1.20.0.dist-info/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "annotated-doc",
+    "version": "0.0.5",
+    "locked_version": "0.0.5",
+    "license": "MIT",
+    "license_files": [
+      "annotated_doc-0.0.5.dist-info/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "annotated-types",
+    "version": "0.8.0",
+    "locked_version": "0.8.0",
+    "license": "MIT",
+    "license_files": [
+      "annotated_types-0.8.0.dist-info/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "anyio",
+    "version": "4.15.1",
+    "locked_version": "4.15.1",
+    "license": "MIT",
+    "license_files": [
+      "anyio-4.15.1.dist-info/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "argon2-cffi",
+    "version": "25.1.0",
+    "locked_version": "25.1.0",
+    "license": "MIT",
+    "license_files": [
+      "argon2_cffi-25.1.0.dist-info/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "argon2-cffi-bindings",
+    "version": "26.1.0",
+    "locked_version": "26.1.0",
+    "license": "MIT",
+    "license_files": [
+      "argon2_cffi_bindings-26.1.0.dist-info/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "async-timeout",
+    "version": "5.0.1",
+    "locked_version": "5.0.1",
+    "license": "Apache 2",
+    "license_files": [
+      "async_timeout-5.0.1.dist-info/LICENSE"
+    ]
+  },
+  {
+    "name": "attrs",
+    "version": "26.1.0",
+    "locked_version": "26.1.0",
+    "license": "MIT",
+    "license_files": [
+      "attrs-26.1.0.dist-info/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "certifi",
+    "version": "2026.7.22",
+    "locked_version": "2026.7.22",
+    "license": "MPL-2.0",
+    "license_files": [
+      "certifi-2026.7.22.dist-info/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "cffi",
+    "version": "2.1.1",
+    "locked_version": "2.1.1",
+    "license": "MIT-0",
+    "license_files": [
+      "cffi-2.1.1.dist-info/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "click",
+    "version": "8.5.0",
+    "locked_version": "8.5.0",
+    "license": "BSD-3-Clause",
+    "license_files": [
+      "click-8.5.0.dist-info/licenses/LICENSE.txt"
+    ]
+  },
+  {
+    "name": "cryptography",
+    "version": "50.0.2",
+    "locked_version": "50.0.2",
+    "license": "Apache-2.0 OR BSD-3-Clause",
+    "license_files": [
+      "cryptography-50.0.2.dist-info/licenses/LICENSE",
+      "cryptography-50.0.2.dist-info/licenses/LICENSE.APACHE",
+      "cryptography-50.0.2.dist-info/licenses/LICENSE.BSD"
+    ]
+  },
+  {
+    "name": "fastapi",
+    "version": "0.142.2",
+    "locked_version": "0.142.2",
+    "license": "MIT",
+    "license_files": [
+      "fastapi-0.142.2.dist-info/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "frozenlist",
+    "version": "1.8.0",
+    "locked_version": "1.8.0",
+    "license": "Apache-2.0",
+    "license_files": [
+      "frozenlist-1.8.0.dist-info/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "greenlet",
+    "version": "3.5.6",
+    "locked_version": "3.5.6",
+    "license": "MIT AND PSF-2.0",
+    "license_files": [
+      "greenlet-3.5.6.dist-info/licenses/LICENSE",
+      "greenlet-3.5.6.dist-info/licenses/LICENSE.PSF"
+    ]
+  },
+  {
+    "name": "h11",
+    "version": "0.16.0",
+    "locked_version": "0.16.0",
+    "license": "MIT",
+    "license_files": [
+      "h11-0.16.0.dist-info/licenses/LICENSE.txt"
+    ]
+  },
+  {
+    "name": "httpcore",
+    "version": "1.0.9",
+    "locked_version": "1.0.9",
+    "license": "BSD-3-Clause",
+    "license_files": [
+      "httpcore-1.0.9.dist-info/licenses/LICENSE.md"
+    ]
+  },
+  {
+    "name": "httptools",
+    "version": "0.8.0",
+    "locked_version": "0.8.0",
+    "license": "MIT",
+    "license_files": [
+      "httptools-0.8.0.dist-info/licenses/LICENSE",
+      "httptools-0.8.0.dist-info/licenses/vendor/http-parser/LICENSE-MIT",
+      "httptools-0.8.0.dist-info/licenses/vendor/llhttp/LICENSE"
+    ]
+  },
+  {
+    "name": "httpx",
+    "version": "0.28.1",
+    "locked_version": "0.28.1",
+    "license": "BSD-3-Clause",
+    "license_files": [
+      "httpx-0.28.1.dist-info/licenses/LICENSE.md"
+    ]
+  },
+  {
+    "name": "idna",
+    "version": "3.20",
+    "locked_version": "3.20",
+    "license": "BSD-3-Clause",
+    "license_files": [
+      "idna-3.20.dist-info/licenses/LICENSE.md"
+    ]
+  },
+  {
+    "name": "iniconfig",
+    "version": "2.3.0",
+    "locked_version": "2.3.0",
+    "license": "MIT",
+    "license_files": [
+      "iniconfig-2.3.0.dist-info/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "itsdangerous",
+    "version": "2.2.0",
+    "locked_version": "2.2.0",
+    "license": "BSD License",
+    "license_files": [
+      "itsdangerous-2.2.0.dist-info/LICENSE.txt"
+    ]
+  },
+  {
+    "name": "magic-filter",
+    "version": "1.0.12",
+    "locked_version": "1.0.12",
+    "license": "MIT",
+    "license_files": [
+      "magic_filter-1.0.12.dist-info/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "maxapi-python",
+    "version": "2.4.1",
+    "locked_version": "2.4.1",
+    "license": "MIT",
+    "license_files": [
+      "maxapi_python-2.4.1.dist-info/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "msgpack",
+    "version": "1.2.3",
+    "locked_version": "1.2.3",
+    "license": "Apache-2.0",
+    "license_files": [
+      "msgpack-1.2.3.dist-info/licenses/COPYING"
+    ]
+  },
+  {
+    "name": "multidict",
+    "version": "6.7.1",
+    "locked_version": "6.7.1",
+    "license": "Apache License 2.0",
+    "license_files": [
+      "multidict-6.7.1.dist-info/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "opentelemetry-api",
+    "version": "1.45.0",
+    "locked_version": "1.45.0",
+    "license": "Apache-2.0",
+    "license_files": [
+      "opentelemetry_api-1.45.0.dist-info/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "packaging",
+    "version": "26.3",
+    "locked_version": "26.3",
+    "license": "Apache-2.0 OR BSD-2-Clause",
+    "license_files": [
+      "packaging-26.3.dist-info/licenses/LICENSE",
+      "packaging-26.3.dist-info/licenses/LICENSE.APACHE",
+      "packaging-26.3.dist-info/licenses/LICENSE.BSD",
+      "packaging/licenses/__init__.py",
+      "packaging/licenses/_spdx.py"
+    ]
+  },
+  {
+    "name": "pillow",
+    "version": "12.3.0",
+    "locked_version": "12.3.0",
+    "license": "MIT-CMU",
+    "license_files": [
+      "pillow-12.3.0.dist-info/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "pluggy",
+    "version": "1.6.0",
+    "locked_version": "1.6.0",
+    "license": "MIT",
+    "license_files": [
+      "pluggy-1.6.0.dist-info/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "propcache",
+    "version": "0.4.1",
+    "locked_version": "0.4.1",
+    "license": "Apache-2.0",
+    "license_files": [
+      "propcache-0.4.1.dist-info/licenses/LICENSE",
+      "propcache-0.4.1.dist-info/licenses/NOTICE"
+    ]
+  },
+  {
+    "name": "pyaes",
+    "version": "1.6.1",
+    "locked_version": "1.6.1",
+    "license": "License :: OSI Approved :: MIT License",
+    "license_files": [
+      "pyaes-1.6.1.dist-info/licenses/LICENSE.txt"
+    ]
+  },
+  {
+    "name": "pyasn1",
+    "version": "0.6.4",
+    "locked_version": "0.6.4",
+    "license": "BSD-2-Clause",
+    "license_files": [
+      "pyasn1-0.6.4.dist-info/licenses/LICENSE.rst"
+    ]
+  },
+  {
+    "name": "pycparser",
+    "version": "3.0",
+    "locked_version": "3.0",
+    "license": "BSD-3-Clause",
+    "license_files": [
+      "pycparser-3.0.dist-info/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "pydantic",
+    "version": "2.13.5",
+    "locked_version": "2.13.5",
+    "license": "MIT",
+    "license_files": [
+      "pydantic-2.13.5.dist-info/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "pydantic-settings",
+    "version": "2.15.0",
+    "locked_version": "2.15.0",
+    "license": "MIT",
+    "license_files": [
+      "pydantic_settings-2.15.0.dist-info/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "pydantic_core",
+    "version": "2.46.5",
+    "locked_version": "2.46.5",
+    "license": "MIT",
+    "license_files": [
+      "pydantic_core-2.46.5.dist-info/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "pytest",
+    "version": "9.1.1",
+    "locked_version": "9.1.1",
+    "license": "MIT",
+    "license_files": [
+      "pytest-9.1.1.dist-info/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "pytest-asyncio",
+    "version": "1.4.0",
+    "locked_version": "1.4.0",
+    "license": "Apache-2.0",
+    "license_files": [
+      "pytest_asyncio-1.4.0.dist-info/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "python-dotenv",
+    "version": "1.2.3",
+    "locked_version": "1.2.3",
+    "license": "BSD-3-Clause",
+    "license_files": [
+      "python_dotenv-1.2.3.dist-info/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "python-multipart",
+    "version": "0.0.32",
+    "locked_version": "0.0.32",
+    "license": "Apache-2.0",
+    "license_files": [
+      "python_multipart-0.0.32.dist-info/licenses/LICENSE.txt"
+    ]
+  },
+  {
+    "name": "python-socks",
+    "version": "3.1.1",
+    "locked_version": "3.1.1",
+    "license": "Apache-2.0",
+    "license_files": [
+      "python_socks-3.1.1.dist-info/licenses/LICENSE.txt"
+    ]
+  },
+  {
+    "name": "qrcode",
+    "version": "8.2",
+    "locked_version": "8.2",
+    "license": "BSD",
+    "license_files": [
+      "qrcode-8.2.dist-info/LICENSE"
+    ]
+  },
+  {
+    "name": "rsa",
+    "version": "4.9.1",
+    "locked_version": "4.9.1",
+    "license": "Apache-2.0",
+    "license_files": [
+      "rsa-4.9.1.dist-info/LICENSE"
+    ]
+  },
+  {
+    "name": "starlette",
+    "version": "1.7.0",
+    "locked_version": "1.7.0",
+    "license": "BSD-3-Clause",
+    "license_files": [
+      "starlette-1.7.0.dist-info/licenses/LICENSE.md"
+    ]
+  },
+  {
+    "name": "typing-inspection",
+    "version": "0.4.4",
+    "locked_version": "0.4.4",
+    "license": "MIT",
+    "license_files": [
+      "typing_inspection-0.4.4.dist-info/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "typing_extensions",
+    "version": "4.16.0",
+    "locked_version": "4.16.0",
+    "license": "PSF-2.0",
+    "license_files": [
+      "typing_extensions-4.16.0.dist-info/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "uvicorn",
+    "version": "0.54.0",
+    "locked_version": "0.54.0",
+    "license": "BSD-3-Clause",
+    "license_files": [
+      "uvicorn-0.54.0.dist-info/licenses/LICENSE.md"
+    ]
+  },
+  {
+    "name": "uvloop",
+    "version": "0.22.1",
+    "locked_version": "0.22.1",
+    "license": "MIT License",
+    "license_files": [
+      "uvloop-0.22.1.dist-info/licenses/LICENSE-APACHE",
+      "uvloop-0.22.1.dist-info/licenses/LICENSE-MIT"
+    ]
+  },
+  {
+    "name": "watchfiles",
+    "version": "1.3.0",
+    "locked_version": "1.3.0",
+    "license": "MIT",
+    "license_files": [
+      "watchfiles-1.3.0.dist-info/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "websockets",
+    "version": "17.1",
+    "locked_version": "17.1",
+    "license": "BSD-3-Clause",
+    "license_files": [
+      "websockets-17.1.dist-info/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "yarl",
+    "version": "1.25.1",
+    "locked_version": "1.25.1",
+    "license": "Apache-2.0",
+    "license_files": [
+      "yarl-1.25.1.dist-info/licenses/LICENSE",
+      "yarl-1.25.1.dist-info/licenses/NOTICE"
+    ]
+  },
+  {
+    "name": "zstandard",
+    "version": "0.25.0",
+    "locked_version": "0.25.0",
+    "license": "BSD-3-Clause",
+    "license_files": [
+      "zstandard-0.25.0.dist-info/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "phonenumbers",
+    "version": "8.13.55",
+    "locked_version": "8.13.55",
+    "license": "Apache License 2.0",
+    "license_files": [
+      "phonenumbers-8.13.55.dist-info/LICENSE"
+    ]
+  }
+]

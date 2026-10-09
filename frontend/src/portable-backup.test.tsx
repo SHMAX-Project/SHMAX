@@ -1,0 +1,41 @@
+import React from 'react';
+import './i18n';
+import {beforeEach,it,expect,vi} from 'vitest';
+import {render,screen,fireEvent,waitFor,cleanup} from '@testing-library/react';
+import '@testing-library/jest-dom/vitest';
+import {MemoryRouter} from 'react-router-dom';
+import {SetupChoice,PortableExport,PortableRestore} from './portable-backup';
+import {api,apiBlob} from './api';
+vi.mock('./api',()=>({api:vi.fn(),apiBlob:vi.fn(),ApiError:class extends Error{status=400;}}));
+beforeEach(()=>{cleanup();vi.mocked(api).mockReset();vi.mocked(apiBlob).mockReset();});
+it('offers fresh setup or encrypted restore immediately after owner creation',()=>{
+ render(<MemoryRouter><SetupChoice/></MemoryRouter>);
+ expect(screen.getByRole('link',{name:'Начать настройку'})).toHaveAttribute('href','/setup/max');
+ expect(screen.getByRole('link',{name:'Восстановить из резервной копии'})).toHaveAttribute('href','/setup/restore');
+});
+it('requires matching passwords and clears secrets after export failure',async()=>{
+ vi.mocked(apiBlob).mockRejectedValue(new Error('Hostd недоступен'));
+ render(<PortableExport/>);
+ fireEvent.change(screen.getByLabelText('Пароль резервной копии'),{target:{value:'strong-password'}});
+ fireEvent.change(screen.getByLabelText('Повторите пароль'),{target:{value:'other-password'}});
+ fireEvent.click(screen.getByRole('button',{name:'Экспортировать для переноса'}));
+ expect(screen.getByRole('status')).toHaveTextContent('Пароли не совпадают');expect(apiBlob).not.toHaveBeenCalled();
+ fireEvent.change(screen.getByLabelText('Повторите пароль'),{target:{value:'strong-password'}});
+ fireEvent.click(screen.getByRole('button',{name:'Экспортировать для переноса'}));
+ await waitFor(()=>expect(screen.getByRole('status')).toHaveTextContent('Hostd недоступен'));
+ expect(screen.getByLabelText('Пароль резервной копии')).toHaveValue('');
+ expect(screen.getByLabelText('Повторите пароль')).toHaveValue('');
+});
+it('uploads then previews before confirmation; no destructive call on inspect',async()=>{
+ vi.mocked(api).mockResolvedValueOnce({job_id:'a'.repeat(32)}).mockResolvedValueOnce({job_id:'a'.repeat(32),application_version:'0.1.0-dev',created_at:1700000000,contents:['db','secrets','sessions'],warnings:['Остановите старый SHMAX']});
+ render(<MemoryRouter><PortableRestore/></MemoryRouter>);
+ fireEvent.change(screen.getByLabelText('Выберите файл .shmax'),{target:{files:[new File(['encrypted'],'copy.shmax')]}});
+ fireEvent.change(screen.getByLabelText('Пароль резервной копии'),{target:{value:'strong-password'}});
+ fireEvent.submit(screen.getByRole('button',{name:'Проверить резервную копию'}).closest('form')!);
+ await waitFor(()=>expect(screen.getByText(/Данные ещё не изменены/)).toBeVisible());
+ expect(screen.getByRole('button',{name:'Восстановить SHMAX'})).toBeDisabled();
+ expect(api).toHaveBeenCalledTimes(2);
+ expect(screen.getByLabelText('Пароль резервной копии')).toHaveValue('');
+ fireEvent.click(screen.getByRole('checkbox'));
+ expect(screen.getByRole('button',{name:'Восстановить SHMAX'})).toBeEnabled();
+});

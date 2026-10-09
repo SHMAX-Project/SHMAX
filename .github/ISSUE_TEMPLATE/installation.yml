@@ -1,0 +1,18 @@
+name: Installation / Установка
+description: Installer or platform compatibility, without private host details.
+body:
+  - type: markdown
+    attributes:
+      value: 'No secrets or vulnerability details. Read SECURITY.md for private reporting. ARMv7 physical acceptance remains incomplete.'
+  - type: input
+    id: platform
+    attributes:
+      label: Debian version, architecture, Docker/Compose version
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Installer mode, sanitized error and reproduction steps
+    validations:
+      required: true

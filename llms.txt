@@ -1,0 +1,65 @@
+# llms.txt — SHMAX
+
+SHMAX — самостоятельный (self-hosted) шлюз MAX ↔ Telegram:
+обычный аккаунт MAX подключается к приватной Telegram-супергруппе
+с форум-темами (один чат MAX = одна тема, ответы в обе стороны,
+медиа, ACL). Живая приёмка владельца: Debian 13 amd64. ODROID-XU4 (ARMv7) — экспериментальная цель, физическая приёмка не завершена;
+приложение одноразово, данные постоянны в /var/lib/shmax.
+
+## Карта
+
+- Быстрый старт: docs/ru/quick-start.md · docs/en/quick-start.md
+- Установка: docs/ru/installation.md
+- Мастер настройки (9 шагов или restore после владельца): docs/ru/first-setup.md
+- Архитектура: docs/ru/architecture.md
+- Данные/файлы: docs/ru/data-persistence.md
+- Обновления: docs/ru/updates.md
+- Медиа/стикеры: docs/ru/media.md · docs/en/media.md
+- Бэкапы/восстановление: docs/ru/backups.md, docs/ru/restore.md
+- Безопасность: docs/ru/security.md, SECURITY.md
+- По симптомам: docs/ru/troubleshooting.md
+- Ребут/boot: docs/ru/reboot-startup.md
+- ARMv7: docs/ru/odroid-xu4-armv7.md
+
+## Для AI-ассистентов
+
+- Полный гайд: docs/AI_ASSISTANT_GUIDE.ru.md (EN:
+  docs/AI_ASSISTANT_GUIDE.en.md). Правила: не запрашивать секреты,
+  не удалять /var/lib/shmax, различать внутренний health и
+  хост-доступность, обновления — только релизы, не git pull.
+
+## Безопасность
+
+Токен бота, API Hash, Xray-подписка и VLESS/Trojan — в SecretStore
+(/var/lib/shmax/secrets, AES-256-GCM). Сессия MAX — отдельный файл 0600.
+Локальные копии могут содержать мастер-ключ и plaintext; portable v2 .shmax всегда зашифрован паролем целиком.
+Portable v2 UI экспортирует один обязательно зашифрованный .shmax и предлагает
+restore после создания нового владельца. Пароль храните отдельно; старые веб-сеансы
+отзываются, Telegram ACL/подписи сохраняются. Не запускайте источник и назначение
+одновременно. Никогда не передавайте секреты, сеансы, архивы или пароль в поддержку.
+
+## Входные точки
+
+- Архитектура: docs/ru/architecture.md
+- Диагностика: docs/ru/troubleshooting.md → diagnostics.md
+- Лицензия: AGPL-3.0-or-later (LICENSE); бренд — TRADEMARKS.md
+
+## Участники Telegram
+
+MAX всегда direct. Полная синхронизация необязательна: API ID + API Hash из
+my.telegram.org, существующий BOT, без userbot/человеческого входа. Импортирует
+молчавших участников; ручная кнопка «Синхронизировать с Telegram» в Users.
+Будущие изменения: chat_member; запасной способ: видимые сообщения. Новые
+участники не одобрены/read_only; Telegram admin не даёт SHMAX admin. Отсутствие
+настроек и ошибки sync не останавливают мост. getMe не доказывает доставку
+сообщений конкретной группы; предупреждение Privacy Mode требует проверки
+прав, BotFather и живого сообщения.
+- RU: docs/ru/telegram-group.md, docs/ru/users-acl.md
+- EN: docs/en/telegram-group.md, docs/en/users-acl.md
+
+## Публикация
+
+v0.1.0 подготовлен, не опубликован. release/v0.1.0/PUBLICATION_RUNBOOK.md.
+Публичный кандидат имеет независимую историю и оригинальную уточку (AGPL-3.0-or-later).
+Настройки GitHub и Private Vulnerability Reporting ожидают подтверждения владельца.
+Статус: release/v0.1.0/PUBLICATION_STATUS.md.
