@@ -136,8 +136,8 @@ RUN groupadd --system --gid ${SHMAX_UID} shmax \
 # as part of the time_t (t64) transition. The pre-trixie names
 # are flagged by ``apt-get`` as "no installation candidate".
 # The renamed names (``*t64``) are the actual current package
-# names on trixie. Verified against the real ODROID-XU4 /
-# Debian 13 install (Oct 2026):
+# names on trixie. ARMv7 remains experimental; physical ODROID-XU4
+# acceptance has not been completed. Runtime package-name mapping:
 #
 #     package                 pre-trixie -> trixie actual
 #     libpng16-16             libpng16-16t64

@@ -5,15 +5,17 @@
     "height": 900,
     "sha256": "898f5b8ee1a44af8122af1dd6bc52aff49508b48ab39b546a0ee7fd721288b39",
     "privacy": "Real isolated SPA capture; synthetic demo identities; external services mocked; no secrets or PNG metadata",
-    "mascot": "Original SHMAX duck; AGPL-3.0-or-later"
+    "mascot": "Original SHMAX duck; AGPL-3.0-or-later",
+    "provenance": "Fresh independent SHMAX-PUBLIC candidate; actual production SPA + real FastAPI; isolated MAX/Telegram mocks; Playwright Chromium desktop/mobile"
   },
   {
     "file": "chat-routing.png",
     "width": 1440,
     "height": 900,
-    "sha256": "4ef324dc50b95a2a74db76767ae6c97baa8016de82719c3a23dc16f1a88e29ed",
+    "sha256": "793f8228fdc80773f79d7f7c7441bfcacd2e42d3a5a2caa320ea58f3cdec3a01",
     "privacy": "Real isolated SPA capture; synthetic demo identities; external services mocked; no secrets or PNG metadata",
-    "mascot": "Original SHMAX duck; AGPL-3.0-or-later"
+    "mascot": "Original SHMAX duck; AGPL-3.0-or-later",
+    "provenance": "Fresh independent SHMAX-PUBLIC candidate; actual production SPA + real FastAPI; isolated MAX/Telegram mocks; Playwright Chromium desktop/mobile"
   },
   {
     "file": "dashboard-desktop.png",
@@ -21,15 +23,17 @@
     "height": 900,
     "sha256": "9debdf3ede6cbb3b327ba574e4e91755231d7d9e5cb608e2062b7d94303e30d7",
     "privacy": "Real isolated SPA capture; synthetic demo identities; external services mocked; no secrets or PNG metadata",
-    "mascot": "Original SHMAX duck; AGPL-3.0-or-later"
+    "mascot": "Original SHMAX duck; AGPL-3.0-or-later",
+    "provenance": "Fresh independent SHMAX-PUBLIC candidate; actual production SPA + real FastAPI; isolated MAX/Telegram mocks; Playwright Chromium desktop/mobile"
   },
   {
     "file": "diagnostics.png",
     "width": 1440,
     "height": 900,
-    "sha256": "e7aef05760415d227912573f314a6d56d6fd412306941b8bb4cb37725c2fe2da",
+    "sha256": "c1379b041698c0734e14675a18b02958f1bc4a1414353936ca3ea4d991900a94",
     "privacy": "Real isolated SPA capture; synthetic demo identities; external services mocked; no secrets or PNG metadata",
-    "mascot": "Original SHMAX duck; AGPL-3.0-or-later"
+    "mascot": "Original SHMAX duck; AGPL-3.0-or-later",
+    "provenance": "Fresh independent SHMAX-PUBLIC candidate; actual production SPA + real FastAPI; isolated MAX/Telegram mocks; Playwright Chromium desktop/mobile"
   },
   {
     "file": "initial-setup.png",
@@ -37,15 +41,17 @@
     "height": 900,
     "sha256": "63bcafafbc0a066f4fb13b1065d663018dc3d934858d769db46131a0f11403d7",
     "privacy": "Real isolated SPA capture; synthetic demo identities; external services mocked; no secrets or PNG metadata",
-    "mascot": "Original SHMAX duck; AGPL-3.0-or-later"
+    "mascot": "Original SHMAX duck; AGPL-3.0-or-later",
+    "provenance": "Fresh independent SHMAX-PUBLIC candidate; actual production SPA + real FastAPI; isolated MAX/Telegram mocks; Playwright Chromium desktop/mobile"
   },
   {
     "file": "max-settings.png",
     "width": 1440,
     "height": 900,
-    "sha256": "420cbc22e235f439304fd7f2c5d15a892353782c106371bbecb3c866c6875561",
+    "sha256": "0cd89ffcfdeaa7cd71a70d5208829f2b8732a415d2e8fcefc674491df61692b0",
     "privacy": "Real isolated SPA capture; synthetic demo identities; external services mocked; no secrets or PNG metadata",
-    "mascot": "Original SHMAX duck; AGPL-3.0-or-later"
+    "mascot": "Original SHMAX duck; AGPL-3.0-or-later",
+    "provenance": "Fresh independent SHMAX-PUBLIC candidate; actual production SPA + real FastAPI; isolated MAX/Telegram mocks; Playwright Chromium desktop/mobile"
   },
   {
     "file": "mobile-dashboard.png",
@@ -53,7 +59,8 @@
     "height": 1624,
     "sha256": "6b18c810ac251b665142a238b3d50c4fd199a0ea53e06fab0619026317fe4352",
     "privacy": "Real isolated SPA capture; synthetic demo identities; external services mocked; no secrets or PNG metadata",
-    "mascot": "Original SHMAX duck; AGPL-3.0-or-later"
+    "mascot": "Original SHMAX duck; AGPL-3.0-or-later",
+    "provenance": "Fresh independent SHMAX-PUBLIC candidate; actual production SPA + real FastAPI; isolated MAX/Telegram mocks; Playwright Chromium desktop/mobile"
   },
   {
     "file": "restore.png",
@@ -61,15 +68,17 @@
     "height": 900,
     "sha256": "28498cab6efe969acbd8759eb8777291d266ea7056bc245b1028c315ff700406",
     "privacy": "Real isolated SPA capture; synthetic demo identities; external services mocked; no secrets or PNG metadata",
-    "mascot": "Original SHMAX duck; AGPL-3.0-or-later"
+    "mascot": "Original SHMAX duck; AGPL-3.0-or-later",
+    "provenance": "Fresh independent SHMAX-PUBLIC candidate; actual production SPA + real FastAPI; isolated MAX/Telegram mocks; Playwright Chromium desktop/mobile"
   },
   {
     "file": "telegram-settings.png",
     "width": 1440,
     "height": 900,
-    "sha256": "795a58a94c05b92e4022df00e550cca19d2cdc762ed64b3370b4e06b98b3aa74",
+    "sha256": "ce57d2ade9da4457346e53405df76c68b51c1c4c405aab25814176d797de22c6",
     "privacy": "Real isolated SPA capture; synthetic demo identities; external services mocked; no secrets or PNG metadata",
-    "mascot": "Original SHMAX duck; AGPL-3.0-or-later"
+    "mascot": "Original SHMAX duck; AGPL-3.0-or-later",
+    "provenance": "Fresh independent SHMAX-PUBLIC candidate; actual production SPA + real FastAPI; isolated MAX/Telegram mocks; Playwright Chromium desktop/mobile"
   },
   {
     "file": "users.png",
@@ -77,6 +86,7 @@
     "height": 951,
     "sha256": "278bddab5e0257914c1b55d02db2e7ddbac62f765e3fdbb498f4b98ef0f0f1f5",
     "privacy": "Real isolated SPA capture; synthetic demo identities; external services mocked; no secrets or PNG metadata",
-    "mascot": "Original SHMAX duck; AGPL-3.0-or-later"
+    "mascot": "Original SHMAX duck; AGPL-3.0-or-later",
+    "provenance": "Fresh independent SHMAX-PUBLIC candidate; actual production SPA + real FastAPI; isolated MAX/Telegram mocks; Playwright Chromium desktop/mobile"
   }
 ]
