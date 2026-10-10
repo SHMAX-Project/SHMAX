@@ -17,7 +17,11 @@ for line in (out/'SHA256SUMS').read_text().splitlines():
   for m in members:
    assert (m.isfile() or m.isdir()) and not m.name.startswith('/') and '..' not in pathlib.PurePosixPath(m.name).parts,m.name
    assert not any(x in {'.git','.venv','node_modules','.env','__pycache__'} for x in pathlib.PurePosixPath(m.name).parts),m.name
-   assert not m.name.endswith(('.sqlite','.db','.session','.shmax','.pem','.key','.log')),m.name
+   if m.name == prefix+'deploy/bootstrap/release-public.pem':
+    assert m.isfile()
+    assert t.extractfile(m).read() == (pathlib.Path(__file__).resolve().parents[1]/'deploy/bootstrap/release-public.pem').read_bytes()
+   else:
+    assert not m.name.endswith(('.sqlite','.db','.session','.shmax','.pem','.key','.log')),m.name
   assert t.getmember(prefix+'deploy/installer/install.sh').mode & 0o111
   if '-source.' not in name:assert 'frontend/dist/index.html' in names
   else:assert 'frontend/dist/index.html' not in names
