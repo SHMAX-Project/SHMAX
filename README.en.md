@@ -36,10 +36,45 @@ See [media documentation](docs/en/media.md) for attachment and sticker handling.
 
 ```mermaid
 flowchart LR
-    MAX[MAX chats] <--> SHMAX[SHMAX]
-    SHMAX <--> BOT[Telegram bot]
-    BOT <--> FORUM[Private Telegram group topics]
+    MAX["MAX account"] <-->|PyMax| CORE["SHMAX: bridge, queue, message mapping, ACL"]
+    CORE <-->|aiogram| XRAY{"Xray"}
+    XRAY <-->|"Loopback SOCKS"| TG["Telegram Bot API"]
+    CORE <-->|"Direct / SOCKS5 / HTTP"| TG
+    TG <--> FORUM["Private Telegram group topics"]
 ```
+
+## Deployment architecture
+
+```mermaid
+flowchart TD
+    HOST["Debian 13 server"] --> DK["Docker: SHMAX container"]
+    HOST --> HOSTD["shmax-hostd: updates and backups"]
+    HOST --> BOOT["shmax-boot.service: startup after reboot"]
+    HOST --> OPT["/opt/shmax: application files"]
+    HOST --> VAR["/var/lib/shmax: persistent data"]
+    HOSTD -->|"Update checks and rollback"| DK
+    BOOT -->|"Startup recovery"| DK
+    DK -->|"Configuration, database, credentials"| VAR
+```
+
+### Build architectures
+
+The same SHMAX source is used to build containers for `amd64`, `arm64` and `arm/v7`.
+The Dockerfile selects the platform-specific Xray binary and image dependencies;
+application data is stored outside the container.
+
+```mermaid
+flowchart LR
+    SRC["SHMAX source"] --> BUILD["Docker: target-platform build"]
+    BUILD --> AMD64["amd64 · x86-64"]
+    BUILD --> ARM64["arm64 · ARM 64-bit"]
+    BUILD --> ARMV7["arm/v7 · ARM 32-bit"]
+    AMD64 --> APP["SHMAX container"]
+    ARM64 --> APP
+    ARMV7 --> APP
+    APP --> DATA["Persistent data: /var/lib/shmax"]
+```
+
 
 SHMAX requires an ordinary MAX account, your own Telegram bot and a private
 Telegram supergroup with topics enabled. Connections and chat mappings are

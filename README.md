@@ -37,10 +37,45 @@ SHMAX объединяет переписку в MAX и Telegram. Сообщен
 
 ```mermaid
 flowchart LR
-    MAX[Чаты MAX] <--> SHMAX[SHMAX]
-    SHMAX <--> BOT[Telegram-бот]
-    BOT <--> FORUM[Темы приватной Telegram-группы]
+    MAX["Аккаунт MAX"] <-->|PyMax| CORE["SHMAX: мост, очередь, сопоставление сообщений, ACL"]
+    CORE <-->|aiogram| XRAY{"Xray"}
+    XRAY <-->|"Локальный SOCKS"| TG["Telegram Bot API"]
+    CORE <-->|"Direct / SOCKS5 / HTTP"| TG
+    TG <--> FORUM["Приватная группа: темы Telegram"]
 ```
+
+## Архитектура развёртывания
+
+```mermaid
+flowchart TD
+    HOST["Сервер Debian 13"] --> DK["Docker: контейнер SHMAX"]
+    HOST --> HOSTD["shmax-hostd: управление обновлениями и копиями"]
+    HOST --> BOOT["shmax-boot.service: запуск после перезагрузки"]
+    HOST --> OPT["/opt/shmax: файлы приложения"]
+    HOST --> VAR["/var/lib/shmax: постоянные данные"]
+    HOSTD -->|"Проверка и откат обновлений"| DK
+    BOOT -->|"Восстановление запуска"| DK
+    DK -->|"Конфигурация, база данных, авторизация"| VAR
+```
+
+### Архитектуры сборки
+
+Один исходный код используется для сборки контейнеров `amd64`, `arm64` и `arm/v7`.
+Dockerfile выбирает платформенный бинарный файл Xray и зависимости образа;
+данные приложения хранятся вне контейнера.
+
+```mermaid
+flowchart LR
+    SRC["Исходный код SHMAX"] --> BUILD["Docker: сборка для целевой платформы"]
+    BUILD --> AMD64["amd64 · x86-64"]
+    BUILD --> ARM64["arm64 · ARM 64-bit"]
+    BUILD --> ARMV7["arm/v7 · ARM 32-bit"]
+    AMD64 --> APP["Контейнер SHMAX"]
+    ARM64 --> APP
+    ARMV7 --> APP
+    APP --> DATA["Постоянные данные: /var/lib/shmax"]
+```
+
 
 Для работы нужны обычный аккаунт MAX, собственный Telegram-бот и приватная
 супергруппа Telegram с включёнными темами. Подключения и соответствия чатов
