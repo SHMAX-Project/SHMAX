@@ -8,3 +8,7 @@ logos were used. The image is licensed under AGPL-3.0-or-later, like the project
 The 1280 × 640 PNG is used in the README and as the GitHub social preview.
 Screenshot provenance is recorded separately in
 [`SCREENSHOTS.json`](../../release/v0.1.0/SCREENSHOTS.json).
+
+`message-flow.ru.svg` and `message-flow.en.svg` are original schematic diagrams
+with fictional messages. They are not screenshots of MAX or Telegram and use no
+third-party logos. They are licensed under AGPL-3.0-or-later.

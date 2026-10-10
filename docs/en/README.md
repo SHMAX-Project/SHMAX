@@ -33,3 +33,6 @@ English mirrors [canonical Russian documentation](../ru/README.md).
 AI assistants: [English guide](../AI_ASSISTANT_GUIDE.en.md).
 
 [Photos and stickers](media.md).
+
+- [Roadmap](roadmap.md)
+- [First deployment experience](deployment-story.md)

@@ -4,6 +4,32 @@ Thanks for considering a contribution! Language: Russian and
 English are both welcome; Russian is canonical for user-facing
 text.
 
+## Как помочь проекту
+
+- **Нашли ошибку?** Откройте [сообщение об ошибке](https://github.com/SHMAX-Project/SHMAX/issues/new?template=bug.yml). Укажите версию SHMAX, ОС и архитектуру, шаги воспроизведения, ожидаемый и фактический результат. Приложите только очищенные от секретов логи.
+- **Проблема с установкой?** Используйте [шаблон установки](https://github.com/SHMAX-Project/SHMAX/issues/new?template=installation.yml); укажите способ установки и этап, на котором она остановилась.
+- **Нужна функция?** Опишите реальный сценарий через [предложение](https://github.com/SHMAX-Project/SHMAX/issues/new?template=feature.yml). Для маршрутизатора полезны примеры связей аккаунтов, групп и требуемых прав.
+- **Есть ARM-сервер?** Помогите проверить свою платформу: модель, ОС, архитектура, установка, подключение и доставка тестовых сообщений. Разделяйте успешную сборку и проверку реальной работы.
+- **Хотите изменить код или документацию?** Для крупного изменения сначала согласуйте подход в Issue, затем откройте PR с описанием результата и проверок. Небольшие исправления документации можно присылать сразу.
+
+Контакт по проекту: [v.fomenko.me@gmail.com](mailto:v.fomenko.me@gmail.com).
+Вопросы и предложения лучше размещать в Issues, чтобы ответы помогали другим.
+Уязвимости сообщайте приватно по [SECURITY.md](SECURITY.md).
+Никогда не публикуйте токены, пароли, файлы сессий, базы с реальной перепиской
+или ссылки на прокси-подписки.
+
+## How to help
+
+Report bugs or installation failures using the Issue templates; include the SHMAX
+version, OS/architecture, reproduction steps and sanitized logs. Feature requests
+should describe a real workflow. ARM reports should name the hardware and separate
+build success from actual operation. Discuss larger changes in an Issue before
+opening a PR; small documentation fixes are welcome directly.
+
+Project contact: [v.fomenko.me@gmail.com](mailto:v.fomenko.me@gmail.com).
+Use public Issues for ordinary questions and [SECURITY.md](SECURITY.md) for private
+vulnerability reports. Never post credentials, session files or real message databases.
+
 ## Prerequisites
 
 - Python ≥ 3.12 (backend)
