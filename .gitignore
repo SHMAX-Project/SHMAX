@@ -114,3 +114,6 @@ release-staging/
 *.pem
 *.key
 master.key
+
+# Public release verification key; private keys remain excluded.
+!deploy/bootstrap/release-public.pem
