@@ -38,12 +38,6 @@ provides a web interface for connections, routing and user access.
 
 The diagram uses fictional messages to illustrate routing. Actual SHMAX screenshots appear below.
 
-## Follow a message through the bridge
-
-![Illustration: MAX → Telegram topic → reply in MAX](docs/assets/message-flow.en.svg)
-
-The diagram uses fictional messages to illustrate routing. Actual SHMAX screenshots appear below.
-
 ## Use cases
 
 - **One team workspace.** Reply to MAX conversations from Telegram topics while keeping chats separate.
@@ -67,34 +61,6 @@ The diagram uses fictional messages to illustrate routing. Actual SHMAX screensh
 1. Connect your MAX account and your own Telegram bot in the setup wizard.
 2. Map a selected MAX chat to a topic in a private Telegram group.
 3. Receive messages in that topic and reply from Telegram — SHMAX sends replies back to the MAX chat.
-
-## Verified for v0.1.0
-
-- **Clean installation:** Debian 13 amd64, automatic Docker/Compose setup, systemd and readiness checks.
-- **Data preservation:** installer reruns and updates preserve synthetic settings, secrets, session files and SQLite.
-- **Rollback:** a forced candidate rejection restores the previous image and cold data backup.
-- **Package authenticity:** public stable download and the pinned signature were verified after publication.
-
-[Debian VM acceptance](https://github.com/SHMAX-Project/SHMAX/actions/runs/38054225801) ·
-[Release CI: 957 backend / 46 frontend tests](https://github.com/SHMAX-Project/SHMAX/actions/runs/38054452388).
-VM checks used synthetic data, without live messenger accounts.
-[First deployment experience](docs/en/deployment-story.md).
-
-## Before installing
-
-**What do I need?** A regular MAX account, your own Telegram bot and a private supergroup with topics enabled. The bot needs message sending and topic management permissions; disable Privacy Mode.
-
-**Do I need a separate MAX account?** v0.1.0 connects one regular MAX account. Administrators may choose a dedicated work account.
-
-**Where is my data?** On your server in `/var/lib/shmax`. Updates preserve it; keep backups to protect against disk failure.
-
-**What happens after reboot?** Services restart the application. Delivery requires MAX and Telegram connectivity; the local dashboard can start without internet.
-
-**Which attachments work?** Photos, documents and supported video. Animated stickers may become static images or text fallbacks. [Media limits](docs/en/media.md).
-
-**Does MAX support proxies?** v0.1.0 connects to MAX directly. MAX proxies, multiple accounts and route permissions are on the [roadmap](docs/en/roadmap.md).
-
-[Full FAQ](docs/en/faq.md) · [Contribute](CONTRIBUTING.md).
 
 ## Verified for v0.1.0
 
