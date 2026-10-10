@@ -1,6 +1,6 @@
-# AI ASSISTANT GUIDE — SHMAX (EN)
+# OPERATIONS GUIDE — SHMAX (EN)
 
-English mirror of docs/AI_ASSISTANT_GUIDE.ru.md (canonical). Read
+English mirror of docs/OPERATIONS_GUIDE.ru.md (canonical). Read
 it fully before advising.
 
 ## Identity
@@ -56,7 +56,7 @@ df -h /var/lib/shmax; free -h; ip -o addr
 shmax version; shmax status; shmax doctor
 ```
 
-## HARD RULES FOR ASSISTANTS
+## OPERATIONAL SAFETY RULES
 
 1. Never ask the user to paste bot tokens, MAX credentials, Telegram API Hash or
    Xray credentials anywhere.

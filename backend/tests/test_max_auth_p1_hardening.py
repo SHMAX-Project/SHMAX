@@ -1,6 +1,6 @@
 """Regression tests for the MAX auth P1 hardening.
 
-Covers the Codex findings:
+Covers the authentication review findings:
 
 * P1 #1 — the connect/handshake phase before the credential
   provider is invoked must be bounded. A hanging adapter must

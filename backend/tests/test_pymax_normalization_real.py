@@ -1,6 +1,6 @@
 """P0 #3 — normalization against REAL PyMax 2.4.1 objects.
 
-The Codex review verified the actual SDK layout:
+The review verified the actual SDK layout:
   * reply  — ``Message.link`` (ReplyLink / ForwardLink discriminated
     union, ``ReplyLink.message`` = nested replied-to Message)
   * attachments — ``Message.attaches`` (PhotoAttachment /

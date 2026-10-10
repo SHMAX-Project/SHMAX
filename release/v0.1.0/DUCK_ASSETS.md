@@ -1,14 +1,13 @@
 # Original SHMAX duck — source and derivatives
 
-Authoring method: Codex authored SVG geometry from scratch for the owner's explicit
-SHMAX branding request on 2026-10-09. No stock photo, internet meme, downloaded
-Telegram sticker, traced illustration, icon pack or image-generation tool input.
+Original SVG geometry created for SHMAX branding on 2026-10-09. No stock photo, internet meme, downloaded
+Telegram sticker, traced illustration, or icon pack.
 
 Master: `frontend/public/shmax-duck.svg` (viewBox 512×512).
 Derivatives: `shmax-icon.png` 512×512, `shmax-icon-256.png` 256×256,
 `favicon.png` 32×32. Rendered with sharp's SVG rasterizer, transparent background.
 Preview sizes checked: 16, 32, 64, 180, 192, 256, 512; only actually referenced
-sizes are shipped. No separate graphics-generating service/license was used.
+sizes are shipped.
 
 License: AGPL-3.0-or-later, matching the project; SVG includes its SPDX identifier.
 No separate restrictive art license. No exclusive claim over the generic duck
