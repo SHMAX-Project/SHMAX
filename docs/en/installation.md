@@ -14,7 +14,7 @@ token and does not fail (live bug A10 fixed).
 
 Paths: `/opt/shmax` deployment; `/var/lib/shmax` persistent data.
 Debian 13 + systemd; the `shmax-boot.service` unit is installed
-automatically. For ARMv7 see odroid-xu4-armv7.md.
+automatically.
 
 ## Hostd and systemd after a clean install
 
@@ -43,8 +43,8 @@ preserving `/var/lib/shmax`. Only explicitly confirmed `--purge` removes user da
 
 ## v0.1.0 archive installation
 
-Public repository URL is unresolved. Once published, download the production
-archive, SHA256SUMS and build-info.json from the approved release page:
+Download the production archive, SHA256SUMS and build-info.json from
+[SHMAX Releases](https://github.com/SHMAX-Project/SHMAX/releases):
 
 ```bash
 sha256sum -c SHA256SUMS --ignore-missing
@@ -58,7 +58,7 @@ The source archive includes Dockerfile/frontend sources/lock; the production
 archive also includes built frontend/dist. Docker still fetches dependencies,
 base images and Xray: an archive is not a fully offline installation.
 Debian 13 amd64, root/sudo, Docker/Compose v2 and systemd are required; missing
-host tools are installed by the installer. ARMv7 physical acceptance is incomplete.
+host tools are installed by the installer.
 
 ```bash
 sudo bash deploy/installer/install.sh --mode repair

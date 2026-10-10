@@ -25,7 +25,6 @@
 
 - systemd (unit `shmax-boot.service` ставится автоматически);
 - Docker Engine + Compose v2 (ставится при отсутствии);
-- для ARMv7 см. [odroid-xu4-armv7.md](odroid-xu4-armv7.md).
 
 ## Ручной офлайн-апгрейд
 
@@ -61,8 +60,8 @@ Uninstall отключает и удаляет оба unit, runtime hostd и run
 
 ## Установка v0.1.0 из релизного архива
 
-Публичный URL ещё не назначен. После публикации скачайте production архив,
-SHA256SUMS и build-info.json с утверждённого release page. На Debian:
+Скачайте production-архив, SHA256SUMS и build-info.json со
+[страницы выпусков SHMAX](https://github.com/SHMAX-Project/SHMAX/releases). На Debian:
 
 ```bash
 sha256sum -c SHA256SUMS --ignore-missing
@@ -77,7 +76,6 @@ production архив дополнительно содержит собранн
 сборке Docker всё равно получает зависимости/base images/Xray из сети: наличие
 архива не означает полностью автономную установку. Требуется Debian 13 amd64,
 root/sudo, Docker/Compose v2 и systemd; installer устанавливает недостающие средства.
-ARMv7 — экспериментальный target без завершённой физической приёмки.
 
 ```bash
 sudo bash deploy/installer/install.sh --mode repair
