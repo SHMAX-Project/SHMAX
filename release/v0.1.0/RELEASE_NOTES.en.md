@@ -17,6 +17,14 @@ provides a web interface for connections, routing and access management.
   and automatic rollback.
 - Non-root container execution and correct application file permissions.
 
+## Installation and updates
+
+The official `install.sh` bootstrap verifies RSA-3072/SHA-256 signatures and
+checksums before executing release code. Manual production-archive installation
+remains supported. `sudo shmax update` downloads the latest signed stable release;
+`sudo shmax update /path/to/release.tar.gz` retains local-archive updates.
+Rejected candidates restore the previous image and verified cold data backup.
+
 ## Requirements and installation
 
 Debian 13 amd64, Docker Engine, Compose v2 and systemd. Installation requires

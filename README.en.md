@@ -1,5 +1,12 @@
 # SHMAX
 
+```bash
+curl -fsSL https://raw.githubusercontent.com/SHMAX-Project/SHMAX/main/install.sh | sudo bash
+```
+
+Debian 13 amd64 · [One-line installation](docs/en/installation.md#one-line-installation) · [Manual archive installation](docs/en/installation.md#manual-archive-installation).
+The first stable release is not published yet; the bootstrap safely reports that no package is available until publication.
+
 [![Version](https://img.shields.io/badge/version-0.1.0-2563eb)](backend/shmax/VERSION)
 [![CI](https://github.com/SHMAX-Project/SHMAX/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/SHMAX-Project/SHMAX/actions/workflows/ci.yml)
 [![License: AGPL v3+](https://img.shields.io/badge/license-AGPL--3.0--or--later-059669)](LICENSE)
@@ -115,20 +122,18 @@ and updates. See [architecture](docs/en/architecture.md) for component details.
 
 ## Installation
 
-Download the complete production archive and `SHA256SUMS` from
-[GitHub Releases](https://github.com/SHMAX-Project/SHMAX/releases).
-Verify its checksum and extract the archive. From the extracted release directory, run:
+The command at the top runs the bootstrap, verifies a signed stable package and
+installs the application. Open the printed setup link to configure your integrations.
 
-```bash
-sudo bash deploy/installer/install.sh --mode install
-```
+[Manual archive installation](docs/en/installation.md#manual-archive-installation)
+remains supported: download → verify signature and checksum → extract → run
+`sudo bash deploy/installer/install.sh --mode install`.
 
-The installer prepares services, builds and starts the container, and provides
-the initial setup link. Use the wizard to create an administrator, connect MAX
-and Telegram, select chats and configure participant access.
+Update with `sudo shmax update`, or use a local verified archive:
+`sudo shmax update /absolute/path/shmax-v0.1.0.tar.gz`.
 
-[Installation guide](docs/en/installation.md) ·
-[Initial setup](docs/en/first-setup.md) · [Troubleshooting](docs/en/troubleshooting.md)
+[Installation and modes](docs/en/installation.md) · [First setup](docs/en/first-setup.md) ·
+[Troubleshooting](docs/en/troubleshooting.md).
 
 ## Updates and data
 

@@ -1,5 +1,12 @@
 # SHMAX
 
+```bash
+curl -fsSL https://raw.githubusercontent.com/SHMAX-Project/SHMAX/main/install.sh | sudo bash
+```
+
+Debian 13 amd64 · [Установка одной командой](docs/ru/installation.md#одной-командой) · [Ручная установка из архива](docs/ru/installation.md#ручная-установка-из-архива).
+Первый стабильный релиз ещё не опубликован; до его публикации bootstrap безопасно сообщает об отсутствии пакета.
+
 [![Version](https://img.shields.io/badge/version-0.1.0-2563eb)](backend/shmax/VERSION)
 [![CI](https://github.com/SHMAX-Project/SHMAX/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/SHMAX-Project/SHMAX/actions/workflows/ci.yml)
 [![License: AGPL v3+](https://img.shields.io/badge/license-AGPL--3.0--or--later-059669)](LICENSE)
@@ -116,21 +123,19 @@ flowchart LR
 
 ## Установка
 
-Скачайте полный production-архив из [GitHub Releases](https://github.com/SHMAX-Project/SHMAX/releases)
-вместе с `SHA256SUMS`. Проверьте контрольную сумму и распакуйте архив.
-Из каталога распакованного релиза выполните:
+Одна команда в начале страницы запускает bootstrap, который проверяет подписанный
+стабильный пакет и выполняет установку. По завершении откройте напечатанную ссылку
+и пройдите мастер настройки.
 
-```bash
-sudo bash deploy/installer/install.sh --mode install
-```
+[Ручная установка из архива](docs/ru/installation.md#ручная-установка-из-архива) также
+поддерживается: скачать → проверить подпись и сумму → распаковать → запустить
+`sudo bash deploy/installer/install.sh --mode install`.
 
-Установщик подготовит службы, соберёт и запустит контейнер, затем предоставит
-ссылку первоначальной настройки. В мастере создайте администратора, подключите
-MAX и Telegram, выберите чаты и настройте права участников.
+Обычное обновление: `sudo shmax update`. Сохраняется и обновление из локального
+архива: `sudo shmax update /полный/путь/shmax-v0.1.0.tar.gz`.
 
-[Инструкция по установке](docs/ru/installation.md) ·
-[Первоначальная настройка](docs/ru/first-setup.md) ·
-[Решение проблем](docs/ru/troubleshooting.md)
+[Установка и режимы](docs/ru/installation.md) · [Первоначальная настройка](docs/ru/first-setup.md) ·
+[Решение проблем](docs/ru/troubleshooting.md).
 
 ## Обновления и данные
 
