@@ -4,7 +4,7 @@
 > an earlier development stage; commands, dependency versions, acceptance checklists
 > and product descriptions below are not current operator instructions. Use
 > [RU documentation](ru/README.md), [EN documentation](en/README.md) and the
-> [current Operations guide](OPERATIONS_GUIDE.en.md). The current wizard has nine steps;
+> [current Operations guide](AI_ASSISTANT_GUIDE.en.md). The current wizard has nine steps;
 > Telegram uses the existing bot, with optional bot-only member sync (no human
 > userbot). Sync sessions are memory-only. A normal .shmax backup includes the
 > SecretStore master key and is not encrypted as a whole. MAX stays direct.

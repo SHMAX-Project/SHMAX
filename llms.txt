@@ -1,4 +1,4 @@
-# PROJECT_CONTEXT.txt — SHMAX
+# llms.txt — SHMAX
 
 SHMAX — самостоятельный (self-hosted) шлюз MAX ↔ Telegram:
 обычный аккаунт MAX подключается к приватной Telegram-супергруппе
@@ -23,8 +23,8 @@ SHMAX — самостоятельный (self-hosted) шлюз MAX ↔ Telegram
 
 ## Для AI-ассистентов
 
-- Полный гайд: docs/OPERATIONS_GUIDE.ru.md (EN:
-  docs/OPERATIONS_GUIDE.en.md). Правила: не запрашивать секреты,
+- Полный гайд: docs/AI_ASSISTANT_GUIDE.ru.md (EN:
+  docs/AI_ASSISTANT_GUIDE.en.md). Правила: не запрашивать секреты,
   не удалять /var/lib/shmax, различать внутренний health и
   хост-доступность, обновления — только релизы, не git pull.
 

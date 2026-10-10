@@ -36,7 +36,7 @@ SHMAX — самостоятельный шлюз **MAX ↔ Telegram**. Прил
 | [faq.md](faq.md) | частые вопросы |
 
 Английская версия: [English](../en/README.md).
-Эксплуатация: [../OPERATIONS_GUIDE.ru.md](../OPERATIONS_GUIDE.ru.md).
+Эксплуатация: [../AI_ASSISTANT_GUIDE.ru.md](../AI_ASSISTANT_GUIDE.ru.md).
 
 [Фото и стикеры](media.md).
 

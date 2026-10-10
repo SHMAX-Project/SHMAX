@@ -80,7 +80,7 @@ Format: Keep a Changelog; versioning: SemVer.
 - Installer (install/repair/upgrade/uninstall, Debian 13,
   ODROID-XU4/ARMv7 aware); upgrade never requires a setup token.
 - Russian in-app help and Russian/English repository documentation; operations support guide
-  (docs/OPERATIONS_GUIDE.ru.md).
+  (docs/AI_ASSISTANT_GUIDE.ru.md).
 
 ### Limitations (V1)
 - MAX ordinary-user accounts only (no bot API on MAX side).

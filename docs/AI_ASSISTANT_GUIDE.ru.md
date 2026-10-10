@@ -1,7 +1,8 @@
-# OPERATIONS GUIDE — SHMAX (RU, канонический)
+# AI ASSISTANT GUIDE — SHMAX (RU, канонический)
 
-Этот документ описывает эксплуатацию и диагностику SHMAX.
-Прочитайте его перед изменением настроек или устранением неполадок.
+Руководство для ИИ-ассистентов, помогающих с установкой, эксплуатацией
+и диагностикой SHMAX. Сначала прочитайте документ целиком; проверяйте
+текущую версию и не запрашивайте у пользователя секреты.
 
 ## Идентичность продукта
 
@@ -205,4 +206,4 @@ Socket activation unit не нужен. Boot-unit имеет конкретны�
 ## Release v0.1.0 / Публикация
 
 Debian 13 amd64: owner-confirmed live acceptance. ARMv7/ODROID-XU4: experimental; physical acceptance incomplete.
-v0.1.0 remains unpublished. See [publication runbook](../release/v0.1.0/PUBLICATION_RUNBOOK.md) and [local status](../release/v0.1.0/PUBLICATION_STATUS.md). No publishing without explicit owner authorization and blocker resolution.
+v0.1.0 is published as a stable release. See [publication runbook](../release/v0.1.0/PUBLICATION_RUNBOOK.md) and [local status](../release/v0.1.0/PUBLICATION_STATUS.md). No publishing without explicit owner authorization and blocker resolution.

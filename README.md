@@ -227,7 +227,7 @@ SHMAX использует шифрование хранилища секрет�
 
 [Документация на русском](docs/ru/README.md) ·
 [Documentation in English](docs/en/README.md) ·
-[Руководство по эксплуатации](docs/OPERATIONS_GUIDE.ru.md) ·
+[Руководство для ИИ-ассистентов](docs/AI_ASSISTANT_GUIDE.ru.md) ·
 [Участие в разработке](CONTRIBUTING.md)
 
 SHMAX — независимый проект с открытым исходным кодом. Разработка не связана с

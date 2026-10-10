@@ -30,7 +30,7 @@ English mirrors [canonical Russian documentation](../ru/README.md).
 - [users acl ](users-acl.md)
 - [xray ](xray.md)
 
-Operations: [English guide](../OPERATIONS_GUIDE.en.md).
+Operations: [English guide](../AI_ASSISTANT_GUIDE.en.md).
 
 [Photos and stickers](media.md).
 

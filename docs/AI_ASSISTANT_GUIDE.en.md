@@ -1,6 +1,6 @@
-# OPERATIONS GUIDE — SHMAX (EN)
+# AI ASSISTANT GUIDE — SHMAX (EN)
 
-English mirror of docs/OPERATIONS_GUIDE.ru.md (canonical). Read
+English mirror of docs/AI_ASSISTANT_GUIDE.ru.md (canonical). Read
 it fully before advising.
 
 ## Identity
@@ -154,4 +154,4 @@ Expired MAX sessions, invalid Telegram tokens and unavailable networks remain on
 ## Release v0.1.0 / Публикация
 
 Debian 13 amd64: owner-confirmed live acceptance. ARMv7/ODROID-XU4: experimental; physical acceptance incomplete.
-v0.1.0 remains unpublished. See [publication runbook](../release/v0.1.0/PUBLICATION_RUNBOOK.md) and [local status](../release/v0.1.0/PUBLICATION_STATUS.md). No publishing without explicit owner authorization and blocker resolution.
+v0.1.0 is published as a stable release. See [publication runbook](../release/v0.1.0/PUBLICATION_RUNBOOK.md) and [local status](../release/v0.1.0/PUBLICATION_STATUS.md). No publishing without explicit owner authorization and blocker resolution.

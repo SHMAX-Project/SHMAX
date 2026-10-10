@@ -225,7 +225,7 @@ Report vulnerabilities through the private GitHub channel described in the
 
 [English documentation](docs/en/README.md) ·
 [Документация на русском](docs/ru/README.md) ·
-[Operations guide](docs/OPERATIONS_GUIDE.en.md) · [Contributing](CONTRIBUTING.md)
+[AI assistant guide](docs/AI_ASSISTANT_GUIDE.en.md) · [Contributing](CONTRIBUTING.md)
 
 SHMAX is an independent open-source project and is not affiliated with the
 companies operating MAX or Telegram.
