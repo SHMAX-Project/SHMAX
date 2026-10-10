@@ -1,6 +1,6 @@
 [Unit]
 Description=SHMAX host helper daemon (restricted socket)
-Documentation=https://github.com/example/shmax
+Documentation=https://github.com/SHMAX-Project/SHMAX
 After=network-online.target docker.service
 Wants=network-online.target
 Requires=docker.service

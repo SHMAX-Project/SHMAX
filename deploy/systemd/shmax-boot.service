@@ -1,6 +1,6 @@
 [Unit]
 Description=SHMAX boot orchestration (wait for bind address, ensure published port, host readiness)
-Documentation=https://github.com/example/shmax
+Documentation=https://github.com/SHMAX-Project/SHMAX
 # network-online.target alone does NOT guarantee the configured
 # bind address exists — the boot script verifies it explicitly.
 After=docker.service network-online.target shmax-hostd.service

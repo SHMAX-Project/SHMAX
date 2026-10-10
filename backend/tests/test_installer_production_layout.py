@@ -215,6 +215,10 @@ def test_actual_systemd_analyze_verify_staged_units(tmp_path):
     units=root/'etc/systemd/system';units.mkdir(parents=True)
     for name in ['shmax-boot.service','shmax-hostd.service']:
         shutil.copy(ROOT/'deploy/systemd'/name,units/name)
+    # The isolated root has no OS units. Supply the standard targets needed
+    # by service default dependencies, while verifying the real SHMAX units.
+    for name in ['sysinit.target','basic.target','shutdown.target','network-online.target','multi-user.target']:
+        (units/name).write_text(f'[Unit]\nDescription=Test fixture for {name}\nDefaultDependencies=no\n')
     (units/'docker.service').write_text('[Service]\nExecStart=/opt/shmax/boot/shmax-boot.sh\n')
     result=subprocess.run(['systemd-analyze','verify','--root',str(root),'shmax-boot.service','shmax-hostd.service'],capture_output=True,text=True)
     assert result.returncode==0,result.stderr
