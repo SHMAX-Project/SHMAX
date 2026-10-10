@@ -107,6 +107,7 @@ async def test_first_fails_second_msecond_returns_it(monkeypatch):
     cfg = TransportConfig(
         mode=TransportMode.AUTO,
         bot_token="123:abc",
+        proxy=ProxyConfig(scheme="socks5", host="127.0.0.1", port=10808),
     )
     call_count = {"n": 0}
 
@@ -159,6 +160,7 @@ async def test_explicit_override_skips_ladder(monkeypatch):
     cfg = TransportConfig(
         mode=TransportMode.AUTO,
         bot_token="123:abc",
+        proxy=ProxyConfig(scheme="http", host="127.0.0.1", port=10808),
     )
 
     def factory(config):

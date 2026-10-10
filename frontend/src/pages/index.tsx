@@ -224,6 +224,13 @@ export function TelegramPage({ status, reload }: { status: StatusSnapshot['teleg
         </div>
         {result && <div className={`alert ${result.startsWith('Соединение') ? 'alert-success' : 'alert-error'}`}>{result}</div>}
       </div>
+      {status?.recovery && status.recovery.state !== 'HEALTHY' && status.recovery.state !== 'NOT_CONFIGURED' && (
+        <div className="alert" role="status">
+          Восстановление Telegram: {status.recovery.state}. Попыток: {status.recovery.attempts}.
+          {status.recovery.failure && <> Причина: {status.recovery.failure}.</>}
+          {status.recovery.retry_in_seconds != null && <> Следующая проверка не позднее чем через {Math.ceil(status.recovery.retry_in_seconds)} с.</>}
+        </div>
+      )}
       <MemberSync settings />
       <p className="muted">Проверка соединения не подтверждает получение обычных сообщений группы. Если SHMAX их не видит, проверьте права бота и /setprivacy → Disable в BotFather.</p>
     </section>

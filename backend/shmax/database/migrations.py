@@ -39,8 +39,7 @@ def _sync_url(async_url: str) -> str:
 
 def _make_alembic_config(db_url: str) -> Config:
     cfg = Config(str(ALEMBIC_INI) if ALEMBIC_INI.exists() else None)
-    if not cfg.config_file_name:
-        cfg.set_main_option("script_location", str(ALEMBIC_DIR))
+    cfg.set_main_option("script_location", str(ALEMBIC_DIR))
     cfg.set_main_option("sqlalchemy.url", db_url)
     return cfg
 

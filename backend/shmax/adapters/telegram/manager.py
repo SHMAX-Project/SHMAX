@@ -87,6 +87,15 @@ class TelegramAutoStateStore:
         self._path.write_text(json.dumps(state.to_dict(), indent=2, sort_keys=True))
 
 
+class TransportSelectionError(RuntimeError):
+    """Sanitized selection outcome; retain classification without secret-bearing text."""
+    def __init__(self, mode, cause):
+        from ...telegram_recovery import failure_kind
+        self.permanent, self.failure_class = failure_kind(cause)
+        label = "AUTO ladder exhausted" if mode == TransportMode.AUTO else f"explicit transport {mode.value} failed"
+        super().__init__(f"{label}; failure={self.failure_class}")
+
+
 class TelegramTransportManager:
     def __init__(self, config: TransportConfig, state_store: TelegramAutoStateStore | None = None) -> None:
         self._config = config
@@ -179,13 +188,21 @@ class TelegramTransportManager:
                 await self.record_failure(mode, e)
                 adapter = None
                 continue
-        raise RuntimeError(
-            f"AUTO ladder exhausted; last failure: {last_exc!r}"
-        )
+        raise TransportSelectionError(override_mode or self._config.mode, last_exc) from None
 
     def auto_iter(self) -> "list[TransportMode]":
         """Concrete modes the AUTO ladder would try, in order."""
-        return [m for m in _AUTO_LADDER if self._mode_available(m)]
+        modes = [m for m in _AUTO_LADDER if self._mode_available(m)]
+        previous = self.state.active_transport
+        if previous is not None:
+            try:
+                cached = TransportMode(previous)
+            except ValueError:
+                cached = None
+            if cached in modes:
+                modes.remove(cached)
+                modes.insert(0, cached)
+        return modes
 
     async def record_success(self, mode: TransportMode) -> None:
         if not self._store:
@@ -207,6 +224,8 @@ class TelegramTransportManager:
         self._store.save(st)
 
     def _build_for_mode(self, mode: TransportMode) -> TransportConfig:
+        if not self._mode_available(mode):
+            raise ValueError("configured transport credentials or proxy are missing")
         return TransportConfig(
             mode=mode,
             bot_token=self._config.bot_token,
@@ -247,24 +266,21 @@ class TelegramTransportManager:
         return TransportMode.BOT_API_DIRECT
 
     def _mode_available(self, mode: TransportMode) -> bool:
-        if mode in (
-            TransportMode.BOT_API_DIRECT,
-            TransportMode.BOT_API_SOCKS5,
-            TransportMode.BOT_API_HTTP,
-        ):
+        proxy = self._config.proxy
+        valid_proxy = bool(proxy and proxy.host and 1 <= proxy.port <= 65535)
+        if mode == TransportMode.BOT_API_DIRECT:
             return bool(self._config.bot_token)
-        if mode in (
-            TransportMode.MTPROTO_DIRECT,
-            TransportMode.MTPROTO_SOCKS,
-            TransportMode.MTPROTO_PROXY,
-        ):
-            # MTProto works for both bot and user accounts:
-            # bots need api_id/api_hash/bot_token, users only
-            # need api_id/api_hash. We allow the fallback path
-            # whenever credentials are present, so the AUTO
-            # ladder has somewhere to land if the bot token
-            # is missing.
-            return bool(self._config.api_id and self._config.api_hash)
+        if mode in (TransportMode.BOT_API_SOCKS5, TransportMode.BOT_API_HTTP):
+            scheme = "socks5" if mode == TransportMode.BOT_API_SOCKS5 else "http"
+            return bool(self._config.bot_token and valid_proxy and proxy.scheme == scheme)
+        mt = bool(self._config.api_id and self._config.api_hash)
+        if mode == TransportMode.MTPROTO_DIRECT:
+            return mt
+        if mode == TransportMode.MTPROTO_SOCKS:
+            return bool(mt and valid_proxy and proxy.scheme == "socks5")
+        if mode == TransportMode.MTPROTO_PROXY:
+            p = self._config.mtproxy
+            return bool(mt and p and p.host and p.secret and 1 <= p.port <= 65535)
         return False
 
 

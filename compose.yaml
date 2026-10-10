@@ -45,6 +45,7 @@ services:
       SHMAX_HOST: "0.0.0.0"
       SHMAX_PORT: "${SHMAX_PORT:-8787}"
       SHMAX_HOSTD_SOCKET: /run/shmax/hostd/hostd.sock
+      SHMAX_DEPLOYMENT_ID: "${SHMAX_DEPLOYMENT_ID:-}"
       SHMAX_DATA_DIR: /data
       SHMAX_LOG_LEVEL: "${SHMAX_LOG_LEVEL:-INFO}"
       SHMAX_VERSION: "${SHMAX_VERSION:-0.1.0}"

@@ -186,3 +186,19 @@ it('English in-product Help explains skip, resume and independent editing', asyn
   expect(await screen.findByTestId('help-section-navigation')).toHaveTextContent('After mandatory administrator creation');
   expect(screen.getByTestId('help-section-navigation')).toHaveTextContent('Continue initial setup');
 });
+
+it('shows sanitized Telegram recovery progress without claiming Xray is stopped', async () => {
+  const original = globalThis.fetch;
+  vi.stubGlobal('fetch', vi.fn(async (path: string, init?: RequestInit) => {
+    if (path === '/api/status') return new Response(JSON.stringify({ max: component,
+      telegram: { ...component, configured: true, state: 'DEGRADED', recovery: {
+        state: 'DEGRADED', attempts: 2, failure: 'TimeoutError', retry_in_seconds: 4,
+      } }, bridge: { state: 'DEGRADED', worker_running: true }, queue: {}, database: 'ok', version: '0.1.0',
+    }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    return original(path, init);
+  }));
+  mount('/telegram');
+  expect(await screen.findByText(/Восстановление Telegram/)).toHaveTextContent('TimeoutError');
+  expect(screen.getByText(/Восстановление Telegram/)).toHaveTextContent('Попыток: 2');
+  expect(screen.queryByText('Xray не запущен')).not.toBeInTheDocument();
+});

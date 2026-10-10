@@ -107,7 +107,7 @@ export async function session(): Promise<SessionStatus> {
 }
 
 export type IntegrationState = 'NOT_CONFIGURED' | 'CONFIGURED' | 'CONNECTING' | 'HEALTHY' | 'DEGRADED' | 'DOWN' | 'AUTH_REQUIRED' | 'ERROR';
-export interface IntegrationStatus { configured: boolean; state: IntegrationState; authenticated: boolean; connected: boolean; account_id: string | null; bot_id: string | null; last_probe_at: number | null; }
+export interface IntegrationStatus { recovery?: { state: IntegrationState; attempts: number; failure: string | null; retry_in_seconds: number | null }; configured: boolean; state: IntegrationState; authenticated: boolean; connected: boolean; account_id: string | null; bot_id: string | null; last_probe_at: number | null; }
 export interface StatusSnapshot {
   service: string;
   version: string;

@@ -15,3 +15,8 @@ See [publication configuration](PUBLICATION_CONFIG.md),
 [runbook](PUBLICATION_RUNBOOK.md), [duck provenance](DUCK_ASSETS.md), and
 [security policy](../../SECURITY.md). Publish only after the owner's explicit
 “А ТЕПЕРЬ ВЫКЛАДЫВАЕМ” instruction.
+
+2026-10-10: public candidate refreshed with the changes from private development
+commits 97176e4, b933d1e and cca08135. Previous fbb3079 artifacts predate these
+fixes and must not be published. New validation is recorded outside the source
+repository; no historical validation is claimed for this updated candidate.

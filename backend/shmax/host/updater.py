@@ -314,6 +314,22 @@ class HostUpdater:
     async def apply(self) -> UpdateResult:
         meta = await self._resolve_release()
         archive = await self._download_and_verify(meta)
+        if self._runner is _default_runner and self._readiness is _default_readiness:
+            # Production remote apply shares the verified local transaction.
+            # Injectable legacy boundaries remain available for old flat fixtures.
+            import tempfile
+            from .local_update import LocalReleaseUpdater, LocalUpdateError
+            with tempfile.TemporaryDirectory(prefix="shmax-release-") as tmp:
+                package = Path(tmp) / "release.tar.gz"
+                package.write_bytes(archive)
+                try:
+                    report = await asyncio.to_thread(LocalReleaseUpdater(
+                        opt=self._opt, data=self._data
+                    ).apply, package)
+                except LocalUpdateError as exc:
+                    raise UpdateError(str(exc)) from None
+            return UpdateResult(version=str(meta.get("version", "")), backup_path=str(report / "data.tar"),
+                                stages=["verifying", "backup", "installing", "checking", "completed"])
         backup_path = await self._safety_backup()
 
         import tempfile

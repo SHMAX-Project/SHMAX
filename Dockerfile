@@ -18,9 +18,10 @@ ARG PY_VERSION=3.12
 ARG NODE_VERSION=22
 ARG SHMAX_VERSION=0.1.0
 ARG SHMAX_UID=8787
+ARG SHMAX_GID=8787
 
 # --- Frontend build ---------------------------------------------
-FROM node:${NODE_VERSION}-bookworm-slim AS frontend-builder
+FROM --platform=$BUILDPLATFORM node:${NODE_VERSION}-bookworm-slim AS frontend-builder
 WORKDIR /build/frontend
 COPY frontend/package.json frontend/package-lock.json* ./
 RUN npm install --no-audit --no-fund --prefer-offline
@@ -87,7 +88,7 @@ RUN pip install --prefix=/install --no-cache-dir --no-deps .
 # linux-64 (amd64) AND linux-arm32-v7a (ODROID-XU4) are covered via
 # TARGETARCH mapping.
 # ----------------------------------------------------------------------
-FROM debian:bookworm-slim AS xray-downloader
+FROM --platform=$BUILDPLATFORM debian:bookworm-slim AS xray-downloader
 ARG TARGETARCH=amd64
 ENV XRAY_VERSION=v25.3.6
 # Verified SHA256 of the release zips (computed from the official
@@ -114,6 +115,7 @@ FROM python:${PY_VERSION}-slim AS runtime
 
 ARG SHMAX_VERSION
 ARG SHMAX_UID
+ARG SHMAX_GID
 ENV SHMAX_VERSION=${SHMAX_VERSION} \
     SHMAX_HOST=0.0.0.0 \
     SHMAX_PORT=8787 \
@@ -122,7 +124,7 @@ ENV SHMAX_VERSION=${SHMAX_VERSION} \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
-RUN groupadd --system --gid ${SHMAX_UID} shmax \
+RUN groupadd --system --gid ${SHMAX_GID} shmax \
     && useradd --system --uid ${SHMAX_UID} --gid shmax --no-create-home --shell /usr/sbin/nologin shmax
 
 # Runtime libraries that the compiled Pillow wheel (and other
@@ -183,6 +185,10 @@ RUN mkdir -p /run/shmax/xray && chown shmax:shmax /run/shmax/xray
 
 # Persistent mount point. compose.yaml bind-mounts /var/lib/shmax.
 RUN mkdir -p /data && chown -R shmax:shmax /data
+# Release extraction may use umask 077. COPY preserves nested source modes;
+# normalize application code before dropping privileges (never persistent data).
+RUN find /app -type d -exec chmod 0755 {} + \
+    && find /app -type f -exec chmod 0644 {} +
 USER shmax
 
 EXPOSE 8787

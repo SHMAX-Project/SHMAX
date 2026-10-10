@@ -911,12 +911,12 @@ export function StepTelegramNetwork(props: { onNext: () => void; onPrev: () => v
         setStatus('Cached node active');
         setNetworkOk(true);
       } else {
-        setStatus('Xray не запущен');
+        setStatus(r.xray?.state === 'running' ? 'Прокси запущен; Telegram недоступен' : 'Прокси не готов');
         setError(r.detail || 'Прокси недоступен');
       }
     } catch (e: any) {
-      setStatus('Xray не запущен');
-      setError(humanError(e, 'xray failed'));
+      setStatus('Не удалось проверить подключение через Xray');
+      setError(humanError(e, 'Проверка Xray/Telegram не завершена'));
     } finally {
       setBusy(false);
     }

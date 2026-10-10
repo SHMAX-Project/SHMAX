@@ -5,6 +5,14 @@ Format: Keep a Changelog; versioning: SemVer.
 
 ## 0.1.0 — prepared locally; not published
 
+### Fixed
+- Production packaging: explicit directory modes and non-root code normalization prevent import failure after private-umask extraction. Local release update adds verified cold backup, integration acceptance, protected diagnostics before rollback and exact-image rollback.
+- Telegram automatically recovers saved transport after delayed SOCKS/Xray startup,
+  transient getMe failure and polling termination, with serialized single-consumer
+  replacement, bounded cancellable backoff and sanitized permanent-error cooldown.
+- Explicit Telegram proxy modes never fall back to direct; AUTO skips unconfigured
+  proxies. Xray liveness and Telegram reachability are reported separately.
+
 ### Release preparation
 - Release metadata 0.1.0; real demo screenshots; source/production archives,
   immutable-source packaging and read-only verification workflows.

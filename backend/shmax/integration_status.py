@@ -70,6 +70,17 @@ async def snapshot(runtime):
     phone = (max_account.phone if max_account else None) or getattr(max_cfg, "phone", None) or secret("max_phone", "SHMAX_MAX_PHONE")
     max_configured = bool(max_account and (phone or any(p.is_file() and p.stat().st_size for p in session_paths)))
     tg_cfg = getattr(runtime.telegram_adapter, "_config", None)
+    recovery = getattr(runtime, "telegram_recovery", None)
+    saved_transport = None
+    if recovery is not None:
+        from .startup_restore import load_telegram_transport, _build_transport_config
+        saved_transport = await load_telegram_transport(runtime.db, runtime.secrets)
+        if tg_cfg is None and saved_transport is not None:
+            try:
+                token_for_config = secret("telegram_bot_token", "SHMAX_TG_BOT_TOKEN")
+                tg_cfg = _build_transport_config(saved_transport, token_for_config, "")
+            except (ValueError, TypeError):
+                pass
     token = getattr(tg_cfg, "bot_token", None) or secret("telegram_bot_token", "SHMAX_TG_BOT_TOKEN")
     mode = getattr(tg_cfg, "mode", None) or os.environ.get("SHMAX_TG_TRANSPORT", "auto")
     mode = getattr(mode, "value", mode)
@@ -87,6 +98,9 @@ async def snapshot(runtime):
     for name, configured, adapter, watchdog in (("max", max_configured, runtime.max_adapter, runtime.max_watchdog), ("telegram", tg_configured, runtime.telegram_adapter, runtime.tg_watchdog)):
         probe = runtime._integration_probes.get(name)
         state = evidence_state(configured, adapter, probe, watchdog.snapshot, now, runtime_mode)
+        if name == "telegram" and recovery is not None and configured:
+            if recovery.status["state"] not in {"HEALTHY", "NOT_CONFIGURED"}:
+                state = recovery.status["state"]
         health = probe.get("health", {}) if probe and probe.get("adapter") is adapter else {}
         result[name] = {"configured": configured, "state": state, "status": state.lower(),
                         "authenticated": bool(health.get("authenticated") and _counts_as_live(adapter, runtime_mode)),
@@ -94,6 +108,8 @@ async def snapshot(runtime):
                         "account_id": health.get("account_id") if name == "max" else None,
                         "bot_id": health.get("bot_id") if name == "telegram" else None,
                         "last_probe_at": probe.get("wall_at") if probe else None}
+    if recovery is not None:
+        result["telegram"]["recovery"] = dict(recovery.status)
     workers = bool(runtime.started and runtime._worker_tasks and all(not task.done() for task in runtime._worker_tasks))
     states = [result[name]["state"] for name in ("max", "telegram")]
     bridge = "NOT_CONFIGURED" if "NOT_CONFIGURED" in states else ("HEALTHY" if states == ["HEALTHY", "HEALTHY"] and workers else "DEGRADED")

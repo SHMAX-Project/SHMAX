@@ -389,6 +389,10 @@ class AppRuntime:
         self._worker_tasks: list[asyncio.Task[None]] = []
         self._outbox_task: Optional[asyncio.Task[None]] = None
         self._shutdown = asyncio.Event()
+        self._telegram_lifecycle_lock = asyncio.Lock()
+        self.telegram_recovery = None
+        self._telegram_failure = None
+        self._telegram_probe_task = None
         # Wakeup channel: callers (bridge.enqueue, runtime.stop)
         # call ``wakeup()`` to nudge the worker immediately
         # instead of waiting for the poll loop.
@@ -527,7 +531,19 @@ class AppRuntime:
             password_future=self.max_password_future,
         )
 
-    async def install_telegram(
+    async def install_telegram(self, manager, adapter, *, on_command=None, expected_adapter=None):
+        """All startup, API and recovery replacements share the same ownership gate."""
+        async with self._telegram_lifecycle_lock:
+            if self._shutdown.is_set() or (expected_adapter is not None and self._tg is not expected_adapter):
+                await asyncio.wait_for(adapter.disconnect(), timeout=5)
+                return False
+            await self._install_telegram_locked(manager, adapter, on_command=on_command)
+            self._telegram_failure = None
+            if self.telegram_recovery is not None:
+                self.telegram_recovery.trigger()
+            return True
+
+    async def _install_telegram_locked(
         self,
         manager: TelegramTransportManager,
         adapter: TelegramAdapter,
@@ -571,15 +587,13 @@ class AppRuntime:
             if sup is not None and sup._task is not None and not sup._task.done():  # type: ignore[attr-defined]
                 await sup.stop()
         except Exception:  # noqa: BLE001
-            logger.exception("AppRuntime: stopping previous Telegram listener failed")
+            raise RuntimeError("previous Telegram listener did not stop") from None
         previous_adapter = self._tg
         if previous_adapter is not None and previous_adapter is not adapter:
             try:
-                await previous_adapter.disconnect()
+                await asyncio.wait_for(previous_adapter.disconnect(), timeout=5)
             except Exception:  # noqa: BLE001
-                logger.exception(
-                    "AppRuntime: disconnecting previous Telegram adapter failed"
-                )
+                raise RuntimeError("previous Telegram adapter did not disconnect") from None
         self._tg_manager = manager
         self._tg = adapter
         if on_command is not None:
@@ -619,7 +633,11 @@ class AppRuntime:
             # the wizard's Finish gate see the real state without
             # waiting for the next watchdog tick.
             loop = asyncio.get_running_loop()
-            loop.create_task(self.probe_integration("telegram"))
+            previous_probe = getattr(self, "_telegram_probe_task", None)
+            if previous_probe is not None:
+                previous_probe.cancel()
+                await asyncio.gather(previous_probe, return_exceptions=True)
+            self._telegram_probe_task = loop.create_task(self.probe_integration("telegram"))
 
     @property
     def max_adapter(self) -> MaxAdapter:
@@ -902,7 +920,14 @@ class AppRuntime:
     async def stop(self) -> None:
         logger.info("AppRuntime stopping")
         self._shutdown.set()
+        if self.telegram_recovery is not None:
+            await self.telegram_recovery.close()
 
+        probe = getattr(self, "_telegram_probe_task", None)
+        if probe is not None:
+            probe.cancel()
+            await asyncio.gather(probe, return_exceptions=True)
+            self._telegram_probe_task = None
         for sup in list(self._supervisors.values()):
             await sup.stop()
 
@@ -1450,19 +1475,30 @@ class AppRuntime:
                 type(self._tg).__name__,
             )
             return
+        adapter = self._tg
         try:
-            await self._tg.connect()
-        except Exception:  # noqa: BLE001
-            logger.exception("telegram.connect failed")
+            await asyncio.wait_for(adapter.connect(), timeout=20)
+            async for event in adapter.listen_events():
+                if self._shutdown.is_set():
+                    break
+                try:
+                    normalized = _telegram_event_to_normalized(event)
+                    await self._on_inbound("telegram", normalized)
+                except Exception:
+                    logger.warning("Telegram inbound handler failed")
+            if not self._shutdown.is_set():
+                raise RuntimeError("Telegram event stream ended")
+        except asyncio.CancelledError:
             raise
-        async for event in self._tg.listen_events():
-            if self._shutdown.is_set():
-                break
-            try:
-                normalized = _telegram_event_to_normalized(event)
-                await self._on_inbound("telegram", normalized)
-            except Exception:  # noqa: BLE001
-                logger.exception("telegram inbound handler failed")
+        except Exception as exc:
+            from .telegram_recovery import failure_kind
+            self._telegram_failure = failure_kind(exc)
+            logger.warning("telegram listener failed category=%s", self._telegram_failure[1])
+            # Recovery owns retry timing and permanent-error cooldown. Retire this
+            # supervisor; it is explicitly re-armed after a successful restore.
+            return
+        finally:
+            await asyncio.wait_for(adapter.disconnect(), timeout=5)
 
     # ------------------------------------------------------------------
     # P0 #11 — real-pipeline media fetching

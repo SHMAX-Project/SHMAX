@@ -1232,6 +1232,7 @@ def create_app(
         # APP-OWNED Xray manager (surgical review): created once on
         # app.state; startup bootstrap, API and shutdown share it.
         app.state.xray_manager = xstate.build_manager()
+        runtime.xray_manager_ref = app.state.xray_manager
 
         restore_handler = _build_telegram_command_handler(
             member_sync=member_sync,
@@ -1274,9 +1275,21 @@ def create_app(
             logger.exception("auto update check task failed to start")
             _update_service_task = None
 
+        deployment_task = None
+        deployment_id = os.environ.get("SHMAX_DEPLOYMENT_ID")
+        if not deployment_id and (layout.state / "update-deployment-id").is_file():
+            deployment_id = (layout.state / "update-deployment-id").read_text().strip()
+        if deployment_id:
+            from ..deployment_readiness import publish_readiness
+            deployment_task = asyncio.create_task(publish_readiness(
+                runtime, layout.state / "deployment-readiness.json", deployment_id
+            ), name="shmax.deployment-readiness")
         try:
             yield
         finally:
+            if deployment_task is not None:
+                deployment_task.cancel()
+                await asyncio.gather(deployment_task, return_exceptions=True)
             await member_sync.close()
             if _update_service_task is not None:
                 _update_service_task.cancel()
@@ -3040,11 +3053,16 @@ def create_app(
 
         manager = xstate.get_manager(app.state)
         status = await manager.health()
+        runtime = getattr(app.state, "runtime", None)
         nodes = await xstate.load_nodes_sanitized(db)
         selection = xstate.load_selected(secret_store)
         disappeared = xstate.selected_node_disappeared(secret_store)
         return {
             **status.to_dict(),
+            "executable_installed": os.path.isfile(manager.binary_path) and os.access(manager.binary_path, os.X_OK),
+            "process_running": manager.is_running,
+            "socks_listening": status.state == "running",
+            "telegram_reachable": _xray_telegram_reachable(runtime, manager),
             "nodes": nodes,
             "selected_node_id": selection[0] if selection else None,
             "subscription_loaded": xstate.load_subscription(secret_store) is not None,
@@ -4038,3 +4056,20 @@ class _LazyApp:
 
 
 app = _LazyApp()  # type: ignore[assignment]
+
+
+def _xray_telegram_reachable(runtime, manager):
+    if runtime is None:
+        return None
+    cfg = getattr(runtime.telegram_adapter, "_config", None)
+    proxy = getattr(cfg, "proxy", None)
+    if proxy is None or proxy.host not in ("127.0.0.1", "localhost", "::1") or proxy.port != manager.socks_port:
+        return None
+    probe = runtime._integration_probes.get("telegram")
+    if not probe or probe.get("adapter") is not runtime.telegram_adapter:
+        return None
+    import time
+    if time.monotonic() - probe["at"] > 120:
+        return None
+    health = probe.get("health", {})
+    return bool(health.get("connected") and health.get("authenticated"))

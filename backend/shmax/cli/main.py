@@ -170,6 +170,14 @@ async def _cmd_restore(args: argparse.Namespace) -> int:
 
 
 async def _cmd_update(args: argparse.Namespace) -> int:
+    if args.action not in {"check", "apply"}:
+        from ..host.local_update import LocalReleaseUpdater, LocalUpdateError
+        try:
+            await asyncio.to_thread(LocalReleaseUpdater(data=_default_data_dir()).apply, Path(args.action))
+        except LocalUpdateError as exc:
+            print(str(exc), file=sys.stderr)
+            return 1
+        return 0
     if args.action == "check":
         from ..update.service import UpdateService
 
@@ -339,7 +347,7 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("setup-link", help="print the local setup URL").set_defaults(func=None)
 
     p = sub.add_parser("update", help="update operations")
-    p.add_argument("action", choices=["check", "apply"])
+    p.add_argument("action", help="check, apply, or local production release.tar.gz")
     p.add_argument("--channel", choices=["stable", "beta"], default="stable")
     p.set_defaults(func=None)
 

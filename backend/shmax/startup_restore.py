@@ -169,10 +169,7 @@ async def load_telegram_transport(
 
 
 def _build_transport_config(facts: dict[str, Any], bot_token: str, session_dir: str) -> TransportConfig:
-    try:
-        mode = TransportMode(facts.get("mode", "auto"))
-    except ValueError:
-        mode = TransportMode.AUTO
+    mode = TransportMode(facts.get("mode", "auto"))
     proxy: Optional[ProxyConfig] = None
     if isinstance(facts.get("proxy"), dict):
         p = facts["proxy"]
@@ -254,19 +251,43 @@ async def restore_telegram(
         # AUTO candidates are probed with a timeout and the first
         # working one wins; explicit modes are verified too.
         override = None if cfg.mode == TransportMode.AUTO else cfg.mode
+        from .telegram_recovery import proxy_accepting
+        previous = runtime.telegram_adapter
+        if override is not None:
+            manager._build_for_mode(override)  # Validate before TCP readiness; invalid config is permanent.
+        if cfg.proxy is not None and cfg.mode in (TransportMode.BOT_API_SOCKS5, TransportMode.BOT_API_HTTP, TransportMode.MTPROTO_SOCKS):
+            await proxy_accepting(cfg.proxy)
         adapter = await manager.select_probed(override_mode=override)
-        await runtime.install_telegram(
-            manager, adapter, on_command=on_command
+        installed = await runtime.install_telegram(
+            manager, adapter, on_command=on_command, expected_adapter=previous
         )
+        if installed is False:
+            return {"restored": False, "state": "DEGRADED", "detail": "configuration_changed"}
+        if adapter.is_real():
+            async def listener_ready():
+                while True:
+                    failure = runtime._telegram_failure
+                    if failure:
+                        return False
+                    health = await asyncio.wait_for(adapter.health(), timeout=5)
+                    if health.get("connected") and health.get("authenticated") and health.get("polling") is not False:
+                        return True
+                    await asyncio.sleep(0.05)
+            ready = await asyncio.wait_for(listener_ready(), timeout=15)
+            if not ready:
+                permanent, category = runtime._telegram_failure or (False, "listener_not_ready")
+                return {"restored": False, "state": "AUTH_REQUIRED" if permanent else "DEGRADED", "detail": category}
         result["restored"] = True
         result["state"] = "HEALTHY"
         result["detail"] = cfg.mode.value
         return result
     except Exception as e:  # noqa: BLE001
-        logger.exception("telegram startup restore failed")
+        from .telegram_recovery import failure_kind
+        permanent, category = failure_kind(e)
+        logger.warning("telegram startup restore failed category=%s permanent=%s", category, permanent)
         result["restored"] = False
-        result["state"] = "ERROR"
-        result["detail"] = f"{type(e).__name__}: {e}"[:300]
+        result["state"] = "AUTH_REQUIRED" if permanent else "DEGRADED"
+        result["detail"] = category
         return result
 
 
@@ -505,6 +526,35 @@ async def restore_integrations(
         auto_state_path=auto_state_path,
     )
     mx = await restore_max(runtime)
+    from .telegram_recovery import TelegramRecovery
+    proxy_failures = 0
+    async def prepare_proxy():
+        nonlocal proxy_failures
+        if xray_manager is None or not secret_store.has_secret("xray_managed"):
+            return
+        if not xray_manager.is_running:
+            proxy_failures = 0
+            await bootstrap_xray(secret_store, xray_manager=xray_manager)
+            return
+        health = await xray_manager.health()
+        if health.state == "running":
+            proxy_failures = 0
+            return  # Never restart a listening proxy because Telegram getMe failed.
+        proxy_failures += 1
+        if proxy_failures >= 3:
+            from .xray.state import selected_node_config
+            config = selected_node_config(secret_store, local_socks_port=xray_manager.socks_port)
+            if config is not None:
+                await xray_manager.restart(config)
+            proxy_failures = 0
+    async def retry_telegram():
+        return await restore_telegram(
+            runtime, db=db, secret_store=secret_store, session_dir=session_dir,
+            on_command=on_command, auto_state_path=auto_state_path,
+        )
+    if runtime.telegram_recovery is None:
+        runtime.telegram_recovery = TelegramRecovery(runtime, restore=retry_telegram, prepare=prepare_proxy)
+    runtime.telegram_recovery.start()
     return {
         "telegram": tg,
         "max": mx,

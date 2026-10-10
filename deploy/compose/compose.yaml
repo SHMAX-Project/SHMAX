@@ -24,6 +24,7 @@ services:
       - "${SHMAX_BIND_ADDR:-127.0.0.1}:${SHMAX_PORT:-8787}:8787"
     environment:
       SHMAX_HOSTD_SOCKET: /run/shmax/hostd/hostd.sock
+      SHMAX_DEPLOYMENT_ID: "${SHMAX_DEPLOYMENT_ID:-}"
       SHMAX_DATA_DIR: /data
       SHMAX_HOST: 0.0.0.0
       SHMAX_PORT: "8787"

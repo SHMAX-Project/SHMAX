@@ -109,6 +109,7 @@ class TelegramBotApiAdapter(TelegramAdapter):
         # one polling loop per adapter instance.
         self._polling_task: Optional[asyncio.Task[None]] = None
         self._stop_polling = asyncio.Event()
+        self._connect_lock = asyncio.Lock()
 
     def _make_bot(self) -> Any:
         if self._bot_factory is not None:
@@ -316,6 +317,14 @@ class TelegramBotApiAdapter(TelegramAdapter):
         )
 
     async def connect(self) -> None:
+        async with self._connect_lock:
+            try:
+                await self._connect_owned()
+            except BaseException:
+                await asyncio.wait_for(self.disconnect(), timeout=5)
+                raise
+
+    async def _connect_owned(self) -> None:
         if self._started:
             return
         self._bot = self._make_bot()
@@ -459,12 +468,11 @@ class TelegramBotApiAdapter(TelegramAdapter):
             # cleanly when ``stop_polling()`` is called.
             raise
         except Exception:
-            logger.exception("Bot API polling crashed")
+            logger.warning("Bot API polling crashed; session will be recovered")
             raise
 
     async def disconnect(self) -> None:
-        if not self._started:
-            return
+        # Also close a session created by a failed/cancelled getMe before _started.
         # Stop the polling loop first; ``dispatcher.stop_polling()``
         # cancels the in-flight long-poll so the
         # ``start_polling()`` coroutine inside ``_polling_task``
@@ -475,9 +483,9 @@ class TelegramBotApiAdapter(TelegramAdapter):
                 stop_polling = getattr(self._dispatcher, "stop_polling", None)
                 if callable(stop_polling):
                     try:
-                        await stop_polling()
+                        await asyncio.wait_for(stop_polling(), timeout=3.0)
                     except Exception:
-                        logger.exception("dispatcher.stop_polling() failed")
+                        logger.warning("dispatcher stop did not complete")
         finally:
             self._stop_polling.set()
             if self._polling_task is not None:
@@ -494,9 +502,9 @@ class TelegramBotApiAdapter(TelegramAdapter):
                 if session is not None:
                     close = getattr(session, "close", None)
                     if callable(close):
-                        await close()
+                        await asyncio.wait_for(close(), timeout=3)
         except Exception:  # pragma: no cover - best-effort
-            logger.exception("error closing aiogram session")
+            logger.warning("aiogram session close failed")
         self._bot = None
         self._dispatcher = None
         self._started = False
@@ -518,8 +526,22 @@ class TelegramBotApiAdapter(TelegramAdapter):
         if not self._started:
             raise RuntimeError("listen_events called before connect()")
         while True:
-            ev = await self._events.get()
-            yield ev
+            get_event = asyncio.create_task(self._events.get())
+            try:
+                done, _ = await asyncio.wait(
+                    {get_event, self._polling_task}, return_when=asyncio.FIRST_COMPLETED
+                )
+                if self._polling_task in done:
+                    if not self._polling_task.cancelled():
+                        exc = self._polling_task.exception()
+                        if exc is not None:
+                            raise exc
+                    raise RuntimeError("Telegram polling consumer stopped")
+                yield get_event.result()
+            finally:
+                if not get_event.done():
+                    get_event.cancel()
+                await asyncio.gather(get_event, return_exceptions=True)
 
     async def create_topic(self, chat_id: str, title: str) -> str:
         if not self._started or self._bot is None:
@@ -650,9 +672,9 @@ class TelegramBotApiAdapter(TelegramAdapter):
                 if session is not None:
                     close = getattr(session, "close", None)
                     if callable(close):
-                        await close()
+                        await asyncio.wait_for(close(), timeout=3)
             except Exception:  # noqa: BLE001
-                logger.exception("probe: closing throwaway session failed")
+                logger.warning("probe session close failed")
 
     def is_real(self) -> bool:
         # The Bot API adapter IS the real Telegram transport. The
@@ -690,7 +712,7 @@ class TelegramBotApiAdapter(TelegramAdapter):
             else:
                 exc = self._polling_task.exception()
                 if exc is not None:
-                    polling_error = f"{type(exc).__name__}: {exc}"[:200]
+                    polling_error = type(exc).__name__
                 else:
                     polling_error = "polling task finished"
         try:

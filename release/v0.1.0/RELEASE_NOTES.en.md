@@ -4,6 +4,9 @@ SHMAX is an independent self-hosted MAX ↔ Telegram gateway, not an official
 product of either platform. One ordinary MAX account connects to your Telegram
 bot and private forum supergroup; each selected MAX chat maps to one forum topic.
 
+- Automatic recovery of saved Telegram transport with a single polling consumer.
+- Verified local production-archive updates with backup, health checks and rollback.
+- Docker application and metadata permission normalization for non-root startup after extraction with umask 077.
 - Bidirectional messages, reply mapping, user approval, roles and operator signatures.
   Telegram administrators do not automatically receive SHMAX administrative access.
 - Optional member synchronization using the existing bot and Telegram API ID/Hash;
