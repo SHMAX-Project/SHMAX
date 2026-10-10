@@ -1,5 +1,15 @@
 # SHMAX
 
+[![Version](https://img.shields.io/badge/version-0.1.0-2563eb)](backend/shmax/VERSION)
+[![CI](https://github.com/SHMAX-Project/SHMAX/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/SHMAX-Project/SHMAX/actions/workflows/ci.yml)
+[![License: AGPL v3+](https://img.shields.io/badge/license-AGPL--3.0--or--later-059669)](LICENSE)
+[![MAX ↔ Telegram](https://img.shields.io/badge/MAX-%E2%86%94%20Telegram-229ED9?logo=telegram&logoColor=white)](docs/en/architecture.md)
+
+[![Debian 13](https://img.shields.io/badge/Debian-13-A81D33?logo=debian&logoColor=white)](docs/en/installation.md)
+[![Docker](https://img.shields.io/badge/deploy-Docker-2496ED?logo=docker&logoColor=white)](Dockerfile)
+[![Build targets: amd64, arm64, arm/v7](https://img.shields.io/badge/build_targets-amd64%20%7C%20arm64%20%7C%20arm%2Fv7-7C3AED)](Dockerfile)
+[![Self-hosted](https://img.shields.io/badge/hosting-self--hosted-475569)](docs/en/architecture.md)
+
 **A self-hosted gateway between MAX and Telegram**
 
 SHMAX connects conversations in MAX and Telegram. Messages from selected MAX
@@ -8,9 +18,16 @@ return to the corresponding MAX chats. The gateway runs on your server and
 provides a web interface for connections, routing and user access.
 
 [Русский](README.md) · [Documentation](docs/en/README.md) ·
-[Releases](https://github.com/SHMAX-Project/SHMAX/releases) · [Security](SECURITY.md)
+[Installation](docs/en/installation.md) · [Releases](https://github.com/SHMAX-Project/SHMAX/releases) ·
+[Report an issue](https://github.com/SHMAX-Project/SHMAX/issues) · [Security](SECURITY.md)
 
 ![SHMAX dashboard](docs/assets/screenshots/dashboard-desktop.png)
+
+## Use cases
+
+- **One team workspace.** Reply to MAX conversations from Telegram topics while keeping chats separate.
+- **Multiple operators.** Approve participants, assign roles and control who can send messages.
+- **Your own infrastructure.** Manage the SHMAX server, connections, stored data and backups yourself.
 
 ## Features
 

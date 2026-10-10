@@ -1,5 +1,15 @@
 # SHMAX
 
+[![Version](https://img.shields.io/badge/version-0.1.0-2563eb)](backend/shmax/VERSION)
+[![CI](https://github.com/SHMAX-Project/SHMAX/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/SHMAX-Project/SHMAX/actions/workflows/ci.yml)
+[![License: AGPL v3+](https://img.shields.io/badge/license-AGPL--3.0--or--later-059669)](LICENSE)
+[![MAX ↔ Telegram](https://img.shields.io/badge/MAX-%E2%86%94%20Telegram-229ED9?logo=telegram&logoColor=white)](docs/ru/architecture.md)
+
+[![Debian 13](https://img.shields.io/badge/Debian-13-A81D33?logo=debian&logoColor=white)](docs/ru/installation.md)
+[![Docker](https://img.shields.io/badge/deploy-Docker-2496ED?logo=docker&logoColor=white)](Dockerfile)
+[![Build targets: amd64, arm64, arm/v7](https://img.shields.io/badge/build_targets-amd64%20%7C%20arm64%20%7C%20arm%2Fv7-7C3AED)](Dockerfile)
+[![Self-hosted](https://img.shields.io/badge/hosting-self--hosted-475569)](docs/ru/architecture.md)
+
 **Шлюз между MAX и Telegram для собственного сервера**
 
 SHMAX объединяет переписку в MAX и Telegram. Сообщения из выбранных чатов MAX
@@ -8,9 +18,16 @@ SHMAX объединяет переписку в MAX и Telegram. Сообщен
 веб-интерфейс для настройки подключений, маршрутов и доступа пользователей.
 
 [English](README.en.md) · [Документация](docs/ru/README.md) ·
-[Выпуски](https://github.com/SHMAX-Project/SHMAX/releases) · [Безопасность](SECURITY.md)
+[Установка](docs/ru/installation.md) · [Выпуски](https://github.com/SHMAX-Project/SHMAX/releases) ·
+[Сообщить о проблеме](https://github.com/SHMAX-Project/SHMAX/issues) · [Безопасность](SECURITY.md)
 
 ![Панель управления SHMAX](docs/assets/screenshots/dashboard-desktop.png)
+
+## Для каких задач
+
+- **Единое рабочее пространство.** Команда отвечает на переписку MAX из тем Telegram, сохраняя разделение по чатам.
+- **Доступ для нескольких операторов.** Администратор одобряет участников, назначает роли и контролирует право отправки сообщений.
+- **Размещение на своей инфраструктуре.** Организация управляет сервером, подключениями, данными и резервными копиями SHMAX.
 
 ## Возможности
 
