@@ -1,76 +1,96 @@
-# Installation modes
+# Install SHMAX
 
-`deploy/installer/install.sh`; add `--dry-run` to preview.
+The one-line bootstrap supports Debian 13 amd64 with systemd and root/sudo.
+Both installation methods use the same application and persistent `/var/lib/shmax` data.
+Network access to GitHub, Debian/Docker repositories and build dependencies is required.
 
-| Mode | Behavior | Setup token |
-|---|---|---|
-| install | full install: user, dirs, Docker, container, boot unit | only if setup is incomplete |
-| repair | re-apply layout, data preserved | never |
-| upgrade | refresh deployment artifacts, data preserved | never |
-| uninstall | remove app, keep data (see `--purge`) | — |
-
-After a successful upgrade the installer does NOT require a setup
-token and does not fail (live bug A10 fixed).
-
-Paths: `/opt/shmax` deployment; `/var/lib/shmax` persistent data.
-Debian 13 + systemd; the `shmax-boot.service` unit is installed
-automatically.
-
-## Hostd and systemd after a clean install
-
-Run `sudo bash deploy/installer/install.sh --mode install` from the complete
-extracted SHMAX archive. A standalone install.sh download is insufficient: the
-installer needs backend, Dockerfile, compose, boot and systemd files.
-
-The installer creates a separate root-owned `/opt/shmax-hostd` runtime: a Python
->=3.12 venv, copied Python package and only hostd/CLI/backup/update dependencies.
-No host Node or developer checkout is required. This runtime survives replacement
-of `/opt/shmax`; repair/upgrade refresh it idempotently.
-
-`shmax-hostd.service` creates `/run/shmax/hostd.sock` itself; no socket unit is needed.
-The directory is root:shmax 0750 and socket root:shmax 0660. The service preserves
-the directory on restart, removes/recreates the socket and refuses to replace a
-regular file. The container mounts the directory read-only at `/run/shmax/hostd`
-and connects to `/run/shmax/hostd/hostd.sock`; it receives no Docker socket.
-
-Boot is installed unchanged: `ExecStart=/opt/shmax/boot/shmax-boot.sh`. Both units
-must pass `systemd-analyze verify` before enable/start; unit verification, hostd
-startup, missing socket or incorrect permissions fail installation. A socket
-connect is also checked under the container UID/GID (default 8787:8787).
-
-Uninstall disables/removes both units, hostd runtime and runtime directory,
-preserving `/var/lib/shmax`. Only explicitly confirmed `--purge` removes user data.
-
-## v0.1.0 archive installation
-
-Download the production archive, SHA256SUMS and build-info.json from
-[SHMAX Releases](https://github.com/SHMAX-Project/SHMAX/releases):
+## One-line installation
 
 ```bash
+curl -fsSL https://raw.githubusercontent.com/SHMAX-Project/SHMAX/main/install.sh | sudo bash
+```
+
+The bootstrap downloads the latest published stable release from the official
+repository, verifies its RSA-3072/SHA-256 signature using the embedded public key,
+checks archive and file integrity, then runs the full installer. Missing Docker
+Engine, Compose v2 and dependencies are installed from official APT repositories.
+The installer does not reconfigure SSH or disable the firewall.
+
+Drafts and prereleases are rejected. Until the first stable release is published,
+the command reports that no stable release exists and does not install SHMAX.
+
+After successful health checks, open the printed web address and setup link in your
+browser. Re-running on an existing installation offers a safe update and preserves
+settings, keys and sessions. Confirmation is read from the terminal; unattended
+updates do not start automatically. Partial deployments require repair, not a fresh install.
+
+## Manual archive installation
+
+Manual installation remains supported. Download from
+[SHMAX Releases](https://github.com/SHMAX-Project/SHMAX/releases):
+
+- `shmax-v0.1.0.tar.gz`, the full production package;
+- `SHA256SUMS` and `SHA256SUMS.sig`;
+- the official repository's `deploy/bootstrap/release-public.pem` verification key.
+
+Check the public key fingerprint against the official release documentation, then:
+
+```bash
+openssl dgst -sha256 -verify release-public.pem -signature SHA256SUMS.sig SHA256SUMS
 sha256sum -c SHA256SUMS --ignore-missing
 tar -xzf shmax-v0.1.0.tar.gz
 cd shmax-v0.1.0
-# Inspect deploy/installer/install.sh first.
+# Inspect the full installer before execution.
 sudo bash deploy/installer/install.sh --mode install
 ```
 
-The source archive includes Dockerfile/frontend sources/lock; the production
-archive also includes built frontend/dist. Docker still fetches dependencies,
-base images and Xray: an archive is not a fully offline installation.
-Debian 13 amd64, root/sudo, Docker/Compose v2 and systemd are required; missing
-host tools are installed by the installer.
+Stop if either verification fails. Use the production archive; the source archive
+omits built `frontend/dist`. Docker still downloads base images, dependencies and
+Xray, so a manually transferred archive does not make installation fully offline.
+
+## Updates
+
+Latest signed stable release:
 
 ```bash
-sudo bash deploy/installer/install.sh --mode repair
-sudo bash deploy/installer/install.sh --mode upgrade
-sudo bash deploy/installer/install.sh --mode uninstall
+sudo shmax update
 ```
 
-All three preserve `/var/lib/shmax`. `--purge` deletes data and requires a separate
-explicit decision; do not use it for ordinary app removal. Create a
-[backup](backups.md) before upgrade/removal; [fresh-owner restore](restore.md) uses
-portable encrypted exports rather than ordinary local copies.
+A manually downloaded and verified production archive:
 
-Do not execute an unknown `curl | sudo bash`. Download the full archive, verify
-its hash through a trusted channel and inspect the script. A hash from the same
-compromised site alone does not establish authenticity. No live one-line URL exists yet.
+```bash
+sudo shmax update /absolute/path/shmax-v0.1.0.tar.gz
+```
+
+Both use the local transaction: build before downtime, verified cold backup,
+candidate startup and readiness checks, with previous-image and data rollback on
+failure. Protected reports are stored in `/var/backups/shmax`.
+
+## Full installer modes
+
+Run from the complete extracted archive; add `--dry-run` to preview.
+
+| Mode | Behavior |
+|---|---|
+| `--mode install` | Initial application, Docker and service installation |
+| `--mode repair` | Repair deployment while retaining data |
+| `--mode upgrade` | Refresh deployment while retaining data; back up first |
+| `--mode uninstall` | Remove application, retain data |
+
+Prefer `shmax update` for ordinary updates because it includes backup, acceptance
+and rollback. `--purge` deletes user data and requires separate confirmation.
+
+## Paths and services
+
+- `/opt/shmax`: deployment, compose and boot files.
+- `/var/lib/shmax`: persistent database, settings, secrets, sessions and backups.
+- `/opt/shmax-hostd`: separate root-owned Python runtime and CLI.
+- `shmax-hostd.service` and `shmax-boot.service`: verified before startup.
+
+The application runs without root and connects to a restricted hostd socket;
+its container does not receive the Docker socket.
+
+[First setup](first-setup.md) · [Backups](backups.md) ·
+[Restore](restore.md) · [Web interface updates](updates.md).
+
+SHA-256 fingerprint of the published PEM key file: `35cd7ddcf79cc3d66a1698e9be32d5d042815b9dacae08b6a088a9c03adbd4ac`.

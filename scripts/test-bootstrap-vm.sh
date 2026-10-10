@@ -27,21 +27,27 @@ sudo qemu-system-x86_64 -machine q35,accel="$accel" -cpu max -smp 4 -m 4096 \
 ssh_args=(-i "$tmp/vm-key" -p 2222 -o BatchMode=yes -o ConnectTimeout=5 -o StrictHostKeyChecking=accept-new -o "UserKnownHostsFile=$tmp/known_hosts")
 guest() { ssh "${ssh_args[@]}" debian@127.0.0.1 "$@"; }
 for i in $(seq 1 120); do if guest true 2>/dev/null; then break; fi; sleep 5; done
+printf 'Waiting for cloud-init and checking clean Debian host...\n'
 guest 'sudo cloud-init status --wait; test "$(dpkg --print-architecture)" = amd64; . /etc/os-release; test "$ID:$VERSION_ID" = debian:13; ! command -v docker' > "$report/preflight.log" 2>&1
+printf 'Clean Debian 13 amd64 verified; Docker is absent.\n'
 # Transfer only public code and signed assets; no GitHub or signing credentials enter VM.
 tar -C "$candidate" -cf - SHA256SUMS SHA256SUMS.sig release-manifest.json shmax-v0.1.0.tar.gz | guest 'mkdir -p /tmp/candidate; tar -xf - -C /tmp/candidate'
 cat "$root/install.sh" | guest 'cat > /tmp/install.sh'
 # Logs contain a temporary setup token; redact it before publishing test artifacts.
+printf 'Installing signed SHMAX candidate and Docker in the clean VM...\n'
 guest 'sudo bash /tmp/install.sh --release-dir /tmp/candidate > /tmp/install.log 2>&1' || { guest 'sudo cat /tmp/install.log' | sed -E 's/[?]t=[^[:space:]]+/\?t=[REDACTED]/g' > "$report/install.log"; exit 1; }
 guest 'sudo cat /tmp/install.log' | sed -E 's/[?]t=[^[:space:]]+/\?t=[REDACTED]/g' > "$report/install.log"
+printf 'Initial installation completed; checking services and creating persistent data fixtures...\n'
 guest 'sudo docker compose -f /opt/shmax/compose.yaml ps; sudo systemctl is-active shmax-hostd; sudo test -e /opt/shmax/.shmax-installed; sudo shmax version' > "$report/installed.log"
 # Exercise missing stable-release path; it must stop without modifying deployment.
 guest 'sudo shmax update > /tmp/stable-check.log 2>&1; test $? -ne 0; grep -q "No published stable" /tmp/stable-check.log' > "$report/stable-gate.log"
 cat "$root/scripts/test-bootstrap-guest.py" | guest 'cat > /tmp/test-guest.py'
 guest 'sudo python3 /tmp/test-guest.py seed' > "$report/data-seed.log"
+printf 'Running existing-installation safe update...\n'
 guest 'sudo bash /tmp/install.sh --yes --release-dir /tmp/candidate > /tmp/update.log 2>&1' || { guest 'sudo cat /tmp/update.log' | sed -E 's/[?]t=[^[:space:]]+/\?t=[REDACTED]/g' > "$report/update.log"; exit 1; }
 guest 'sudo cat /tmp/update.log' | sed -E 's/[?]t=[^[:space:]]+/\?t=[REDACTED]/g' > "$report/update.log"
 guest 'sudo python3 /tmp/test-guest.py verify' > "$report/preserved-data.log"
+printf 'Update completed; forcing a candidate rejection to verify cold-data rollback...\n'
 cat "$root/scripts/test-bootstrap-rollback.py" | guest 'cat > /tmp/test-rollback.py'
 guest 'sudo /opt/shmax-hostd/.venv/bin/python /tmp/test-rollback.py' > "$report/rollback.log" 2>&1
 guest 'sudo python3 /tmp/test-guest.py verify' > "$report/rollback-preserved-data.log"
