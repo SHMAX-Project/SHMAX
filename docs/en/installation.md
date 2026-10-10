@@ -16,8 +16,8 @@ checks archive and file integrity, then runs the full installer. Missing Docker
 Engine, Compose v2 and dependencies are installed from official APT repositories.
 The installer does not reconfigure SSH or disable the firewall.
 
-Drafts and prereleases are rejected. Until the first stable release is published,
-the command reports that no stable release exists and does not install SHMAX.
+Stable release [v0.1.0](https://github.com/SHMAX-Project/SHMAX/releases/tag/v0.1.0) is available.
+Drafts and prereleases are rejected.
 
 After successful health checks, open the printed web address and setup link in your
 browser. Re-running on an existing installation offers a safe update and preserves

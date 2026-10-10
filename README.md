@@ -5,7 +5,7 @@ curl -fsSL https://raw.githubusercontent.com/SHMAX-Project/SHMAX/main/install.sh
 ```
 
 Debian 13 amd64 · [Установка одной командой](docs/ru/installation.md#одной-командой) · [Ручная установка из архива](docs/ru/installation.md#ручная-установка-из-архива).
-Первый стабильный релиз ещё не опубликован; до его публикации bootstrap безопасно сообщает об отсутствии пакета.
+Стабильный выпуск [v0.1.0](https://github.com/SHMAX-Project/SHMAX/releases/tag/v0.1.0) доступен для установки. Установщик проверяет подпись и целостность пакета.
 
 [![Version](https://img.shields.io/badge/version-0.1.0-2563eb)](backend/shmax/VERSION)
 [![CI](https://github.com/SHMAX-Project/SHMAX/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/SHMAX-Project/SHMAX/actions/workflows/ci.yml)
