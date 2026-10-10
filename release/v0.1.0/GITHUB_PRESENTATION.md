@@ -1,8 +1,8 @@
 # GitHub presentation — prepared, unpublished
 
 Repository: **SHMAX**. Organization/owner configuration is centralized in
-[PUBLICATION_CONFIG.md](PUBLICATION_CONFIG.md); requested organization **SHMAX** is
-not assumed to exist.
+[PUBLICATION_CONFIG.md](PUBLICATION_CONFIG.md); approved organization **SHMAX-Project** and empty public repository
+were created on 2026-10-10. Code and release remain unpublished.
 
 Short English description:
 Self-hosted gateway connecting MAX and Telegram through a Telegram bot,

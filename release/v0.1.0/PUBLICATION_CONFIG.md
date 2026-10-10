@@ -1,8 +1,12 @@
 # Publication-time configuration — single source of owner information
 
-Requested organization name/login: **SHMAX**. Availability, existence and ownership
-are unverified. Repository name: **SHMAX**. Preferred URL if approved and available:
-`https://github.com/SHMAX/SHMAX` (planned, not asserted to exist).
+Original requested login **SHMAX** was occupied. Owner approved **SHMAX-Project**.
+Organization and empty public repository were created and verified on 2026-10-10
+under `viacheslav-fomenko`. Repository: https://github.com/SHMAX-Project/SHMAX .
+Code, tags and release artifacts have not been uploaded.
+
+APPROVED_ORG_LOGIN: `SHMAX-Project`.
+REPO_URL: `https://github.com/SHMAX-Project/SHMAX`.
 
 Resolve these variables once in the publication session:
 

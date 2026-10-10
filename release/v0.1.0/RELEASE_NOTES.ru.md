@@ -45,5 +45,5 @@ export. Остановить старый мост перед запуском �
 Лицензия кода: [AGPL-3.0-or-later](../../LICENSE).
 [Медиа](../../docs/ru/media.md) · [Копии](../../docs/ru/backups.md) ·
 [Безопасность](../../SECURITY.md) · [Скриншоты DEMO](../../docs/assets/screenshots/README.md).
-Публичный URL и GitHub Private Vulnerability Reporting ожидают подтверждения/включения.
+Репозиторий: https://github.com/SHMAX-Project/SHMAX . Приватные сообщения об уязвимостях включены. Код и релиз пока не опубликованы.
 Оригинальная уточка и независимая публичная source history подготовлены локально.

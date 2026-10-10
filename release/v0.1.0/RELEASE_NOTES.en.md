@@ -45,5 +45,5 @@ Protect the web UI instead of exposing it publicly without access controls.
 Source license: [AGPL-3.0-or-later](../../LICENSE).
 [Media](../../docs/en/media.md) · [Backups](../../docs/en/backups.md) ·
 [Security](../../SECURITY.md) · [DEMO screenshots](../../docs/assets/screenshots/README.md).
-Public URL and GitHub Private Vulnerability Reporting await confirmation/enablement.
+Repository: https://github.com/SHMAX-Project/SHMAX . Private vulnerability reporting is enabled. Code and release remain unpublished.
 Original duck artwork and independent public source history are prepared locally.

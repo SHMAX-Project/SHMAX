@@ -13,31 +13,21 @@ Please help us keep it safe.
 
 ## Reporting a vulnerability / Как сообщить об уязвимости
 
-**GitHub Private Vulnerability Reporting: PENDING — NOT ENABLED OR VERIFIED.**
+**GitHub Private Vulnerability Reporting: ENABLED.**
 
-Final organization/repository configuration is centralized in
-[PUBLICATION_CONFIG.md](release/v0.1.0/PUBLICATION_CONFIG.md). No active reporting
-URL exists yet in this policy.
+Repository: [SHMAX-Project/SHMAX](https://github.com/SHMAX-Project/SHMAX).
+Private reporting was enabled by the owner account on 2026-10-10 and verified
+in the repository Security overview. Use
+[Security → Advisories](https://github.com/SHMAX-Project/SHMAX/security/advisories)
+to report privately. If the private report option is unavailable, do not post
+exploit details in public issues or pull requests.
 
-Once the approved public repository exists, its administrator must enable
-Private Vulnerability Reporting, verify the “Report a vulnerability” entry on
-Security → Advisories, and verify maintainer access and notification settings.
-Only after this check should this policy advertise an active reporting route.
-Follow [GitHub's configuration instructions](https://docs.github.com/en/code-security/how-tos/report-and-fix-vulnerabilities/configure-vulnerability-reporting/configure-for-a-repository).
-
-The owner must confirm the organization administrator and enable/verify GitHub
-Private Vulnerability Reporting at the public-repository stage before release
-publication. No personal security email is invented. While reporting is pending,
-do not send exploit details,
-credentials or reproduction material through public issues or pull requests.
-
-**Приватные сообщения об уязвимостях: ОЖИДАЮТ ВКЛЮЧЕНИЯ И ПРОВЕРКИ.**
-Планируемая организация — `SHMAX`; её существование, доступность имени и права
-владельца не подтверждены. После создания утверждённого публичного репозитория
-администратор должен включить функцию, проверить форму Security → Advisories и
-доступ/уведомления сопровождающего. До этого рабочий канал здесь не заявляется.
-Настройка GitHub Private Vulnerability Reporting обязательна до публикации релиза.
-Не публикуйте детали эксплуатации, токены или данные авторизации в issues/PR.
+**Приватные сообщения об уязвимостях: ВКЛЮЧЕНЫ.**
+Организация `SHMAX-Project`, репозиторий `SHMAX`. Функция включена 10 октября
+2026 года, статус Enabled проверен в Security. Сообщайте через приватную форму
+Security → Advisories. Не публикуйте детали эксплуатации, токены или данные
+авторизации в issues/PR. Настройки личных уведомлений сопровождающего отдельно
+не проверялись; срок ответа не гарантируется.
 
 Please include:
 
