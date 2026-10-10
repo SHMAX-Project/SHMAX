@@ -6,7 +6,7 @@ candidate=${1:?signed candidate directory required}
 report=${2:?report directory required}
 mkdir -p "$report"
 tmp=$(mktemp -d)
-cleanup() { if [[ -f "$tmp/qemu.pid" ]]; then sudo kill "$(cat "$tmp/qemu.pid")" || true; fi; rm -rf "$tmp"; }
+cleanup() { if [[ -f "$tmp/qemu.pid" ]]; then sudo kill "$(sudo cat "$tmp/qemu.pid")" || true; fi; rm -rf "$tmp"; }
 trap cleanup EXIT
 url=https://cloud.debian.org/images/cloud/trixie/20261001-2618/debian-13-genericcloud-amd64-20261001-2618.qcow2
 curl --proto '=https' --tlsv1.2 -fSL "$url" -o "$tmp/debian.qcow2"
@@ -16,6 +16,7 @@ ssh-keygen -t ed25519 -N '' -f "$tmp/vm-key" -q
 printf '#cloud-config\nssh_authorized_keys:\n  - %s\n' "$(cat "$tmp/vm-key.pub")" > "$tmp/user-data"
 printf 'instance-id: shmax-bootstrap-test\nlocal-hostname: shmax-test\n' > "$tmp/meta-data"
 cloud-localds "$tmp/seed.img" "$tmp/user-data" "$tmp/meta-data"
+touch "$report/serial.log"
 accel=tcg
 if [[ -c /dev/kvm ]]; then accel=kvm; fi
 printf 'VM accelerator: %s\n' "$accel" > "$report/vm.txt"
