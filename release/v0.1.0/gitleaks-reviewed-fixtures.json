@@ -138,5 +138,15 @@
     "classification": "Fixed synthetic credential in isolated local test setup or redaction/SecretStore assertion; source context reviewed independently",
     "Secret": "REDACTED",
     "Match": "REDACTED"
+  },
+  {
+    "File": "docs/en/installation.md",
+    "StartLine": 96,
+    "RuleID": "generic-api-key",
+    "Commit": "b2792db7542842168bf44831a87b9cdecfbee1f8",
+    "Fingerprint": "b2792db7542842168bf44831a87b9cdecfbee1f8:docs/en/installation.md:generic-api-key:96",
+    "classification": "Public verification-key PEM SHA-256 fingerprint; computed digest matches the committed PUBLIC KEY, not a credential",
+    "Secret": "REDACTED",
+    "Match": "REDACTED"
   }
 ]
