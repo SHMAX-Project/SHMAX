@@ -195,6 +195,7 @@ class LocalReleaseUpdater:
             self.run(['docker','build','--build-arg','SHMAX_UID='+uid,'--build-arg','SHMAX_GID='+gid,'-t',tag,str(source)],timeout=1800)
             print('Краткий перерыв MAX/Telegram: создаётся проверенная cold backup и обновляется приложение.',flush=True)
             stopped=False
+            backup_verified=False
             try:
                 stopped=True
                 self.compose('stop','web')
@@ -214,6 +215,7 @@ class LocalReleaseUpdater:
                     if db.execute('pragma integrity_check').fetchone()[0]!='ok' or db.execute('pragma foreign_key_check').fetchall():raise LocalUpdateError('backup SQLite integrity failure')
                 finally:db.close()
                 (self.report/'backup.sha256').write_text(file_sha(cold))
+                backup_verified=True
                 # Pin the exact new image through Compose environment; retain original .env bytes.
                 self.boot_id=stamp;self.env['SHMAX_IMAGE']=tag;self.env['SHMAX_DEPLOYMENT_ID']=stamp
                 self.candidate(tag, stamp)
@@ -240,7 +242,7 @@ class LocalReleaseUpdater:
                 if (host_lib/'shmax').is_dir():
                     # Update the CLI/update code used by subsequent host requests.
                     # Current hostd process remains running; dependencies unchanged.
-                    for rel in ['shmax/host/local_update.py','shmax/host/updater.py','shmax/cli/main.py']:
+                    for rel in ['shmax/host/local_update.py','shmax/host/updater.py','shmax/cli/main.py','shmax/host/release_download.py']:
                         installed=host_lib/rel; saved=self.report/'host-code'/rel
                         saved.parent.mkdir(parents=True,exist_ok=True)
                         if installed.is_file():shutil.copy2(installed,saved)
@@ -279,6 +281,22 @@ class LocalReleaseUpdater:
                     self.candidate(old_image, '')
                     self.env['SHMAX_IMAGE']=old_image;self.env.pop('SHMAX_DEPLOYMENT_ID',None)
                     try:
+                        if backup_verified:
+                            # A failed candidate may have migrated SQLite or changed secrets.
+                            # Stop it before restoring the verified cold data, then recreate mounts.
+                            self.compose('stop','web')
+                            if file_sha(cold) != (self.report/'backup.sha256').read_text():
+                                raise LocalUpdateError('cold backup checksum changed; refusing rollback')
+                            with tempfile.TemporaryDirectory(prefix='.shmax-restore-', dir=self.data.parent) as restore:
+                                self.run(['tar','--acls','--xattrs','--numeric-owner','-xpf',str(cold),'-C',restore],timeout=600)
+                                restored=Path(restore)/self.data.name
+                                failed_data=self.data.parent/('.shmax-failed-'+stamp)
+                                os.replace(self.data,failed_data)
+                                try:os.replace(restored,self.data)
+                                except BaseException:
+                                    os.replace(failed_data,self.data)
+                                    raise
+                                (self.report/'failed-data-path').write_text(str(failed_data))
                         self.compose('up','-d','--no-build','--force-recreate','web')
                         old_container=self.compose('ps','-q','web').strip()
                         if not self.ready(host,port,old_container,integrations=False):raise LocalUpdateError('previous application failed readiness')

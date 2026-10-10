@@ -30,20 +30,27 @@ version = tag[1:]
 import zipfile
 launcher = root / "deploy/update/shmax.pyz"
 launcher.parent.mkdir(parents=True, exist_ok=True)
-main = """import sys
+main = """import sys, tempfile
 from local_update import LocalReleaseUpdater, LocalUpdateError
+from release_download import download_latest, ReleaseDownloadError
 from pathlib import Path
-if len(sys.argv)!=3 or sys.argv[1]!='update':
-    raise SystemExit('usage: shmax update /path/to/production-release.tar.gz')
+if len(sys.argv) not in (2,3) or sys.argv[1]!='update':
+    raise SystemExit('usage: shmax update [production-release.tar.gz]')
 try:
-    LocalReleaseUpdater().apply(Path(sys.argv[2]))
-except LocalUpdateError as exc:
+    if len(sys.argv)==2:
+        with tempfile.TemporaryDirectory(prefix='shmax-release-') as tmp:
+            tag, archive = download_latest(Path(tmp))
+            print('Verified signed stable release: '+tag,flush=True)
+            LocalReleaseUpdater().apply(archive)
+    else:
+        LocalReleaseUpdater().apply(Path(sys.argv[2]))
+except (LocalUpdateError, ReleaseDownloadError, OSError, ValueError) as exc:
     print(str(exc),file=sys.stderr);raise SystemExit(1)
 """
 with launcher.open("wb") as raw:
     raw.write(b"#!/usr/bin/env python3\n")
     with zipfile.ZipFile(raw, "w", compression=zipfile.ZIP_DEFLATED) as zipped:
-        for name, content in [("__main__.py", main.encode()), ("local_update.py", (root / "backend/shmax/host/local_update.py").read_bytes())]:
+        for name, content in [("__main__.py", main.encode()), ("local_update.py", (root / "backend/shmax/host/local_update.py").read_bytes()), ("release_download.py", (root / "backend/shmax/host/release_download.py").read_bytes())]:
             entry = zipfile.ZipInfo(name); entry.compress_type = zipfile.ZIP_DEFLATED
             zipped.writestr(entry, content)
 launcher.chmod(0o755)

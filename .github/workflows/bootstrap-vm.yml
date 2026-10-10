@@ -1,0 +1,25 @@
+name: Debian bootstrap acceptance
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  debian-vm:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Install VM tools
+        run: sudo apt-get update && sudo apt-get install -y qemu-system-x86 qemu-utils cloud-image-utils
+      - name: Download unpublished signed candidate on runner
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release download v0.1.0 --repo "$GITHUB_REPOSITORY" --dir candidate --pattern 'shmax-v0.1.0.tar.gz' --pattern SHA256SUMS --pattern SHA256SUMS.sig --pattern release-manifest.json
+      - name: Clean Debian installation and preserved-data update
+        run: bash scripts/test-bootstrap-vm.sh "$PWD/candidate" "$PWD/acceptance-report"
+      - name: Store redacted acceptance evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: debian-bootstrap-acceptance
+          path: acceptance-report/

@@ -85,7 +85,12 @@ def test_failed_acceptance_preserves_data_and_diagnoses_before_exact_image_rollb
         def compose(self,*args):
             events.append(['compose',*args,self.env.get('SHMAX_IMAGE','')])
             return 'container' if 'ps' in args else ''
-        def ready(self,*a,integrations=True):return not integrations
+        def ready(self,*a,integrations=True):
+            if integrations:
+                (data/'session').write_bytes(b'candidate changed session')
+                c=sqlite3.connect(data/'db/shmax.db');c.execute("update preserved set value='candidate mutation'");c.commit();c.close()
+                return False
+            return True
         def diagnostics(self,container):events.append(['diagnostics',container])
     monkeypatch.setattr(os,'geteuid',lambda:0)
     updater=StagedUpdater(opt,data,tmp_path/'backups')
