@@ -1,11 +1,15 @@
 # SHMAX
 
+**MAX ↔ Telegram на вашем сервере.** Отвечайте на сообщения MAX из тем Telegram; управляйте подключениями и доступом через веб-панель.
+
 ```bash
 curl -fsSL https://raw.githubusercontent.com/SHMAX-Project/SHMAX/main/install.sh | sudo bash
 ```
 
 Debian 13 amd64 · [Установка одной командой](docs/ru/installation.md#одной-командой) · [Ручная установка из архива](docs/ru/installation.md#ручная-установка-из-архива).
 Стабильный выпуск [v0.1.0](https://github.com/SHMAX-Project/SHMAX/releases/tag/v0.1.0) доступен для установки. Установщик проверяет подпись и целостность пакета.
+
+![SHMAX — MAX ↔ Telegram, self-hosted messaging bridge](docs/assets/shmax-social.png)
 
 [![Version](https://img.shields.io/badge/version-0.1.0-2563eb)](backend/shmax/VERSION)
 [![CI](https://github.com/SHMAX-Project/SHMAX/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/SHMAX-Project/SHMAX/actions/workflows/ci.yml)
@@ -16,8 +20,6 @@ Debian 13 amd64 · [Установка одной командой](docs/ru/inst
 [![Docker](https://img.shields.io/badge/deploy-Docker-2496ED?logo=docker&logoColor=white)](Dockerfile)
 [![Build targets: amd64, arm64, arm/v7](https://img.shields.io/badge/build_targets-amd64%20%7C%20arm64%20%7C%20arm%2Fv7-7C3AED)](Dockerfile)
 [![Self-hosted](https://img.shields.io/badge/hosting-self--hosted-475569)](docs/ru/architecture.md)
-
-**Шлюз между MAX и Telegram для собственного сервера**
 
 SHMAX объединяет переписку в MAX и Telegram. Сообщения из выбранных чатов MAX
 поступают в темы приватной Telegram-группы; ответы из Telegram отправляются
@@ -35,6 +37,24 @@ SHMAX объединяет переписку в MAX и Telegram. Сообщен
 - **Единое рабочее пространство.** Команда отвечает на переписку MAX из тем Telegram, сохраняя разделение по чатам.
 - **Доступ для нескольких операторов.** Администратор одобряет участников, назначает роли и контролирует право отправки сообщений.
 - **Размещение на своей инфраструктуре.** Организация управляет сервером, подключениями, данными и резервными копиями SHMAX.
+
+## Что поддерживается
+
+| Задача | Возможности v0.1.0 |
+|---|---|
+| MAX ↔ Telegram | Двусторонняя передача сообщений и сопоставление ответов |
+| Несколько чатов MAX | Отдельная тема приватной Telegram-группы для каждого подключённого чата |
+| Вложения | Фото, документы и поддерживаемое видео; [подробности и ограничения](docs/ru/media.md) |
+| Работа команды | Одобрение участников, роли, блокировки и подписи операторов |
+| Управление сервером | Веб-панель, диагностика, резервные копии и обновление с откатом |
+| Установка одной командой | Проверена на чистом Debian 13 amd64; ручная установка также поддерживается |
+| Другие архитектуры | Цели сборки Docker: arm64 и arm/v7; [сведения о платформах](docs/ru/architecture.md) |
+
+### Пример рабочего процесса
+
+1. Подключите аккаунт MAX и собственного Telegram-бота в мастере настройки.
+2. Свяжите нужный чат MAX с темой приватной Telegram-группы.
+3. Получайте сообщения в этой теме и отвечайте из Telegram — SHMAX отправляет ответы обратно в чат MAX.
 
 ## Возможности
 

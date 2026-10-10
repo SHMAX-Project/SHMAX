@@ -1,11 +1,15 @@
 # SHMAX
 
+**MAX ↔ Telegram on your server.** Reply to MAX conversations from Telegram topics and manage connections and access through a web dashboard.
+
 ```bash
 curl -fsSL https://raw.githubusercontent.com/SHMAX-Project/SHMAX/main/install.sh | sudo bash
 ```
 
 Debian 13 amd64 · [One-line installation](docs/en/installation.md#one-line-installation) · [Manual archive installation](docs/en/installation.md#manual-archive-installation).
 Stable release [v0.1.0](https://github.com/SHMAX-Project/SHMAX/releases/tag/v0.1.0) is available. The installer verifies the package signature and integrity.
+
+![SHMAX — MAX ↔ Telegram, self-hosted messaging bridge](docs/assets/shmax-social.png)
 
 [![Version](https://img.shields.io/badge/version-0.1.0-2563eb)](backend/shmax/VERSION)
 [![CI](https://github.com/SHMAX-Project/SHMAX/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/SHMAX-Project/SHMAX/actions/workflows/ci.yml)
@@ -16,8 +20,6 @@ Stable release [v0.1.0](https://github.com/SHMAX-Project/SHMAX/releases/tag/v0.1
 [![Docker](https://img.shields.io/badge/deploy-Docker-2496ED?logo=docker&logoColor=white)](Dockerfile)
 [![Build targets: amd64, arm64, arm/v7](https://img.shields.io/badge/build_targets-amd64%20%7C%20arm64%20%7C%20arm%2Fv7-7C3AED)](Dockerfile)
 [![Self-hosted](https://img.shields.io/badge/hosting-self--hosted-475569)](docs/en/architecture.md)
-
-**A self-hosted gateway between MAX and Telegram**
 
 SHMAX connects conversations in MAX and Telegram. Messages from selected MAX
 chats appear in topics within a private Telegram group; replies from Telegram
@@ -35,6 +37,24 @@ provides a web interface for connections, routing and user access.
 - **One team workspace.** Reply to MAX conversations from Telegram topics while keeping chats separate.
 - **Multiple operators.** Approve participants, assign roles and control who can send messages.
 - **Your own infrastructure.** Manage the SHMAX server, connections, stored data and backups yourself.
+
+## Supported workflows
+
+| Task | v0.1.0 capabilities |
+|---|---|
+| MAX ↔ Telegram | Bidirectional messages and reply mapping |
+| Multiple MAX chats | A separate private Telegram forum topic for each connected chat |
+| Attachments | Photos, documents and supported video; [details and limits](docs/en/media.md) |
+| Team access | Participant approval, roles, blocking and operator attribution |
+| Server operations | Web dashboard, diagnostics, backups and updates with rollback |
+| One-line installation | Verified on clean Debian 13 amd64; manual installation also supported |
+| Other architectures | Docker build targets: arm64 and arm/v7; [platform details](docs/en/architecture.md) |
+
+### Example workflow
+
+1. Connect your MAX account and your own Telegram bot in the setup wizard.
+2. Map a selected MAX chat to a topic in a private Telegram group.
+3. Receive messages in that topic and reply from Telegram — SHMAX sends replies back to the MAX chat.
 
 ## Features
 
