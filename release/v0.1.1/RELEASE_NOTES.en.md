@@ -1,41 +1,24 @@
-# SHMAX v0.1.1 — MAX Photo Album Fix
+# SHMAX v0.1.1 — MAX → Telegram photo albums
 
-Prepared stable patch; publication awaits owner approval.
+Fixed multiple photos from one MAX message: previously only the first photo reached Telegram, while the remaining photos were marked as unsupported attachments.
 
-Fixed multiple supported attachments in one MAX message. The bridge previously
-fetched photos but retained only the first, turning remaining attachments into
-unsupported notices before calling Telegram.
+- Native Telegram albums of 2–10 consecutive photos preserve order, captions, attribution, forum topics and replies. Single photos retain their existing path; other supported attachments are sent separately.
+- Durable queue checkpoints retain confirmed progress across retries and restarts. All album message IDs resolve to the original MAX message, including replies to the last photo.
+- Bounded download retries and expired photo URL refresh through PyMax. After retry exhaustion, remaining valid attachments are delivered and partial failure stays visible in the queue.
+- Improved 0.1.0 → 0.1.1 update compatibility: an additive migration preserves data; no reinstall or repeated setup is required.
 
-Bot API now sends consecutive photos in groups of 2–10, preserving order, forum
-topic, attribution and replies. Single photos keep their existing path. Documents
-and other supported media are sent separately. Adapters without groups, and
-explicit Bot API group rejections, use ordered single-item fallback. Ambiguous
-network timeouts never trigger blind group-to-single fallback.
+Validation: backend — 985 passed / 4 skipped; frontend — 46 passed; typecheck — PASS; 24 album regression scenarios using PyMax 2.4.1 models. Upgrade and rollback passed in an isolated Debian 13 amd64 VM, preserving settings, routes, queue/history, encrypted secrets and synthetic session files. Final archives were checked against the public commit, their inventories and the signed installer's verification/extraction path.
 
-Durable queue checkpoints retain confirmed delivery progress across retries and
-restarts. Every returned Telegram ID resolves to the original canonical MAX
-message. An additive alias-table migration preserves existing records.
+Update an existing installation:
 
-Transient download failures use the existing bounded retry policy (8 attempts).
-After exhaustion, remaining valid media are delivered and partial failure remains
-visible in the queue. Expired photo URLs can be refreshed with the actual PyMax
-get_messages API using source chat/message/photo identifiers. chat_id=0 stays valid.
+```bash
+sudo shmax update
+```
 
-Telegram offers no idempotency key. Remote acceptance followed by a lost response
-or a crash before durable checkpoint can still duplicate on retry. Exactly-once
-remote delivery and per-item partial sendMediaGroup responses are not claimed.
-
-No sanitized live six-photo payload was available. Tests use actual PyMax 2.4.1
-PhotoAttachment/Message models; unknown gallery variants and live messenger
-compatibility remain unverified. The offline summarize-max-attachments.py tool
-outputs safe metadata without URLs, tokens, IDs, names or message text.
-
-Existing users only need to update:
+Or update using the downloaded production archive:
 
 ```bash
 sudo shmax update /path/to/shmax-v0.1.1.tar.gz
 ```
 
-No reinstall, onboarding, bot token reset, MAX reauthorization or Xray reselection
-is required. The signed one-line installer continues to select the actually
-published stable release, currently v0.1.0 until v0.1.1 is approved and published.
+Telegram offers no idempotency key: a lost response after remote acceptance or a crash before a durable checkpoint can still duplicate a send on retry. Ambiguous timeouts never trigger blind album-to-single fallback.
