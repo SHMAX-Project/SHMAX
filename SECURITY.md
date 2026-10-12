@@ -8,8 +8,8 @@ Please help us keep it safe.
 
 | Version | Supported |
 |---------|-----------|
-| Current local release candidate (`0.1.0`) | reports accepted |
-| 0.1.0 | prepared; not a published release yet |
+| 0.1.1 | pending publication; reports accepted |
+| 0.1.0 | published stable release; reports accepted |
 
 ## Reporting a vulnerability / Как сообщить об уязвимости
 
