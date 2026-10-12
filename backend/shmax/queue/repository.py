@@ -70,6 +70,10 @@ def _to_record(row: DeliveryQueueItem) -> QueueRecord:
     )
 
 
+class LeaseOwnershipLostError(RuntimeError):
+    """A previous worker must not ACK/retry another worker's lease."""
+
+
 class DuplicateEnqueueError(Exception):
     """Raised when an enqueue collides with an existing
     ``idempotency_key`` UNIQUE constraint."""
@@ -184,6 +188,26 @@ class DeliveryQueueRepository:
         rows = list((await self._session.execute(select_stmt)).scalars().all())
         await self._session.commit()
         return [_to_record(r) for r in rows]
+
+    async def renew_lease(self, *, queue_id, worker_id, lease_seconds=120):
+        result = await self._session.execute(update(DeliveryQueueItem).where(
+            DeliveryQueueItem.id == queue_id, DeliveryQueueItem.status == "processing",
+            DeliveryQueueItem.worker_id == worker_id,
+        ).values(lease_until=_dt.datetime.now(_dt.timezone.utc)+_dt.timedelta(seconds=lease_seconds)))
+        if result.rowcount != 1:
+            await self._session.rollback()
+            raise LeaseOwnershipLostError("delivery lease ownership lost")
+        await self._session.commit()
+
+    async def checkpoint(self, *, queue_id, worker_id, payload, lease_seconds=120):
+        result = await self._session.execute(update(DeliveryQueueItem).where(
+            DeliveryQueueItem.id == queue_id, DeliveryQueueItem.status == "processing",
+            DeliveryQueueItem.worker_id == worker_id,
+        ).values(payload=payload, lease_until=_dt.datetime.now(_dt.timezone.utc)+_dt.timedelta(seconds=lease_seconds)))
+        if result.rowcount != 1:
+            await self._session.rollback()
+            raise LeaseOwnershipLostError("delivery lease ownership lost")
+        await self._session.commit()
 
     async def reclaim_expired(self) -> int:
         """Move expired-processing items back to ``pending``.

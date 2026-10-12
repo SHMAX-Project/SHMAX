@@ -4,3 +4,10 @@ class MediaFailure(ValueError):
         self.operation = operation
         self.reason = reason
         super().__init__(reason)
+
+
+class MediaGroupRejected(MediaFailure):
+    """Explicit Bot API rejection permits deterministic single-item fallback.
+
+    This is never used for network errors or ambiguous timeouts.
+    """

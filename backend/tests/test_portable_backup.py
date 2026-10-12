@@ -125,7 +125,7 @@ def test_compatible_previous_schema_migrates_forward(appliance,tmp_path):
     stage=tmp_path/'stage';manifest=extract(payload,stage)
     assert manifest['schema_revision']=='0009_sent_native'
     validate_stage(stage,manifest,migrate=True)
-    assert schema_revision(stage/'db/shmax.db')=='0010_member_sync'
+    assert schema_revision(stage/'db/shmax.db')=='0011_telegram_message_alias'
 
 
 def test_source_binaries_and_deployment_binding_excluded(appliance,tmp_path):

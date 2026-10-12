@@ -3,7 +3,22 @@
 All notable changes to SHMAX are documented here.
 Format: Keep a Changelog; versioning: SemVer.
 
-## 0.1.0 — prepared locally; not published
+## 0.1.1 — prepared; publication pending approval
+
+### Fixed
+- MAX multi-photo messages retain every supported attachment. Bot API sends
+  contiguous photo groups of 2–10, preserving order, forum topic and caption.
+- Durable queue checkpoints resume after confirmed partial delivery; all Telegram
+  album IDs resolve to the canonical MAX message for replies and echo suppression.
+- Expired photo URLs can be refreshed by source message/photo ID through PyMax.
+
+### Limitations
+- No sanitized live six-photo payload was available; tests use actual PyMax 2.4.1
+  models. Ambiguous remote success before checkpoint may duplicate on retry.
+- Permanently unavailable items are recorded as failed after bounded retries;
+  other valid media are delivered without unsupported-photo placeholders.
+
+## 0.1.0 — published 2026-10-10
 
 ### Fixed
 - Production packaging: explicit directory modes and non-root code normalization prevent import failure after private-umask extraction. Local release update adds verified cold backup, integration acceptance, protected diagnostics before rollback and exact-image rollback.

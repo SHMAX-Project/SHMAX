@@ -23,6 +23,7 @@ from pathlib import Path
 from typing import Optional
 
 from .state_machine import VersionInfo
+from .. import __version__
 
 
 class UpdateSource:
@@ -52,8 +53,8 @@ class LocalUpdateSource(UpdateSource):
     async def fetch(self) -> VersionInfo:
         if not self._path.is_file():
             return VersionInfo(
-                current_version=os.environ.get("SHMAX_VERSION", "0.1.0-dev"),
-                available_version=os.environ.get("SHMAX_VERSION", "0.1.0-dev"),
+                current_version=os.environ.get("SHMAX_VERSION", __version__),
+                available_version=os.environ.get("SHMAX_VERSION", __version__),
             )
         import json
 

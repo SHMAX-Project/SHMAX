@@ -11,6 +11,45 @@ import platform
 import sys
 from pathlib import Path
 
+def _accepted_backend(opt: Path) -> Path | None:
+    """Existing updater retains the verified accepted source under releases/.
+
+    Older updaters copy CLI files but not the host package VERSION/migrations.
+    Reuse that immutable accepted package with the existing host Python runtime.
+    """
+    import re
+    try:
+        values = dict(line.split("=", 1) for line in (opt / ".env").read_text().splitlines()
+                      if line.startswith("SHMAX_DEPLOYMENT_ID="))
+        identifier = values.get("SHMAX_DEPLOYMENT_ID", "")
+        if not re.fullmatch(r"[A-Za-z0-9_-]{1,128}", identifier):
+            return None
+        backend = (opt / "releases" / identifier / "backend").resolve()
+        if not backend.is_relative_to((opt / "releases").resolve()):
+            return None
+        version = backend / "shmax" / "VERSION"
+        if not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+(?:-[A-Za-z0-9.-]+)?", version.read_text().strip()):
+            return None
+        if not (backend / "shmax" / "cli" / "main.py").is_file():
+            return None
+        if os.geteuid() == 0 and (version.stat().st_uid != 0 or version.stat().st_mode & 0o022):
+            raise RuntimeError("accepted release ownership is unsafe")
+        return backend
+    except (OSError, ValueError):
+        return None
+
+
+def _use_accepted_host_release():
+    backend = _accepted_backend(Path("/opt/shmax"))
+    if backend is not None and backend != Path(__file__).resolve().parents[2]:
+        environment = os.environ.copy()
+        environment["PYTHONPATH"] = str(backend)
+        os.execve(sys.executable, [sys.executable, "-P", "-m", "shmax.cli", *sys.argv[1:]], environment)
+
+
+_use_accepted_host_release()
+
+
 from .. import __service_name__, __version__
 from ..config import Settings
 from ..core.paths import PathLayout

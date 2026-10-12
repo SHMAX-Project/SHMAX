@@ -144,7 +144,7 @@ def test_migration_fresh_and_upgrade(tmp_path,start):
         with sqlite3.connect(path) as con: con.execute("INSERT INTO telegram_users(user_id,role,approved,blocked,first_seen_at) VALUES ('30','operator',1,0,CURRENT_TIMESTAMP)")
     command.upgrade(cfg,'head')
     with sqlite3.connect(path) as con:
-        assert con.execute('SELECT version_num FROM alembic_version').fetchone()[0]=='0010_member_sync'
+        assert con.execute('SELECT version_num FROM alembic_version').fetchone()[0]=='0011_telegram_message_alias'
         assert {'membership','source','is_admin'} <= {r[1] for r in con.execute('PRAGMA table_info(telegram_users)')}
         assert 'membership' not in {r[1] for r in con.execute('PRAGMA table_info(admin_sessions)')}
         if start: assert con.execute("SELECT role,approved,is_admin FROM telegram_users WHERE user_id='30'").fetchone()==('operator',1,0)

@@ -77,7 +77,7 @@ def test_migration_records_revision(tmp_path, monkeypatch):
         try:
             row = con.execute("SELECT version_num FROM alembic_version LIMIT 1").fetchone()
             assert row is not None
-            assert row[0] == "0010_member_sync"
+            assert row[0] == "0011_telegram_message_alias"
         finally:
             con.close()
     finally:

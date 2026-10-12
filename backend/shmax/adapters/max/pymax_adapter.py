@@ -390,11 +390,25 @@ class PyMaxMaxAdapter(MaxAdapter):
         dest = _Path(dest)
         url = payload.get("url")
         if url and "://" in str(url):
-            return await self._download_url(str(url), dest)
+            try:
+                return await self._download_url(str(url), dest)
+            except Exception as exc:
+                from ...media.diagnostics import MediaFailure
+                if not isinstance(exc, MediaFailure) or exc.reason != "http_response_failed" or payload.get("photo_id") is None:
+                    raise
+                if payload.get("chat_id") is None or payload.get("message_id") is None:
+                    raise
+                messages = await self._handle.client.get_messages(int(payload["chat_id"]), [int(payload["message_id"])])
+                for message in messages:
+                    for photo in message.attaches or []:
+                        if str(getattr(photo,"photo_id",None)) == str(payload["photo_id"]):
+                            fresh = getattr(photo,"base_url",None)
+                            if fresh: return await self._download_url(str(fresh), dest)
+                raise MediaFailure("max.download", "photo_reference_unavailable") from None
         kind = str(payload.get("pymax_type", "")).upper()
         chat_id = payload.get("chat_id")
         message_id = payload.get("message_id")
-        if not chat_id or not message_id:
+        if chat_id is None or message_id is None:
             raise ValueError("attachment payload lacks chat/message coordinates")
         if "FILE" in kind and payload.get("file_id") is not None:
             req = await self._handle.client.get_file_by_id(

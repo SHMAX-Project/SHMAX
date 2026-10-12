@@ -342,17 +342,21 @@ class BridgeEngine:
         """Resolve the event's attachments into (media entry,
         fallback text).
 
-        The FIRST supported attachment becomes the media entry
-        (V1 delivers one media per message); every other
-        attachment — unsupported kinds, extras, fetch failures —
-        is surfaced as a controlled text fallback instead of
-        being silently dropped (audit P0 #11)."""
+        Multiple MAX attachments remain ordered references for durable worker
+        delivery. Single-item and Telegram-origin messages retain the existing
+        path. Only genuinely unsupported kinds become unsupported notices."""
         if not event.attachments:
             return None, None
         unsupported, supported, _ = self._split_attachments(event)
         labels: list[str] = []
         for a in unsupported:
             labels.append(a.kind.value if hasattr(a.kind, "value") else str(a.kind))
+        if source == "max" and len(supported) > 1:
+            # Keep every supported reference. Downloads happen in the durable
+            # worker so one transient download failure cannot discard photos.
+            items = [{"kind": a.kind.value if hasattr(a.kind, "value") else str(a.kind),
+                      "payload": dict(a.payload), "caption": a.caption} for a in supported]
+            return {"media_items": items, "caption": supported[0].caption}, self._fallback_text(labels) if labels else None
         media_entry: Optional[dict] = None
         if supported:
             entries, failures = await self._media_entries_for(
@@ -674,6 +678,11 @@ class BridgeEngine:
         if media is not None and media.get("media_kind") == "sticker" and not body and author.label:
             body = author.label
 
+        if media is not None and "media_items" in media:
+            initial = str(media.get("caption") or "")
+            album_caption = (body + ("\n"+initial if initial else "")) if body else (attribute_caption(caption=initial, label=author.label) if initial else author.label)
+            media["album_caption"] = album_caption if len(album_caption.encode("utf-16-le"))//2 <= 1024 else author.label
+            body = "" if len(album_caption.encode("utf-16-le"))//2 <= 1024 else album_caption
         if fallback:
             body = f"{body}\n{fallback}" if body else fallback
         payload = {

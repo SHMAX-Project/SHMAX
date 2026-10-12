@@ -365,6 +365,17 @@ class MessageMap(Base):
     )
 
 
+class TelegramMessageAlias(Base):
+    __tablename__ = "telegram_message_alias"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    message_map_id: Mapped[int] = mapped_column(ForeignKey("message_map.id", ondelete="CASCADE"), nullable=False)
+    telegram_account_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    telegram_chat_id: Mapped[str] = mapped_column(String(64), nullable=False)
+    telegram_thread_id: Mapped[str] = mapped_column(String(64), nullable=False)
+    telegram_message_id: Mapped[str] = mapped_column(String(64), nullable=False)
+    __table_args__ = (UniqueConstraint("telegram_account_id", "telegram_chat_id", "telegram_thread_id", "telegram_message_id", name="uq_telegram_alias"),)
+
+
 class DeliveryQueueItem(Base):
     """Durable outbox.
 

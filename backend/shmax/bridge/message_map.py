@@ -23,7 +23,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..database.models import MessageMap
+from ..database.models import MessageMap, TelegramMessageAlias
 
 
 def outbound_marker() -> str:
@@ -116,6 +116,27 @@ class MessageMapRepository:
             )
             if existing is None:
                 raise
+            if (existing.telegram_account_id != telegram_account_id or existing.telegram_chat_id != telegram_chat_id
+                    or (existing.telegram_thread_id or "") != (telegram_thread_id or "")):
+                raise ValueError("mapping destination conflict")
+            occupied = await self.find_by_telegram(telegram_account_id=telegram_account_id,
+                telegram_chat_id=telegram_chat_id, telegram_thread_id=telegram_thread_id,
+                telegram_message_id=telegram_message_id)
+            if occupied is not None and occupied.id != existing.id:
+                raise ValueError("message alias conflict")
+            if str(existing.telegram_message_id) != str(telegram_message_id):
+                alias = await self._session.scalar(select(TelegramMessageAlias).where(
+                    TelegramMessageAlias.telegram_account_id == telegram_account_id,
+                    TelegramMessageAlias.telegram_chat_id == telegram_chat_id,
+                    TelegramMessageAlias.telegram_thread_id == (telegram_thread_id or ""),
+                    TelegramMessageAlias.telegram_message_id == telegram_message_id))
+                if alias is not None and alias.message_map_id != existing.id:
+                    raise ValueError("message alias conflict")
+                if alias is None:
+                    self._session.add(TelegramMessageAlias(message_map_id=existing.id,
+                        telegram_account_id=telegram_account_id, telegram_chat_id=telegram_chat_id,
+                        telegram_thread_id=telegram_thread_id or "", telegram_message_id=telegram_message_id))
+                    await self._session.commit()
             return existing
         await self._session.commit()
         await self._session.refresh(row)
@@ -198,6 +219,13 @@ class MessageMapRepository:
             MessageMap.telegram_message_id == telegram_message_id,
         )
         row = (await self._session.execute(stmt)).scalar_one_or_none()
+        if row is None:
+            row = await self._session.scalar(select(MessageMap).join(TelegramMessageAlias,
+                TelegramMessageAlias.message_map_id == MessageMap.id).where(
+                TelegramMessageAlias.telegram_account_id == telegram_account_id,
+                TelegramMessageAlias.telegram_chat_id == telegram_chat_id,
+                TelegramMessageAlias.telegram_thread_id == (telegram_thread_id or ""),
+                TelegramMessageAlias.telegram_message_id == telegram_message_id))
         return _to_record(row) if row else None
 
     async def find_by_marker(self, marker: str) -> Optional[MappingRecord]:

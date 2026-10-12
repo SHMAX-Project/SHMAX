@@ -2,7 +2,10 @@
 """Validate the frozen public branding, screenshot provenance and license inventory."""
 import hashlib,json,pathlib,struct,tomllib
 root=pathlib.Path(__file__).resolve().parents[1]
-assert (root/'backend/shmax/VERSION').read_text().strip()=='0.1.0'
+version=(root/'backend/shmax/VERSION').read_text().strip()
+assert version=='0.1.1'
+assert tomllib.loads((root/'backend/pyproject.toml').read_text())['project']['version']==version
+assert json.loads((root/'frontend/package.json').read_text())['version']==version
 assert tomllib.loads((root/'backend/pyproject.toml').read_text())['project']['license']['text']=='AGPL-3.0-or-later'
 assert json.loads((root/'frontend/package.json').read_text())['license']=='AGPL-3.0-or-later'
 assert 'GNU AFFERO GENERAL PUBLIC LICENSE' in (root/'LICENSE').read_text()

@@ -630,6 +630,34 @@ class TelegramBotApiAdapter(TelegramAdapter):
             thread_id=str(msg.message_thread_id) if getattr(msg, "message_thread_id", None) else thread_id,
         )
 
+    async def send_media_group(self, *, chat_id, media_refs, thread_id=None, caption=None, reply_to=None, item_captions=None):
+        if not self._started or self._bot is None:
+            raise RuntimeError("send_media_group called before connect")
+        if not 2 <= len(media_refs) <= 10:
+            raise ValueError("Telegram album requires 2–10 photos")
+        from aiogram.types import FSInputFile, InputMediaPhoto, ReplyParameters
+        from types import SimpleNamespace
+        media = [InputMediaPhoto(media=FSInputFile(ref.partition(":")[2]),
+                                 caption=_escape_html(caption if index == 0 and caption else (item_captions or [None]*len(media_refs))[index]) if (index == 0 and caption) or (item_captions and item_captions[index]) else None,
+                                 parse_mode="HTML") for index, ref in enumerate(media_refs)]
+        kwargs = {"chat_id": int(chat_id), "media": media}
+        if thread_id is not None: kwargs["message_thread_id"] = int(thread_id)
+        if reply_to is not None: kwargs["reply_parameters"] = ReplyParameters(message_id=int(reply_to.message_external_id))
+        try:
+            messages = await self._bot.send_media_group(**kwargs)
+        except Exception as exc:
+            from ...media.diagnostics import MediaFailure, MediaGroupRejected
+            from aiogram.exceptions import TelegramBadRequest
+            failure_class = MediaGroupRejected if isinstance(exc, TelegramBadRequest) else MediaFailure
+            failure = failure_class("telegram.album_send", "request_failed")
+            delay = getattr(exc, "retry_after", None)
+            if isinstance(delay, (int, float)): failure.retry_after = min(86400, max(1, delay))
+            raise failure from None
+        if len(messages) != len(media_refs) or any(str(m.chat.id) != str(chat_id) for m in messages):
+            raise RuntimeError("Telegram album confirmation mismatch")
+        ids = [str(m.message_id) for m in messages]
+        return SimpleNamespace(external_message_id=ids[0], all_external_ids=ids)
+
     async def send_reply(
         self,
         chat_id: str,

@@ -1037,6 +1037,23 @@ class AppRuntime:
             return claimed[0] if claimed else None
 
     async def _drain_one(self, rec: Any) -> None:
+        if not rec.payload.get("media_items"):
+            return await self._drain_one_owned(rec)
+        async def heartbeat():
+            while True:
+                await asyncio.sleep(10)
+                async with self.db.session() as session:
+                    await DeliveryQueueRepository(session).renew_lease(queue_id=rec.id, worker_id=rec.worker_id)
+        delivery = asyncio.create_task(self._drain_one_owned(rec))
+        renewal = asyncio.create_task(heartbeat())
+        try:
+            done, pending = await asyncio.wait([delivery, renewal], return_when=asyncio.FIRST_COMPLETED)
+            for task in done: await task
+        finally:
+            for task in (delivery, renewal): task.cancel()
+            await asyncio.gather(delivery, renewal, return_exceptions=True)
+
+    async def _drain_one_owned(self, rec: Any) -> None:
         from .queue.worker import RetryPolicy
 
         policy = RetryPolicy()
@@ -1044,6 +1061,9 @@ class AppRuntime:
         try:
             delivery_result = await self._deliver(rec)
         except Exception as e:  # noqa: BLE001 - capture every failure
+            from .queue.repository import LeaseOwnershipLostError
+            if isinstance(e, LeaseOwnershipLostError):
+                raise
             logger.exception("delivery failed for queue_id=%s", rec.id)
             async with self.db.session() as s:
                 repo = DeliveryQueueRepository(s)
@@ -1056,7 +1076,7 @@ class AppRuntime:
                 else:
                     next_at = (
                         _dt.datetime.now(_dt.timezone.utc)
-                        + _dt.timedelta(seconds=policy.next_delay(attempts - 1))
+                        + _dt.timedelta(seconds=max(policy.next_delay(attempts - 1), getattr(e, "retry_after", 0)))
                     )
                     await repo.mark_retry(
                         queue_id=rec.id,
@@ -1104,6 +1124,8 @@ class AppRuntime:
                 # Retry: the media file MUST survive for the next
                 # attempt — never released here.
                 return
+            if payload.get("media_items") and getattr(delivery_result,"external_message_id",None):
+                await self._record_mapping(rec, delivery_result)
             async with self.db.session() as s:
                 await DeliveryQueueRepository(s).mark_failed(
                     queue_id=rec.id, last_error=outcome.error or "failed"
@@ -1180,6 +1202,23 @@ class AppRuntime:
             )
 
         if direction == Direction.MAX_TO_TELEGRAM:
+            if payload.get("media_items"):
+                from .media.album import deliver_album
+                from .queue.worker import RetryPolicy
+                async def save_album(value):
+                    async with self.db.session() as session:
+                        await DeliveryQueueRepository(session).checkpoint(queue_id=rec.id, worker_id=rec.worker_id, payload=value)
+                    ids = value.get("album_progress", {}).get("ids", [])
+                    if ids:
+                        from types import SimpleNamespace
+                        await self._record_mapping(rec, SimpleNamespace(external_message_id=ids[0], all_external_ids=ids))
+                previous_ids = payload.get("album_progress", {}).get("ids", [])
+                if previous_ids:
+                    from types import SimpleNamespace
+                    await self._record_mapping(rec, SimpleNamespace(external_message_id=previous_ids[0], all_external_ids=previous_ids))
+                return await deliver_album(payload=payload, chat_id=target_chat_id, thread_id=thread_id,
+                    reply_to=reply_ref, adapter=self._tg, fetch=self._fetch_media, save=save_album,
+                    terminal=rec.attempts+1 >= RetryPolicy().max_attempts)
             if media_ref:
                 # Caption composition is STRUCTURAL (surgical review):
                 # duplicate suppression happened at the composition

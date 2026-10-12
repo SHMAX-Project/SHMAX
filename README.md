@@ -11,7 +11,7 @@ Debian 13 amd64 · [Установка одной командой](docs/ru/inst
 
 ![SHMAX — MAX ↔ Telegram, self-hosted messaging bridge](docs/assets/shmax-social.png)
 
-[![Version](https://img.shields.io/badge/version-0.1.0-2563eb)](backend/shmax/VERSION)
+[![Version](https://img.shields.io/badge/version-0.1.1-2563eb)](backend/shmax/VERSION)
 [![CI](https://github.com/SHMAX-Project/SHMAX/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/SHMAX-Project/SHMAX/actions/workflows/ci.yml)
 [![License: AGPL v3+](https://img.shields.io/badge/license-AGPL--3.0--or--later-059669)](LICENSE)
 [![MAX ↔ Telegram](https://img.shields.io/badge/MAX-%E2%86%94%20Telegram-229ED9?logo=telegram&logoColor=white)](docs/ru/architecture.md)
@@ -238,3 +238,5 @@ SHMAX — независимый проект с открытым исходны
 Проект распространяется под [AGPL-3.0-or-later](LICENSE).
 [Сторонние компоненты и лицензии](THIRD_PARTY_NOTICES.md) ·
 [Использование названия и символики](TRADEMARKS.md).
+
+Подготовка patch v0.1.1: [release notes](release/v0.1.1/RELEASE_NOTES.ru.md). Выпуск ещё не опубликован; публичный stable installer выбирает опубликованный v0.1.0.
