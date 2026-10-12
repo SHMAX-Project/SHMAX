@@ -3,20 +3,28 @@
 All notable changes to SHMAX are documented here.
 Format: Keep a Changelog; versioning: SemVer.
 
-## 0.1.1 — prepared; publication pending approval
+## 0.1.1 — 2026-10-12
 
 ### Fixed
-- MAX multi-photo messages retain every supported attachment. Bot API sends
-  contiguous photo groups of 2–10, preserving order, forum topic and caption.
-- Durable queue checkpoints resume after confirmed partial delivery; all Telegram
-  album IDs resolve to the canonical MAX message for replies and echo suppression.
-- Expired photo URLs can be refreshed by source message/photo ID through PyMax.
+- Multiple photos from one MAX message now reach Telegram instead of retaining
+  only the first photo and marking the rest as unsupported attachments.
+- Native Telegram albums contain 2–10 consecutive photos, preserving captions,
+  order, authorship, forum topics and replies. Single photos retain their existing path.
+- Durable queue checkpoints preserve confirmed progress across retries and restarts.
+  Every Telegram album message ID resolves to the canonical MAX message for replies.
+- Bounded download retries and expired media URL refresh through PyMax preserve
+  delivery of remaining valid attachments while recording permanent partial failures.
+- Update compatibility from 0.1.0 to 0.1.1 preserves existing configuration and data.
 
-### Limitations
-- No sanitized live six-photo payload was available; tests use actual PyMax 2.4.1
-  models. Ambiguous remote success before checkpoint may duplicate on retry.
-- Permanently unavailable items are recorded as failed after bounded retries;
-  other valid media are delivered without unsupported-photo placeholders.
+### Validation
+- Backend: 985 passed, 4 skipped; frontend: 46 passed; typecheck passed.
+- 24 album regression cases use actual PyMax 2.4.1 models.
+- Isolated Debian 13 amd64 upgrade and rollback checks passed, including persisted
+  settings, routes, queue/history, encrypted secrets and synthetic session fixtures.
+
+### Delivery semantics
+- Telegram provides no idempotency key: remote acceptance followed by a lost response
+  or a crash before a durable checkpoint can still duplicate a send on retry.
 
 ## 0.1.0 — published 2026-10-10
 
