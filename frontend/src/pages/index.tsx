@@ -1,3 +1,4 @@
+import { maxSessionLabel } from '../ui';
 import { useTranslation } from 'react-i18next';
 import { useNavigationSafety } from '../navigation';
 import { PortableExport } from "../portable-backup";
@@ -107,7 +108,9 @@ export function Dashboard({ status, reload, setupComplete = true }: { status: St
         <div className="status-cell" data-testid="dashboard-max">
           <span className="name">MAX</span>
           <span className="val"><StatusBadge state={status.max.state} /></span>
-          <span className="meta">{status.max.account_id ? `аккаунт ${status.max.account_id}` : status.max.authenticated ? 'сессия активна' : 'сессия не подтверждена'}</span>
+          <span className="meta">{maxSessionLabel(status.max)}{status.max.account_id ? ` · аккаунт ${status.max.account_id}` : ''}</span>
+          {status.max.recovery && <span className="meta">Попытка восстановления: {status.max.recovery.attempts}{status.max.recovery.retry_in_seconds!=null?` · повтор через ${Math.ceil(status.max.recovery.retry_in_seconds)} с`:''}</span>}
+          {status.max.recovery?.last_success_at && <span className="meta">Последнее успешное соединение: {new Date(status.max.recovery.last_success_at*1000).toLocaleString('ru-RU')}</span>}
         </div>
         <div className="status-cell" data-testid="dashboard-telegram">
           <span className="name">Telegram</span>
@@ -165,7 +168,8 @@ export function MaxPage({ status, reload }: { status: StatusSnapshot['max'] | nu
           <div className="kv">
             <span className="k">Состояние</span><span className="v"><StatusBadge state={status.state} /></span>
             <span className="k">Аккаунт</span><span className="v">{status.account_id || '—'}</span>
-            <span className="k">Сессия</span><span className="v">{status.authenticated ? 'авторизована' : status.configured ? 'проверяется' : 'нет'}</span>
+            <span className="k">Сессия</span><span className="v">{maxSessionLabel(status)}</span>
+            {status.recovery && <><span className="k">Попытка восстановления</span><span className="v">{status.recovery.attempts}</span><span className="k">Последнее успешное соединение</span><span className="v">{status.recovery.last_success_at?new Date(status.recovery.last_success_at*1000).toLocaleString('ru-RU'):'—'}</span></>}
             <span className="k">Последняя проверка</span><span className="v">{status.last_probe_at ? new Date(status.last_probe_at * 1000).toLocaleString() : '—'}</span>
           </div>
         ) : (

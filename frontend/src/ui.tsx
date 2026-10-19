@@ -3,7 +3,7 @@
 // stop scattering one-off styling.
 
 import React from 'react';
-import type { IntegrationState } from './api';
+import type { IntegrationState, IntegrationStatus } from './api';
 
 /** Status chip for the canonical integration states. */
 const STATE_TONE: Record<string, { cls: string; label: string }> = {
@@ -71,4 +71,15 @@ export function PageHeader({ title, children }: { title: string; children?: Reac
       {children ? <div className="row" style={{ margin: 0 }}>{children}</div> : null}
     </div>
   );
+}
+
+/** Session validity and transport verification are separate facts. */
+export function maxSessionLabel(status: IntegrationStatus): string {
+  if (!status.configured) return 'Сессия не настроена';
+  if (status.state === 'RECONNECTING') return 'Соединение потеряно; выполняется автоматическое восстановление';
+  if (status.state === 'VERIFICATION_UNAVAILABLE') return 'Проверка сессии временно недоступна из-за сети или API';
+  if (status.state === 'AUTH_REQUIRED') return 'Сессия отклонена или отсутствует; требуется вход';
+  if (status.state === 'HEALTHY') return 'Сессия проверена';
+  if (status.state === 'ERROR') return 'Ошибка проверки; подробности в журнале';
+  return status.authenticated ? 'Сессия активна' : 'Проверка сессии ещё не завершена';
 }
