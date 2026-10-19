@@ -99,7 +99,7 @@ async def snapshot(runtime):
     result = {}
     for name, configured, adapter, watchdog in (("max", max_configured, runtime.max_adapter, runtime.max_watchdog), ("telegram", tg_configured, runtime.telegram_adapter, runtime.tg_watchdog)):
         probe = runtime._integration_probes.get(name)
-        state = evidence_state(configured, adapter, probe, watchdog.snapshot, now, runtime_mode)
+        state = evidence_state(configured, adapter, probe, None if name=="max" and getattr(runtime,"max_recovery",None) is not None else watchdog.snapshot, now, runtime_mode)
         if name == "telegram" and recovery is not None and configured:
             if recovery.status["state"] not in {"HEALTHY", "NOT_CONFIGURED"}:
                 state = recovery.status["state"]

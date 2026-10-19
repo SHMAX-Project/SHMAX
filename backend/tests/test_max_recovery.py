@@ -225,3 +225,21 @@ def test_temporary_probe_is_not_auth_required():
         evidence_state(True, adapter, probe, None, time.monotonic(), RuntimeMode.TEST)
         == "AUTH_REQUIRED"
     )
+
+@pytest.mark.asyncio
+async def test_verified_recovery_does_not_wait_for_stale_watchdog(runtime):
+    import dataclasses,time
+    from sqlalchemy import select
+    from shmax.database.models import MaxAccount
+    from shmax.watchdog.base import AdapterHealthState
+    rt=runtime
+    async with rt.db.session() as session:
+        row=(await session.execute(select(MaxAccount))).scalars().first()
+        row.phone='synthetic-fixture-only';await session.commit()
+    adapter=rt.max_adapter;adapter.generation=1;rt._max_listener_generation=1
+    rec=MaxRecovery(rt);rt.max_recovery=rec;rec.status['state']='HEALTHY'
+    rt.max_watchdog._snapshot=dataclasses.replace(rt.max_watchdog.snapshot,state=AdapterHealthState.DOWN)
+    rt._integration_probes['max']={'adapter':adapter,'at':time.monotonic(),'wall_at':int(time.time()),'verified':True,'health':{'connected':True,'authenticated':True,'account_id':'synthetic'}}
+    assert (await rt.integration_snapshot())['max']['state']=='HEALTHY'
+    rt._integration_probes['max'].update(error=True,error_class='verification_unavailable')
+    assert (await rt.integration_snapshot())['max']['state']=='VERIFICATION_UNAVAILABLE'
