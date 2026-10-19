@@ -3022,9 +3022,7 @@ def create_app(
             )
         try:
             try:
-                runtime.journal.emit("xray.starting",component="xray")
                 xray_status_obj = await manager.restart(config)
-                runtime.journal.emit("xray.ready",component="xray")
             except XrayError:
                 restored=await rollback()
                 runtime.journal.emit("xray.switch_failed",component="xray",result="rolled_back" if restored else "degraded")

@@ -3,7 +3,7 @@
 All notable changes to SHMAX are documented here.
 Format: Keep a Changelog; versioning: SemVer.
 
-## v0.1.3 — candidate
+## v0.1.2 — candidate
 
 - Fix Xray switching, recoverable rollback and Telegram adapter installation.
 - Recover MAX saved-session connections with one generation-aware listener.

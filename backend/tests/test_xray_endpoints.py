@@ -630,7 +630,7 @@ def test_app_owned_manager_shared_across_bootstrap_api_shutdown(
     assert manager._process is None
 
 @pytest.mark.parametrize('with_token',[False,True])
-def test_v013_successful_select_with_optional_token(client,monkeypatch,tmp_path,with_token):
+def test_v012_successful_select_with_optional_token(client,monkeypatch,tmp_path,with_token):
     from types import SimpleNamespace as NS
     from shmax.xray import state as xs
     _seed_subscription_directly(client);node_id=client.get('/api/telegram/xray/status').json()['nodes'][0]['id']
@@ -646,7 +646,7 @@ def test_v013_successful_select_with_optional_token(client,monkeypatch,tmp_path,
     response=client.post('/api/telegram/xray/select',json={'node_id':node_id})
     assert response.status_code==200 and response.json()['ok'],response.json();assert ('installed' in calls)==with_token;assert xs.load_selected(client.app.state.secrets)[0]==node_id
 
-def test_v013_unreachable_switch_rolls_back(client,monkeypatch,tmp_path):
+def test_v012_unreachable_switch_rolls_back(client,monkeypatch,tmp_path):
     from types import SimpleNamespace as NS
     from shmax.xray import state as xs
     from shmax.xray.subscription import parse_subscription

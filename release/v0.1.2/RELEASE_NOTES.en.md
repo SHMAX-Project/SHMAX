@@ -1,4 +1,4 @@
-# SHMAX v0.1.3 — connection recovery and persistent event journal
+# SHMAX v0.1.2 — connection recovery and persistent event journal
 
 Patch candidate; publication and deployment require separate owner approval.
 
@@ -12,4 +12,4 @@ Patch candidate; publication and deployment require separate owner approval.
 
 Preserve v0.1.1 photo albums, all message ID aliases, checkpoints, replies/topics, ACLs, Saved Messages chat_id=0 and encrypted sessions. The historical MAX media failures remain insufficiently detailed to attribute to one cause.
 
-Upgrade using the standard signed package and `sudo shmax update /path/to/shmax-v0.1.3.tar.gz` after approval. The updater creates a cold persistent-data backup and restores the previous image/data when readiness fails. A configuration-only backup does not replace that full snapshot. Upgrading from v0.1.1 must not require reauthorization.
+Upgrade using the standard signed package and `sudo shmax update /path/to/shmax-v0.1.2.tar.gz` after approval. The updater creates a cold persistent-data backup and restores the previous image/data when readiness fails. A configuration-only backup does not replace that full snapshot. Upgrading from v0.1.1 must not require reauthorization.

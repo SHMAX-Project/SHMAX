@@ -1,6 +1,6 @@
-# v0.1.3 candidate, no publication or production deployment
+# v0.1.2 candidate, no publication or production deployment
 
-Build from the reviewed, clean PUBLIC commit: `bash scripts/build-release.sh v0.1.3 OUTPUT`.
+Build from the reviewed, clean PUBLIC commit: `bash scripts/build-release.sh v0.1.2 OUTPUT`.
 Validate with `python scripts/check-release.py OUTPUT`, then use the existing
 `scripts/sign-release.py OUTPUT --key PRIVATE_KEY_PATH` outside the repository.
 Never copy the key into staging, containers or archives; retain the committed public key.

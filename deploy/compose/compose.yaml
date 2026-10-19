@@ -14,7 +14,7 @@ name: shmax
 
 services:
   web:
-    image: ${SHMAX_IMAGE:-shmax:0.1.3}
+    image: ${SHMAX_IMAGE:-shmax:0.1.2}
     restart: unless-stopped
     ports:
       # P0 #14 appliance model: default bind is loopback so the
@@ -31,7 +31,7 @@ services:
       SHMAX_LOG_LEVEL: ${SHMAX_LOG_LEVEL:-info}
       # Pinned in the bake file; surface here so the operator
       # can confirm at a glance.
-      SHMAX_VERSION: ${SHMAX_VERSION:-0.1.3}
+      SHMAX_VERSION: ${SHMAX_VERSION:-0.1.2}
     volumes:
       # Persistent layout created by the installer. Each
       # subdir gets explicit permissions in the installer.

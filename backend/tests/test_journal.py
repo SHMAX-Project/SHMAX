@@ -125,3 +125,9 @@ async def test_journal_failure_does_not_stop_actual_delivery(runtime, monkeypatc
         "synthetic delivery" in m["text"]
         for m in runtime.telegram_adapter.sent_messages
     )
+
+@pytest.mark.asyncio
+async def test_worker_stop_is_recorded_on_normal_shutdown(runtime):
+    await runtime.stop()
+    rows=runtime.journal.query(search='worker.stopped')['events']
+    assert len(rows)==runtime.config.max_concurrent_workers

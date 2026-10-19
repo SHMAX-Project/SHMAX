@@ -534,22 +534,26 @@ class PyMaxMaxAdapter(MaxAdapter):
     async def listen_events(self) -> AsyncIterator[MaxEvent]:
         if self._handle is None or not self._handle.started:
             raise MaxSessionError("listen_events() called before connect()")
-        events = self._handle.events
-        disconnect = self._handle.disconnect_event
-        while True:
+        handle = self._handle
+        events, disconnect = handle.events, handle.disconnect_event
+        generation = self.generation
+        while self._handle is handle:
             if disconnect.is_set() and events.empty():
                 return
-            get_task = asyncio.create_task(events.get())
-            disc_task = asyncio.create_task(disconnect.wait())
-            done, _ = await asyncio.wait(
-                {get_task, disc_task}, return_when=asyncio.FIRST_COMPLETED
-            )
-            if get_task in done:
-                disc_task.cancel()
+            get_task = asyncio.create_task(events.get(), name=f"shmax.max.event.get.{generation}")
+            disc_task = asyncio.create_task(disconnect.wait(), name=f"shmax.max.event.disconnect.{generation}")
+            try:
+                done, _ = await asyncio.wait({get_task, disc_task}, return_when=asyncio.FIRST_COMPLETED)
+                if get_task not in done or self._handle is not handle:
+                    return
                 yield get_task.result()
-            else:
-                get_task.cancel()
-                return
+            finally:
+                # Cancel BOTH waiters even if the outer listener was cancelled
+                # while waiting or suspended at yield during bridge processing.
+                for task in (get_task, disc_task):
+                    if not task.done():
+                        task.cancel()
+                await asyncio.gather(get_task, disc_task, return_exceptions=True)
 
     async def send_text(self, chat_id: str, text: str) -> DeliveryResult:
         return await self._send_impl(chat_id, text, reply_to=None)

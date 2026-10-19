@@ -1017,30 +1017,33 @@ class AppRuntime:
     async def _worker_loop(self, idx: int) -> None:
         self.journal.emit("worker.started",component="bridge")
         lease = self.config.queue_lease_seconds
-        while not self._shutdown.is_set():
-            try:
-                claimed = await self._claim_one(lease)
-                if claimed is None:
-                    # Wait for either a wakeup event or the poll
-                    # timeout. Wakeup makes the test deterministic
-                    # and reduces latency under live load.
-                    try:
-                        await asyncio.wait_for(
-                            self._wakeup_event.wait(),
-                            timeout=self.config.worker_poll_seconds,
-                        )
-                        self._wakeup_event.clear()
-                    except asyncio.TimeoutError:
-                        pass
-                    continue
-                await self._drain_one(claimed)
-            except asyncio.CancelledError:
-                self.journal.emit("worker.stopped",component="bridge")
-                break
-            except Exception:  # noqa: BLE001
-                self.journal.emit("worker.failed",component="bridge",aggregate=True)
-                logger.exception("delivery worker %d crashed", idx)
-                await asyncio.sleep(self.config.worker_poll_seconds)
+        try:
+            while not self._shutdown.is_set():
+                try:
+                    claimed = await self._claim_one(lease)
+                    if claimed is None:
+                        # Wait for either a wakeup event or the poll
+                        # timeout. Wakeup makes the test deterministic
+                        # and reduces latency under live load.
+                        try:
+                            await asyncio.wait_for(
+                                self._wakeup_event.wait(),
+                                timeout=self.config.worker_poll_seconds,
+                            )
+                            self._wakeup_event.clear()
+                        except asyncio.TimeoutError:
+                            pass
+                        continue
+                    await self._drain_one(claimed)
+                except asyncio.CancelledError:
+                    break
+                except Exception:  # noqa: BLE001
+                    self.journal.emit("worker.failed",component="bridge",aggregate=True)
+                    logger.exception("delivery worker %d crashed", idx)
+                    await asyncio.sleep(self.config.worker_poll_seconds)
+
+        finally:
+            self.journal.emit("worker.stopped",component="bridge")
 
     async def wakeup(self) -> None:
         """Nudge every worker so it re-checks the queue immediately.
@@ -1535,14 +1538,21 @@ class AppRuntime:
             logger.exception("max.connect failed")
             raise
         self._max_listener_generation = getattr(self._max, "generation", None)
-        async for event in self._max.listen_events():
-            if self._shutdown.is_set():
-                break
-            try:
-                normalized = _max_event_to_normalized(event)
-                await self._on_inbound("max", normalized)
-            except Exception:  # noqa: BLE001
-                logger.exception("max inbound handler failed")
+        iterator = self._max.listen_events()
+        try:
+            async for event in iterator:
+                if self._shutdown.is_set():
+                    break
+                try:
+                    normalized = _max_event_to_normalized(event)
+                    await self._on_inbound("max", normalized)
+                except Exception:  # noqa: BLE001
+                    logger.exception("max inbound handler failed")
+
+        finally:
+            close = getattr(iterator, "aclose", None)
+            if callable(close):
+                await close()
 
     async def _telegram_listener_loop(self) -> None:
         # Audit-mandated gate: only connect() if the adapter is

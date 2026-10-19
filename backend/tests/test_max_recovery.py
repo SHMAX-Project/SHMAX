@@ -243,3 +243,19 @@ async def test_verified_recovery_does_not_wait_for_stale_watchdog(runtime):
     assert (await rt.integration_snapshot())['max']['state']=='HEALTHY'
     rt._integration_probes['max'].update(error=True,error_class='verification_unavailable')
     assert (await rt.integration_snapshot())['max']['state']=='VERIFICATION_UNAVAILABLE'
+
+@pytest.mark.asyncio
+async def test_real_adapter_cancels_both_waiters_without_leaking_old_queue(tmp_path):
+    from types import SimpleNamespace
+    from shmax.adapters.max.pymax_adapter import PyMaxMaxAdapter,_PyMaxHandle
+    from shmax.adapters.max.config import PyMaxAdapterConfig
+    adapter=PyMaxMaxAdapter(PyMaxAdapterConfig(phone=None,session_dir=tmp_path))
+    async def close():pass
+    for generation in range(1,4):
+        adapter._generation=generation
+        adapter._handle=_PyMaxHandle(client=SimpleNamespace(close=close),events=asyncio.Queue(),started=True)
+        iterator=adapter.listen_events();consumer=asyncio.create_task(anext(iterator))
+        await asyncio.sleep(0);await asyncio.sleep(0)
+        consumer.cancel();await asyncio.gather(consumer,return_exceptions=True);await iterator.aclose()
+        await adapter.disconnect()
+        assert not [task for task in asyncio.all_tasks() if task.get_name().startswith('shmax.max.event.') and not task.done()]

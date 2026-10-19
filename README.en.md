@@ -242,6 +242,6 @@ SHMAX is licensed under [AGPL-3.0-or-later](LICENSE).
 [Third-party components and licenses](THIRD_PARTY_NOTICES.md) ·
 [Name and branding](TRADEMARKS.md).
 
-### v0.1.3 candidate
+### v0.1.2 candidate
 
-Prepared without automatic publication/deployment: MAX recovery, Xray switching and a [persistent event journal](docs/en/event-journal.md). [Release notes](release/v0.1.3/RELEASE_NOTES.en.md).
+Prepared without automatic publication/deployment: MAX recovery, Xray switching and a [persistent event journal](docs/en/event-journal.md). [Release notes](release/v0.1.2/RELEASE_NOTES.en.md).

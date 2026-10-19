@@ -23,7 +23,7 @@ variable "SHMAX_IMAGE" {
 }
 
 variable "SHMAX_VERSION" {
-  default = "0.1.3"
+  default = "0.1.2"
 }
 
 variable "PLATFORMS_AMD64" {

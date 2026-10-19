@@ -280,6 +280,8 @@ class XrayRuntimeManager:
         if not self.binary_path or not Path(self.binary_path).exists():
             raise XrayError(f"xray binary not found: {self.binary_path!r}")
 
+        journal=getattr(self,"journal",None)
+        if journal:journal.emit("xray.starting",component="xray")
         config_path = self._write_ephemeral_config(config)
         # NO shell=True: fixed argv, binary path from config.
         argv = [str(self.binary_path), "run", "-c", str(config_path)]
@@ -331,6 +333,7 @@ class XrayRuntimeManager:
                 f"xray local SOCKS 127.0.0.1:{self.socks_port} "
                 "did not become ready in time"
             )
+        if journal:journal.emit("xray.ready",component="xray")
         logger.info(
             "xray started pid=%s socks=127.0.0.1:%s",
             self._process.pid, self.socks_port,
