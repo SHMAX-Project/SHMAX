@@ -210,7 +210,12 @@ def _build_archive_bytes(data_dir: Path, shmax_version: str) -> tuple[bytes, Man
                 rel = file.relative_to(data_dir)
                 if rel.parts and rel.parts[0] == "db":
                     continue
-                data = file.read_bytes()
+                if str(rel) in {"state/events.db-journal","state/events.db-wal","state/events.db-shm"}:
+                    continue
+                if str(rel)=="state/events.db":
+                    data=_snapshot_sqlite(file,tmp_dir).read_bytes()
+                else:
+                    data = file.read_bytes()
                 entries.append(
                     {"path": str(rel), "sha256": _sha256(data), "size": len(data)}
                 )

@@ -152,7 +152,10 @@ def _classify_pymax_error(exc: BaseException) -> Exception:
     """Translate a PyMax exception into our typed hierarchy."""
     _ensure_pymax()
     if isinstance(exc, _PyMaxApiError):
-        return MaxTransportError(str(exc))
+        from pymax.app import App
+        if App._is_invalid_login_token_error(exc):
+            return MaxAuthError("MAX saved session rejected")
+        return MaxTransportError(type(exc).__name__)
     if isinstance(exc, _PyMaxPyMaxError):
         # Base class for everything PyMax raises; treat as transport
         # by default and let the adapter narrow further on context.
@@ -230,10 +233,11 @@ class PyMaxMaxAdapter(MaxAdapter):
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
-    def _build_client(self) -> Any:
+    def _build_client(self, *, saved_only=False) -> Any:
         cfg = self._config
         extra = _PyMaxExtraConfig(
-            reconnect=cfg.reconnect,
+            reconnect=False,  # SHMAX owns the sole recovery loop.
+            relogin=False,
             log_level=cfg.log_level,
             device_type=_device_type_to_enum(cfg.device_type),
         )
@@ -244,8 +248,14 @@ class PyMaxMaxAdapter(MaxAdapter):
             client=None,  # type: ignore[arg-type]
             events=asyncio.Queue(),
         )
+        self._generation = getattr(self, "_generation", 0) + 1
         self._handle = handle
+        class SavedSessionOnly:
+            async def authenticate(self, app):
+                raise MaxSessionError("saved MAX session unavailable; operator authentication required")
+        auth_kw = {"auth_flow": SavedSessionOnly()} if saved_only else {}
         client = _PyMaxClient(
+            **auth_kw,
             phone=cfg.phone or "",
             work_dir=str(cfg.session_dir),
             session_name=cfg.session_name,
@@ -264,11 +274,13 @@ class PyMaxMaxAdapter(MaxAdapter):
 
         @client.on_message()
         async def _on_msg(msg: Any, _client: Any) -> None:
-            handle.events.put_nowait(self._from_pymax_message(msg))
+            if self._handle is handle:
+                handle.events.put_nowait(self._from_pymax_message(msg))
 
         @client.on_message_edit()
         async def _on_edit(msg: Any, _client: Any) -> None:
-            handle.events.put_nowait(self._from_pymax_message(msg))
+            if self._handle is handle:
+                handle.events.put_nowait(self._from_pymax_message(msg))
 
         @client.on_disconnect()
         async def _on_disconnect(exc: Any, _reconnect: bool, _delay: float) -> None:
@@ -353,10 +365,22 @@ class PyMaxMaxAdapter(MaxAdapter):
             )
         await super().prepare_sms(phone=phone)
 
+    @property
+    def generation(self):
+        return getattr(self, "_generation", 0)
+
+    async def connect_saved(self) -> None:
+        if not self._session_file_exists():
+            raise MaxSessionError("saved session unavailable")
+        await self._connect(saved_only=True)
+
     async def connect(self) -> None:
-        if self._handle is not None and self._handle.started:
+        await self._connect(saved_only=False)
+
+    async def _connect(self, *, saved_only) -> None:
+        if self._handle is not None and self._handle.started and getattr(self._handle.client,"is_connected",False):
             return
-        client = self._build_client()
+        client = self._build_client(saved_only=saved_only)
         try:
             await client.connect()
         except BaseException as e:
@@ -462,11 +486,14 @@ class PyMaxMaxAdapter(MaxAdapter):
     async def disconnect(self) -> None:
         if self._handle is None:
             return
-        client = self._handle.client
+        handle = self._handle
+        handle.disconnect_event.set()
+        client = handle.client
         try:
             await client.close()
         finally:
-            self._handle = None
+            if self._handle is handle:
+                self._handle = None
 
     async def authenticate(self) -> None:
         if self._handle is None:

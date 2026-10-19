@@ -74,22 +74,32 @@ class TelegramRecovery:
                 try:
                     health = await asyncio.wait_for(adapter.health(), timeout=10)
                     if health.get("connected") and health.get("authenticated") and health.get("polling") is not False:
+                        if self.status["state"]!="HEALTHY" and getattr(self.runtime,"journal",None):
+                            self.runtime.journal.emit("telegram.recovery_success",component="telegram")
                         self.status.update(state="HEALTHY", failure=None, retry_in_seconds=None)
                         return {"restored": True, "state": "HEALTHY", "detail": "listener operational"}
                     if health.get("polling") is True:
                         # aiogram owns retries of its existing long-poll. A failed
                         # health getMe must not replace a still-live consumer.
+                        if getattr(self.runtime,"journal",None):
+                            self.runtime.journal.emit("telegram.disconnected",component="telegram",error_class="TransportUnavailable",aggregate=True)
                         self.status.update(state="DEGRADED", failure="telegram_unreachable")
                         return {"restored": False, "state": "DEGRADED", "detail": "telegram_unreachable"}
                 except Exception:
                     polling = getattr(adapter, "_polling_task", None)
                     if polling is not None and not polling.done():
+                        if getattr(self.runtime,"journal",None):
+                            self.runtime.journal.emit("telegram.disconnected",component="telegram",error_class="TransportUnavailable",aggregate=True)
                         self.status.update(state="DEGRADED", failure="health_probe_unavailable")
                         return {"restored": False, "state": "DEGRADED", "detail": "health_probe_unavailable"}
             self.status.update(state="CONNECTING", retry_in_seconds=None)
             self.status["attempts"] += 1
+            journal=getattr(self.runtime,"journal",None)
+            if journal:journal.emit("telegram.recovery_attempt",component="telegram",attempt=self.status["attempts"],aggregate=True)
             result = await self.restore()
             state = result["state"]
+            if journal and (result["restored"] or state!="NOT_CONFIGURED"):
+                journal.emit("telegram.recovery_success" if result["restored"] else "telegram.disconnected",component="telegram",aggregate=not result["restored"])
             self.status.update(state=state, failure=None if result["restored"] else result["detail"])
             logger.info("telegram recovery state=%s attempt=%s failure=%s", state, self.status["attempts"], self.status["failure"])
             return result

@@ -106,8 +106,8 @@ export async function session(): Promise<SessionStatus> {
   return api<SessionStatus>('/api/auth/session');
 }
 
-export type IntegrationState = 'NOT_CONFIGURED' | 'CONFIGURED' | 'CONNECTING' | 'HEALTHY' | 'DEGRADED' | 'DOWN' | 'AUTH_REQUIRED' | 'ERROR';
-export interface IntegrationStatus { recovery?: { state: IntegrationState; attempts: number; failure: string | null; retry_in_seconds: number | null }; configured: boolean; state: IntegrationState; authenticated: boolean; connected: boolean; account_id: string | null; bot_id: string | null; last_probe_at: number | null; }
+export type IntegrationState = 'NOT_CONFIGURED' | 'CONFIGURED' | 'CONNECTING' | 'HEALTHY' | 'DEGRADED' | 'DOWN' | 'AUTH_REQUIRED' | 'ERROR' | 'RECONNECTING' | 'VERIFICATION_UNAVAILABLE';
+export interface IntegrationStatus { recovery?: { state: IntegrationState; attempts: number; failure: string | null; retry_in_seconds: number | null; last_success_at?: number | null }; configured: boolean; state: IntegrationState; authenticated: boolean; connected: boolean; account_id: string | null; bot_id: string | null; last_probe_at: number | null; }
 export interface StatusSnapshot {
   service: string;
   version: string;
@@ -496,7 +496,10 @@ export async function xraySubscribe(url: string): Promise<{ ok: boolean; nodes: 
 
 export async function xraySelect(nodeId: string): Promise<{
   ok: boolean;
-  xray: { state: string; detail: string; socks_port: number | null; pid: number | null };
+  applied?: boolean;
+  rolled_back?: boolean;
+  adapter_installed?: boolean;
+  xray?: { state: string; detail: string; socks_port: number | null; pid: number | null };
   reachable: boolean;
   detail: string;
   bot_error?: string;

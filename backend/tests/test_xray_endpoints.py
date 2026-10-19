@@ -628,3 +628,33 @@ def test_app_owned_manager_shared_across_bootstrap_api_shutdown(
     )
     assert manager.is_running is False
     assert manager._process is None
+
+@pytest.mark.parametrize('with_token',[False,True])
+def test_v013_successful_select_with_optional_token(client,monkeypatch,tmp_path,with_token):
+    from types import SimpleNamespace as NS
+    from shmax.xray import state as xs
+    _seed_subscription_directly(client);node_id=client.get('/api/telegram/xray/status').json()['nodes'][0]['id']
+    manager=client.app.state.xray_manager;binary=tmp_path/'xray';binary.touch();manager.binary_path=str(binary);calls=[]
+    async def valid(*a,**kw):return True,'valid'
+    async def restart(*a,**kw):calls.append('restart');return NS(to_dict=lambda:{'state':'running'})
+    async def reachable(**kw):return NS(ok=True,detail='fixture')
+    async def probed(self,**kw):calls.append('probed');return NS()
+    async def install(*a,**kw):calls.append('installed')
+    monkeypatch.setattr(type(manager),'test_config',valid);monkeypatch.setattr(type(manager),'restart',restart);monkeypatch.setattr('shmax.xray.reachability.probe_telegram',reachable)
+    monkeypatch.setattr('shmax.adapters.telegram.manager.TelegramTransportManager.select_probed',probed);monkeypatch.setattr(client.app.state.runtime,'install_telegram',install)
+    if with_token:client.app.state.secrets.set_secret('telegram_bot_token','123:synthetic-fixture-only')
+    response=client.post('/api/telegram/xray/select',json={'node_id':node_id})
+    assert response.status_code==200 and response.json()['ok'],response.json();assert ('installed' in calls)==with_token;assert xs.load_selected(client.app.state.secrets)[0]==node_id
+
+def test_v013_unreachable_switch_rolls_back(client,monkeypatch,tmp_path):
+    from types import SimpleNamespace as NS
+    from shmax.xray import state as xs
+    from shmax.xray.subscription import parse_subscription
+    _seed_subscription_directly(client);parsed=parse_subscription(VLESS_OK+'\n'+VLESS_OK.replace('tg1.example.com','tg2.example.com'));xs.store_subscription(client.app.state.secrets,'https://synthetic.invalid',parsed.raw_links)
+    first,new=parsed.nodes;xs.store_selection(client.app.state.secrets,first.node_id,parsed.raw_links[first.node_id]);manager=client.app.state.xray_manager;binary=tmp_path/'xray';binary.touch();manager.binary_path=str(binary)
+    monkeypatch.setattr(type(manager),'is_running',property(lambda self:True));calls=[]
+    async def valid(*a,**kw):return True,'valid'
+    async def restart(self,config):calls.append(config);return NS(to_dict=lambda:{'state':'running'})
+    async def unreachable(**kw):return NS(ok=False,detail='fixture')
+    monkeypatch.setattr(type(manager),'test_config',valid);monkeypatch.setattr(type(manager),'restart',restart);monkeypatch.setattr('shmax.xray.reachability.probe_telegram',unreachable)
+    response=client.post('/api/telegram/xray/select',json={'node_id':new.node_id});assert response.status_code==200 and response.json()['rolled_back'];assert len(calls)==2 and xs.load_selected(client.app.state.secrets)[0]==first.node_id

@@ -25,7 +25,7 @@ export function WatchdogCard({adapter,label,canonical,reload}: {adapter:'max'|'t
   const [busy,setBusy]=React.useState(false);
   const [error,setError]=React.useState('');
   const state=canonical?.state;
-  const labels:Record<string,string>={NOT_CONFIGURED:'⚪ Не настроен',CONFIGURED:'Настроен, не проверен',CONNECTING:'Подключаем…',HEALTHY:'🟢 Работает',DEGRADED:'🟡 Деградация',DOWN:'🔴 Недоступен',AUTH_REQUIRED:'Требуется вход',ERROR:'Ошибка'};
+  const labels:Record<string,string>={RECONNECTING:'Переподключаем…',VERIFICATION_UNAVAILABLE:'Проверка сессии временно недоступна',NOT_CONFIGURED:'⚪ Не настроен',CONFIGURED:'Настроен, не проверен',CONNECTING:'Подключаем…',HEALTHY:'🟢 Работает',DEGRADED:'🟡 Деградация',DOWN:'🔴 Недоступен',AUTH_REQUIRED:'Требуется вход',ERROR:'Ошибка'};
   return <div className="card" data-testid={`${adapter}-status`}><h3>{label}</h3><span className={`tag ${state==='HEALTHY'?'healthy':state==='NOT_CONFIGURED'?'not-configured':'not-tested'}`}>{state?labels[state]:'Проверяем…'}</span>{state==='NOT_CONFIGURED'?<p><Link to={adapter === "max" ? "/max/settings" : "/telegram/network"}>Настроить {label}</Link></p>:state&&<button disabled={busy} onClick={async()=>{setBusy(true);setError('');try{await api(`/api/watchdogs/${adapter}/probe`,{method:'POST'});reload?.();}catch(e:any){setError(e.message);}finally{setBusy(false);}}}>Проверить сейчас</button>}{error&&<p role="alert">{error}</p>}</div>;
 }
 

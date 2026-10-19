@@ -11,7 +11,7 @@ from .adapters.max.fake import FakeMaxAdapter
 from .adapters.telegram.fake import FakeTelegramAdapter
 from .adapters.telegram.config import TransportMode
 
-STATES = {"NOT_CONFIGURED", "CONFIGURED", "CONNECTING", "HEALTHY", "DEGRADED", "DOWN", "AUTH_REQUIRED", "ERROR"}
+STATES = {"NOT_CONFIGURED", "CONFIGURED", "CONNECTING", "HEALTHY", "DEGRADED", "DOWN", "AUTH_REQUIRED", "ERROR", "RECONNECTING", "VERIFICATION_UNAVAILABLE"}
 
 
 def live_adapter(adapter) -> bool:
@@ -40,6 +40,8 @@ def evidence_state(configured, adapter, probe, snap, now, runtime_mode=None):
     if now - probe["at"] > 2 * 60:
         return "DEGRADED"
     if probe.get("error"):
+        if probe.get("error_class")=="auth_rejected":return "AUTH_REQUIRED"
+        if probe.get("error_class")=="verification_unavailable":return "VERIFICATION_UNAVAILABLE"
         return "ERROR"
     health = probe["health"]
     if not health.get("authenticated"):
@@ -108,6 +110,14 @@ async def snapshot(runtime):
                         "account_id": health.get("account_id") if name == "max" else None,
                         "bot_id": health.get("bot_id") if name == "telegram" else None,
                         "last_probe_at": probe.get("wall_at") if probe else None}
+    mx_recovery=getattr(runtime,"max_recovery",None)
+    if mx_recovery is not None and max_configured:
+        result["max"]["recovery"]=dict(mx_recovery.status)
+        if mx_recovery.status["state"]!="HEALTHY":
+            result["max"]["state"]=mx_recovery.status["state"]
+            result["max"]["status"]=mx_recovery.status["state"].lower()
+        elif not mx_recovery.listener_alive():
+            result["max"].update(state="DEGRADED",status="degraded")
     if recovery is not None:
         result["telegram"]["recovery"] = dict(recovery.status)
     workers = bool(runtime.started and runtime._worker_tasks and all(not task.done() for task in runtime._worker_tasks))

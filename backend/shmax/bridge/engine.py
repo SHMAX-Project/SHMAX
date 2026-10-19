@@ -74,7 +74,9 @@ class BridgeEngine:
             "Callable[[str, object], Awaitable[Optional[object]]]"
         ] = None,
         db=None,
+        journal=None,
     ) -> None:
+        self.journal = journal
         self._config = config
         self._routes = routes
         self._mapping = mapping
@@ -269,6 +271,7 @@ class BridgeEngine:
         # Check duplicate external id in the mapping.
         known = await self._find_existing(direction, event)
         if known is not None:
+            if self.journal:self.journal.emit("message.duplicate",direction=direction.value)
             logger.debug("drop duplicate %s event id=%s", direction.value, event.external_id)
             return False
 
@@ -348,6 +351,7 @@ class BridgeEngine:
         if not event.attachments:
             return None, None
         unsupported, supported, _ = self._split_attachments(event)
+        if unsupported and getattr(self,"journal",None):self.journal.emit("attachment.unsupported",component=source)
         labels: list[str] = []
         for a in unsupported:
             labels.append(a.kind.value if hasattr(a.kind, "value") else str(a.kind))
@@ -710,6 +714,8 @@ class BridgeEngine:
         }
         if media is not None:
             payload.update(media)
+        from ..journal import correlation
+        payload["journal_correlation"] = correlation.get()
         idem = f"max:{event.chat.external_id}:{event.external_id}:max_to_telegram"
         await self._queue.enqueue(
             direction=payload["direction"],
@@ -718,6 +724,7 @@ class BridgeEngine:
             target_thread_id=route.telegram_thread_id,
             idempotency_key=idem,
         )
+        if self.journal:self.journal.emit("message.queued",direction=payload["direction"])
         if self._on_enqueue is not None:
             await self._on_enqueue()
 
@@ -798,6 +805,8 @@ class BridgeEngine:
         }
         if media is not None:
             payload.update(media)
+        from ..journal import correlation
+        payload["journal_correlation"] = correlation.get()
         idem = f"tg:{event.chat.external_id}:{event.external_id}:tg_to_max"
         await self._queue.enqueue(
             direction=payload["direction"],
@@ -806,6 +815,7 @@ class BridgeEngine:
             target_thread_id=None,
             idempotency_key=idem,
         )
+        if self.journal:self.journal.emit("message.queued",direction=payload["direction"])
         if self._on_enqueue is not None:
             await self._on_enqueue()
 

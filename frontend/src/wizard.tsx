@@ -911,7 +911,10 @@ export function StepTelegramNetwork(props: { onNext: () => void; onPrev: () => v
         setStatus('Cached node active');
         setNetworkOk(true);
       } else {
-        setStatus(r.xray?.state === 'running' ? 'Прокси запущен; Telegram недоступен' : 'Прокси не готов');
+        setNetworkOk(false);
+        setStatus(r.rolled_back ? 'Предыдущий узел восстановлен' : r.reachable ? 'Сеть доступна; бот восстанавливается' : r.xray?.state === 'running' ? 'Прокси запущен; Telegram недоступен' : 'Прокси не готов');
+        const current=await xrayStatus();
+        setSelectedNode(current.selected_node_id || '');
         setError(r.detail || 'Прокси недоступен');
       }
     } catch (e: any) {

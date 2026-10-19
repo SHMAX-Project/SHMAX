@@ -50,7 +50,7 @@ except (LocalUpdateError, ReleaseDownloadError, OSError, ValueError) as exc:
 with launcher.open("wb") as raw:
     raw.write(b"#!/usr/bin/env python3\n")
     with zipfile.ZipFile(raw, "w", compression=zipfile.ZIP_DEFLATED) as zipped:
-        for name, content in [("__main__.py", main.encode()), ("local_update.py", (root / "backend/shmax/host/local_update.py").read_bytes()), ("release_download.py", (root / "backend/shmax/host/release_download.py").read_bytes())]:
+        for name, content in [("__main__.py", main.encode()), ("local_update.py", (root / "backend/shmax/host/local_update.py").read_bytes()), ("release_download.py", (root / "backend/shmax/host/release_download.py").read_bytes()), ("journal.py", (root / "backend/shmax/journal.py").read_bytes())]:
             entry = zipfile.ZipInfo(name); entry.compress_type = zipfile.ZIP_DEFLATED
             zipped.writestr(entry, content)
 launcher.chmod(0o755)

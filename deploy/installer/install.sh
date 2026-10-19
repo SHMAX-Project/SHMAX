@@ -40,7 +40,7 @@ set -o pipefail
 readonly SHMAX_OPT="/opt/shmax"
 readonly SHMAX_DATA="/var/lib/shmax"
 readonly SHMAX_PORT="${SHMAX_PORT:-8787}"
-readonly SHMAX_VERSION="${SHMAX_VERSION:-0.1.1}"
+readonly SHMAX_VERSION="${SHMAX_VERSION:-0.1.3}"
 readonly SHMAX_MARKER="${SHMAX_OPT}/.shmax-installed"
 readonly SHMAX_USER="shmax"
 readonly SHMAX_GROUP="shmax"

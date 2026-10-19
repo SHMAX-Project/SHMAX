@@ -1232,6 +1232,7 @@ def create_app(
         # APP-OWNED Xray manager (surgical review): created once on
         # app.state; startup bootstrap, API and shutdown share it.
         app.state.xray_manager = xstate.build_manager()
+        app.state.xray_manager.journal=runtime.journal
         runtime.xray_manager_ref = app.state.xray_manager
 
         restore_handler = _build_telegram_command_handler(
@@ -1325,6 +1326,12 @@ def create_app(
             "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
             "img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'",
         )
+        if request.method in {"POST","PUT","DELETE","PATCH"} and response.status_code<300:
+            runtime=getattr(request.app.state,"runtime",None)
+            if runtime:
+                runtime.journal.emit("admin.action",component="system")
+                if request.url.path in {"/api/telegram/transport","/api/telegram/xray/subscription","/api/settings"}:
+                    runtime.journal.emit("config.changed",component="system")
         return response
 
     # -----------------------------------------------------------------
@@ -1903,7 +1910,10 @@ def create_app(
         # honours the configured backoff and self-heal retries.
         if runtime is not None:
             try:
-                await runtime.max_watchdog.reconnect_now()
+                if runtime.max_recovery is not None:
+                    runtime.max_recovery.trigger()
+                else:
+                    await runtime.max_watchdog.reconnect_now()
             except Exception:  # noqa: BLE001
                 logger.exception("max reconnect_now() failed")
         return {"ok": True, "reconnect_attempts": snap.reconnect_attempts}
@@ -2909,6 +2919,17 @@ def create_app(
         dependencies=[Depends(require_admin), Depends(require_csrf)],
     )
     async def xray_select(req: Annotated[XraySelectRequest, Body()], request: Request) -> dict:
+        lock=getattr(app.state,"xray_switch_lock",None)
+        if lock is None:
+            lock=app.state.xray_switch_lock=asyncio.Lock()
+        async with lock:
+            recovery=getattr(app.state.runtime,"telegram_recovery",None)
+            if recovery is not None:
+                async with recovery._lock:
+                    return await _xray_select_locked(req,request)
+            return await _xray_select_locked(req,request)
+
+    async def _xray_select_locked(req,request):
         """Select a node: persist it (encrypted), start/restart Xray
         with the ephemeral config, point Telegram SOCKS5 at the local
         Xray port, and probe Telegram through it. No direct fallback.
@@ -2942,13 +2963,31 @@ def create_app(
         # process attempt: even if Xray fails to start now, the
         # cached node lets a later startup/retry proceed without the
         # subscription server being online.
-        xstate.store_selection(secret_store, req.node_id, raw_link)
+        previous=xstate.load_selected(secret_store)
+        previous_config=xstate.selected_node_config(secret_store,local_socks_port=manager.socks_port)
+        previous_running=manager.is_running
+        runtime=app.state.runtime
+        runtime.journal.emit("xray.selection",component="xray")
+        # A first selection remains recoverable from cache even on startup failure.
+        # Existing selection is committed only after transport/adapter acceptance.
+        if previous is None:xstate.store_selection(secret_store, req.node_id, raw_link)
+        async def rollback():
+            if previous and previous_config and previous_running:
+                try:
+                    await manager.restart(previous_config)
+                    xstate.store_selection(secret_store,*previous)
+                    if runtime.telegram_recovery:runtime.telegram_recovery.trigger()
+                    return True
+                except Exception:
+                    return False
+            xstate.store_selection(secret_store,req.node_id,raw_link)
+            return False
 
         # Point Telegram at the local Xray SOCKS (persisted via the
         # existing SecretStore-backed transport path) BEFORE the
         # process attempt — the persisted mode survives a failed
         # Xray start, so restart restores through Xray, never direct.
-        from ..adapters.telegram.config import ProxyConfig, TransportMode
+        from ..adapters.telegram.config import ProxyConfig, TransportMode, TransportConfig
         from ..startup_restore import persist_telegram_transport
 
         proxy = ProxyConfig(
@@ -2982,63 +3021,87 @@ def create_app(
                 f"узел отклонён Xray: {config_detail}",
             )
         try:
-            xray_status_obj = await manager.restart(config)
-        except XrayError as e:
-            raise HTTPException(http_status.HTTP_502_BAD_GATEWAY, f"Xray не запущен: {e}")
-
-        runtime = app.state.runtime
-        # getMe through the local SOCKS ONLY when a token exists;
-        # otherwise a pure reachability probe. NO direct fallback.
-        result = await probe_telegram(
-            mode="bot_api_socks5",
-            proxy_host="127.0.0.1",
-            proxy_port=manager.socks_port,
-            timeout=10.0,
-        )
-        if result.ok and token_present and runtime is not None:
-            cfg = TransportConfig(
-                mode=TransportMode.BOT_API_SOCKS5,
-                bot_token=secret_store.get_secret("telegram_bot_token"),
-                proxy=proxy,
-                session_dir=str(layout.root / "sessions" / "telegram"),
-            )
-            from ..adapters.telegram.manager import (
-                TelegramAutoStateStore,
-                TelegramTransportManager,
-            )
-
-            t_manager = TelegramTransportManager(
-                cfg,
-                TelegramAutoStateStore(layout.root / "state" / "telegram_auto.json"),
-            )
             try:
-                override = TransportMode.BOT_API_SOCKS5
-                new_adapter = await t_manager.select_probed(override_mode=override)
-                handler = _build_telegram_command_handler(
-                    member_sync=member_sync,
-                    users=TelegramUsersRepository(db),
-                    pairing_codes=PairingCodesRepository(db.session),
-                    secret_store=secret_store,
-                    db=db,
-                    adapter_getter=lambda: runtime.telegram_adapter,
-                    limiter=limiter,
-                    on_paired=lambda: asyncio.get_running_loop().create_task(
-                        runtime.probe_integration("telegram")
-                    ),
+                runtime.journal.emit("xray.starting",component="xray")
+                xray_status_obj = await manager.restart(config)
+                runtime.journal.emit("xray.ready",component="xray")
+            except XrayError:
+                restored=await rollback()
+                runtime.journal.emit("xray.switch_failed",component="xray",result="rolled_back" if restored else "degraded")
+                return {"ok":False,"applied":not restored,"rolled_back":restored,"reachable":False,"detail":"Xray не запущен; предыдущий узел восстановлен" if restored else "Xray не запущен; требуется повторная проверка"}
+
+            runtime = app.state.runtime
+            # getMe through the local SOCKS ONLY when a token exists;
+            # otherwise a pure reachability probe. NO direct fallback.
+            result = await probe_telegram(
+                mode="bot_api_socks5",
+                proxy_host="127.0.0.1",
+                proxy_port=manager.socks_port,
+                timeout=10.0,
+            )
+            if not result.ok:
+                restored=await rollback()
+                runtime.journal.emit("xray.switch_failed",component="xray",result="rolled_back" if restored else "degraded")
+                if runtime.telegram_recovery:runtime.telegram_recovery.trigger()
+                return {"ok":False,"applied":not restored,"rolled_back":restored,"reachable":False,"detail":"Новый узел недоступен; предыдущий восстановлен" if restored else "Узел применён, но Telegram недоступен; восстановление продолжится"}
+            if result.ok and token_present and runtime is not None:
+                from ..users.repository import TelegramUsersRepository
+                from ..pairing.repository import PairingCodesRepository
+                cfg = TransportConfig(
+                    mode=TransportMode.BOT_API_SOCKS5,
+                    bot_token=secret_store.get_secret("telegram_bot_token"),
+                    proxy=proxy,
+                    session_dir=str(layout.root / "sessions" / "telegram"),
                 )
-                await runtime.install_telegram(
-                    t_manager, new_adapter, on_command=handler
+                from ..adapters.telegram.manager import (
+                    TelegramAutoStateStore,
+                    TelegramTransportManager,
                 )
-            except Exception as e:  # noqa: BLE001
-                return {
-                    "ok": True,
-                    "xray": xray_status_obj.to_dict(),
-                    "reachable": True,
-                    "detail": "Telegram доступен, но бот ещё не проверен",
-                    "bot_error": f"{type(e).__name__}: {e}"[:200],
-                }
+
+                t_manager = TelegramTransportManager(
+                    cfg,
+                    TelegramAutoStateStore(layout.root / "state" / "telegram_auto.json"),
+                )
+                new_adapter=None
+                try:
+                    override = TransportMode.BOT_API_SOCKS5
+                    new_adapter = await t_manager.select_probed(override_mode=override)
+                    handler = _build_telegram_command_handler(
+                        member_sync=member_sync,
+                        users=TelegramUsersRepository(db),
+                        pairing_codes=PairingCodesRepository(db.session),
+                        secret_store=secret_store,
+                        db=db,
+                        adapter_getter=lambda: runtime.telegram_adapter,
+                        limiter=limiter,
+                        on_paired=lambda: asyncio.get_running_loop().create_task(
+                            runtime.probe_integration("telegram")
+                        ),
+                    )
+                    await runtime.install_telegram(
+                        t_manager, new_adapter, on_command=handler
+                    )
+                except Exception as e:
+                    if new_adapter is not None and runtime.telegram_adapter is not new_adapter:
+                        try:await asyncio.wait_for(new_adapter.disconnect(),timeout=5)
+                        except Exception:pass
+                    restored=await rollback()
+                    if runtime.telegram_recovery:runtime.telegram_recovery.trigger()
+                    runtime.journal.emit("xray.switch_failed",component="xray",error_class=type(e).__name__,result="rolled_back" if restored else "degraded")
+                    return {"ok":False,"applied":not restored,"rolled_back":restored,
+                            "reachable":True,"detail":"Сеть доступна, но адаптер бота не установлен; восстановление продолжится",
+                            "bot_error":type(e).__name__}
+        except asyncio.CancelledError:
+            cleanup=asyncio.create_task(rollback())
+            await asyncio.shield(cleanup)
+            raise
+        xstate.store_selection(secret_store, req.node_id, raw_link)
+        runtime.journal.emit("xray.switch_completed",component="xray",result="success")
+        if runtime.telegram_recovery:runtime.telegram_recovery.trigger()
         return {
             "ok": True,
+            "applied": True,
+            "adapter_installed": bool(token_present),
             "xray": xray_status_obj.to_dict(),
             "reachable": result.ok,
             "detail": result.detail,
@@ -3806,13 +3869,38 @@ def create_app(
     # -----------------------------------------------------------------
     # Logs
     # -----------------------------------------------------------------
+    @app.get("/api/journal", dependencies=[Depends(require_admin), Depends(require_csrf)])
+    async def journal_endpoint(request: Request, limit: int = 50, before: str | None = None,
+                               severity: str | None = None, category: str | None = None,
+                               search: str = "", since: str | None = None, until: str | None = None):
+        from ..journal import SEVERITIES,CATEGORIES
+        if not 1<=limit<=200 or len(search)>128 or (before and len(before)>80):
+            raise HTTPException(400,"Недопустимый размер запроса")
+        if severity and severity not in SEVERITIES or category and category not in CATEGORIES:
+            raise HTTPException(400,"Недопустимый фильтр")
+        def epoch(value):
+            if value is None:return None
+            parsed=_dt.datetime.fromisoformat(value.replace("Z","+00:00"))
+            if parsed.tzinfo is None:raise ValueError()
+            return parsed.timestamp()
+        try:
+            return await asyncio.to_thread(request.app.state.runtime.journal.query,
+                limit=limit,before=before,severity=severity,category=category,search=search,
+                since=epoch(since),until=epoch(until))
+        except ValueError:
+            raise HTTPException(400,"Недопустимая дата или курсор") from None
+        except Exception:
+            raise HTTPException(503,"Журнал временно недоступен") from None
+
     @app.get("/api/logs", dependencies=[Depends(require_admin), Depends(require_csrf)])
     async def logs_endpoint(tail: int = 200) -> dict:
         path = layout.root / "logs" / "shmax.log"
         if not path.is_file():
             return {"lines": []}
-        text = path.read_text(errors="replace").splitlines()
-        return {"lines": text[-tail:]}
+        from collections import deque
+        with path.open(errors="replace") as stream:
+            lines=list(deque(stream,maxlen=max(1,min(tail,1000))))
+        return {"lines":[line.rstrip("\n") for line in lines]}
 
     # -----------------------------------------------------------------
     # Routers

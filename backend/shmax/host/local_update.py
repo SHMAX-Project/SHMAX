@@ -154,6 +154,17 @@ class LocalReleaseUpdater:
             time.sleep(2)
         return False
 
+    def journal_event(self,event_type):
+        # Metadata only; this must never affect update/rollback success.
+        try:
+            try:from shmax.journal import EventJournal
+            except ImportError:from journal import EventJournal
+            j=EventJournal(self.data/'state'/'events.db');j._init()
+            owner=j.path.parent.stat();os.chown(j.path,owner.st_uid,owner.st_gid)
+            j.emit(event_type,component='system')
+            j._write([j.queue.get_nowait()])
+        except Exception:pass
+
     def apply(self, archive: Path):
         if os.geteuid()!=0:raise LocalUpdateError('run with sudo on the SHMAX host')
         archive=Path(archive).resolve()
@@ -260,6 +271,7 @@ class LocalReleaseUpdater:
                 wrapper=Path('/usr/local/bin/shmax.new')
                 wrapper.write_text('#!/bin/sh\nif [ "$1" = update ] && [ "$2" != check ] && [ "$2" != apply ]; then exec python3 /opt/shmax-updater/shmax.pyz "$@"; fi\nexec /opt/shmax-hostd/bin/shmax "$@"\n')
                 wrapper.chmod(0o755);os.replace(wrapper,Path('/usr/local/bin/shmax'))
+                self.journal_event('update.success')
                 print('UPDATE VERIFIED; report: '+str(self.report),flush=True)
                 return self.report
             except BaseException as exc:
@@ -301,6 +313,8 @@ class LocalReleaseUpdater:
                         old_container=self.compose('ps','-q','web').strip()
                         if not self.ready(host,port,old_container,integrations=False):raise LocalUpdateError('previous application failed readiness')
                         (self.report/'rollback.json').write_text(json.dumps({'healthy':True,'image':old_image}))
+                        self.journal_event('update.failed')
+                        self.journal_event('update.rollback')
                     except Exception as rollback_exc:
                         raise LocalUpdateError('UPDATE AND ROLLBACK FAILED; protected report: '+str(self.report)) from rollback_exc
                 raise LocalUpdateError('update failed; previous image restored; protected report: '+str(self.report)) from exc

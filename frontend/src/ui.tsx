@@ -14,6 +14,8 @@ const STATE_TONE: Record<string, { cls: string; label: string }> = {
   NOT_CONFIGURED: { cls: 'idle', label: 'Не настроен' },
   CONFIGURED: { cls: 'info', label: 'Настроен' },
   CONNECTING: { cls: 'info', label: 'Подключение…' },
+  RECONNECTING: { cls:'info',label:'Переподключаем…' },
+  VERIFICATION_UNAVAILABLE: { cls:'warn',label:'Проверка сессии временно недоступна' },
   ERROR: { cls: 'error', label: 'Ошибка' },
 };
 

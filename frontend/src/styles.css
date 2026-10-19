@@ -880,3 +880,8 @@ a.brand { color: inherit; text-decoration: none; border-radius: 8px; }
 a.brand:hover { background: rgba(255,255,255,.06); }
 a.brand:focus-visible { outline: 2px solid var(--accent, #78b7ff); outline-offset: 4px; }
 .wizard-exit { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+
+/* Bounded event journal controls; shared brand/theme stays intact. */
+.journal-filters { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:12px; padding:16px; }
+.journal-filters label { display:flex; flex-direction:column; gap:6px; min-width:0; }
+.journal-filters input { box-sizing:border-box; width:100%; min-width:0; padding:10px 12px; border:1px solid var(--border); border-radius:8px; background:var(--panel); color:var(--fg); }

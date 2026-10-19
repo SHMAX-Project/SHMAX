@@ -300,6 +300,10 @@ class AppRuntime:
         self._max: MaxAdapter
         self._tg: TelegramAdapter
         self._tg_manager: TelegramTransportManager | None = None
+        from .journal import EventJournal
+        self.journal = EventJournal(layout.root / "state" / "events.db")
+        self.max_recovery = None
+        self._max_listener_generation = None
         self._integration_probes: dict[str, dict] = {}
         self._select_default_adapters()
 
@@ -679,8 +683,10 @@ class AppRuntime:
                     probe["verified"] = bool(health.get("bot_id"))
                 probe["health"] = health
             await asyncio.wait_for(verify(), timeout=15)
-        except Exception:
+        except Exception as exc:
             probe["error"] = True
+            from .adapters.max.errors import MaxAuthError
+            probe["error_class"] = "auth_rejected" if isinstance(exc, MaxAuthError) else "verification_unavailable"
         self._integration_probes[name] = probe
 
     # ------------------------------------------------------------------
@@ -813,6 +819,12 @@ class AppRuntime:
                 continue
             sup.start()
         self.started = True
+        await self.journal.start()
+        self.journal.emit("system.started", component="system")
+        self.journal.emit("database.migrated", component="system")
+        if hasattr(self._max, "connect_saved"):
+            from .max_recovery import MaxRecovery
+            self.max_recovery = MaxRecovery(self)
         logger.info("AppRuntime started")
 
     # ------------------------------------------------------------------
@@ -855,6 +867,7 @@ class AppRuntime:
             return
         await sup.stop()
         self._max_listener_started = False
+        self._max_listener_generation = None
         logger.info("AppRuntime: max_listener paused")
 
     async def _on_max_auth_state_change(self, snap) -> None:
@@ -876,6 +889,7 @@ class AppRuntime:
             if state == MaxAuthState.AUTHENTICATED:
                 await self._upsert_max_account(snap)
                 await self.start_max_listener()
+                if self.max_recovery:self.max_recovery.notify_authenticated()
                 # Refresh the integration probe promptly so the UI
                 # reflects reality without waiting for the next
                 # watchdog tick.
@@ -918,7 +932,10 @@ class AppRuntime:
             await s.commit()
 
     async def stop(self) -> None:
+        self.journal.emit("system.stopping",component="system")
         logger.info("AppRuntime stopping")
+        if self.max_recovery is not None:
+            await self.max_recovery.close()
         self._shutdown.set()
         if self.telegram_recovery is not None:
             await self.telegram_recovery.close()
@@ -978,6 +995,7 @@ class AppRuntime:
             pass
 
         self.started = False
+        await self.journal.close()
         logger.info("AppRuntime stopped")
 
     # ------------------------------------------------------------------
@@ -997,6 +1015,7 @@ class AppRuntime:
             self._worker_tasks.append(task)
 
     async def _worker_loop(self, idx: int) -> None:
+        self.journal.emit("worker.started",component="bridge")
         lease = self.config.queue_lease_seconds
         while not self._shutdown.is_set():
             try:
@@ -1016,8 +1035,10 @@ class AppRuntime:
                     continue
                 await self._drain_one(claimed)
             except asyncio.CancelledError:
+                self.journal.emit("worker.stopped",component="bridge")
                 break
             except Exception:  # noqa: BLE001
+                self.journal.emit("worker.failed",component="bridge",aggregate=True)
                 logger.exception("delivery worker %d crashed", idx)
                 await asyncio.sleep(self.config.worker_poll_seconds)
 
@@ -1058,6 +1079,7 @@ class AppRuntime:
 
         policy = RetryPolicy()
         payload = rec.payload
+        self.journal.emit("delivery.attempt",correlation_id=payload.get("journal_correlation") or f"q-{rec.id}",direction=rec.direction,attempt=rec.attempts+1)
         try:
             delivery_result = await self._deliver(rec)
         except Exception as e:  # noqa: BLE001 - capture every failure
@@ -1069,18 +1091,22 @@ class AppRuntime:
                 repo = DeliveryQueueRepository(s)
                 attempts = rec.attempts + 1
                 from .adapters.max.errors import MaxUnsupportedError, MaxAuthError, MaxSessionError
-                if isinstance(e, (MaxUnsupportedError, MaxAuthError, MaxSessionError)) or attempts >= policy.max_attempts:
+                from .delivery_errors import permanent_delivery_error, safe_delivery_error
+                if permanent_delivery_error(e) or isinstance(e, (MaxUnsupportedError, MaxAuthError, MaxSessionError)) or attempts >= policy.max_attempts:
+                    self.journal.emit("delivery.failed",correlation_id=payload.get("journal_correlation") or f"q-{rec.id}",direction=rec.direction,error_class=type(e).__name__,attempt=attempts,result="permanent")
                     await repo.mark_failed(
-                        queue_id=rec.id, last_error=repr(e)[:512]
+                        queue_id=rec.id, last_error=safe_delivery_error(e)
                     )
                 else:
                     next_at = (
                         _dt.datetime.now(_dt.timezone.utc)
                         + _dt.timedelta(seconds=max(policy.next_delay(attempts - 1), getattr(e, "retry_after", 0)))
                     )
+                    self.journal.emit("delivery.temporary_failure",correlation_id=payload.get("journal_correlation") or f"q-{rec.id}",direction=rec.direction,error_class=type(e).__name__,attempt=attempts,result="temporary")
+                    self.journal.emit("delivery.retry",correlation_id=payload.get("journal_correlation") or f"q-{rec.id}",direction=rec.direction,attempt=attempts)
                     await repo.mark_retry(
                         queue_id=rec.id,
-                        last_error=repr(e)[:512],
+                        last_error=safe_delivery_error(e),
                         next_attempt_at=next_at,
                     )
             return
@@ -1106,9 +1132,19 @@ class AppRuntime:
                     await DeliveryQueueRepository(s).mark_delivered(
                         queue_id=rec.id
                     )
+                self.journal.emit("delivery.success",correlation_id=payload.get("journal_correlation") or f"q-{rec.id}",direction=rec.direction,result="success")
+                if payload.get("media_items") or payload.get("media_ref"):
+                    self.journal.emit("album.success" if payload.get("media_items") else "media.success",correlation_id=payload.get("journal_correlation") or f"q-{rec.id}",direction=rec.direction,result="success")
                 finalized = True
                 return
+            if outcome.state == DeliveryState.RETRY and rec.attempts+1 >= policy.max_attempts:
+                async with self.db.session() as s:
+                    await DeliveryQueueRepository(s).mark_failed(queue_id=rec.id,last_error="RetryExhausted")
+                self.journal.emit("delivery.failed",correlation_id=payload.get("journal_correlation") or f"q-{rec.id}",direction=rec.direction,result="permanent",attempt=rec.attempts+1)
+                finalized=True
+                return
             if outcome.state == DeliveryState.RETRY:
+                self.journal.emit("delivery.retry",correlation_id=payload.get("journal_correlation") or f"q-{rec.id}",direction=rec.direction,attempt=rec.attempts+1)
                 async with self.db.session() as s:
                     repo = DeliveryQueueRepository(s)
                     attempts = rec.attempts + 1
@@ -1130,6 +1166,7 @@ class AppRuntime:
                 await DeliveryQueueRepository(s).mark_failed(
                     queue_id=rec.id, last_error=outcome.error or "failed"
                 )
+            self.journal.emit("delivery.failed",correlation_id=payload.get("journal_correlation") or f"q-{rec.id}",direction=rec.direction,result="permanent")
             finalized = True
         finally:
             # Release the cached file only when the queue item is
@@ -1188,6 +1225,9 @@ class AppRuntime:
             reply_to_chat_id = payload.get("target_chat_id")
         reply_to_thread = payload.get("reply_to_thread_id")
         media_ref = payload.get("media_ref")
+        if not str(text or "").strip() and not media_ref and not payload.get("media_items"):
+            from .delivery_errors import InvalidPayload
+            raise InvalidPayload("empty outbound payload")
         media_kind = payload.get("media_kind")
 
         # Build a ReplyRef if the payload carries a reply
@@ -1484,14 +1524,17 @@ class AppRuntime:
                 "Wizard must complete MAX auth first."
             )
             return
+        self._max_listener_generation = getattr(self._max, "generation", None)
         # Idempotent connect; consume events; stop on shutdown.
         logger.info("max_listener: starting (adapter=%s)", type(self._max).__name__)
         try:
             await self._max.connect()
+            self.journal.emit("max.connected",component="max")
             logger.info("max_listener: adapter connected")
         except Exception:  # noqa: BLE001
             logger.exception("max.connect failed")
             raise
+        self._max_listener_generation = getattr(self._max, "generation", None)
         async for event in self._max.listen_events():
             if self._shutdown.is_set():
                 break
@@ -1517,6 +1560,7 @@ class AppRuntime:
         adapter = self._tg
         try:
             await asyncio.wait_for(adapter.connect(), timeout=20)
+            self.journal.emit("telegram.connected",component="telegram")
             async for event in adapter.listen_events():
                 if self._shutdown.is_set():
                     break
@@ -1531,6 +1575,7 @@ class AppRuntime:
             raise
         except Exception as exc:
             from .telegram_recovery import failure_kind
+            self.journal.emit("telegram.polling_failure",component="telegram",error_class=type(exc).__name__,aggregate=True)
             self._telegram_failure = failure_kind(exc)
             logger.warning("telegram listener failed category=%s", self._telegram_failure[1])
             # Recovery owns retry timing and permanent-error cooldown. Retire this
@@ -1632,6 +1677,13 @@ class AppRuntime:
 
         from .database.models import TelegramTarget
         from .users.repository import TelegramUsersRepository
+        from .queue.repository import DuplicateEnqueueError
+        from .journal import message_correlation, correlation
+        cid=message_correlation(source,getattr(getattr(event,"chat",None),"external_id",""),getattr(event,"external_id",""))
+        token=correlation.set(cid)
+        direction="max_to_telegram" if source=="max" else "telegram_to_max"
+        self.journal.emit("message.received",component=source,direction=direction)
+        self.journal.emit("message.normalized",component=source,direction=direction)
 
         # Audit P0 #7: the fail-closed TG→MAX ACL needs the
         # CONFIGURED target chat — loaded from the canonical
@@ -1663,6 +1715,7 @@ class AppRuntime:
                 on_enqueue=self.wakeup,
                 media_fetcher=self._fetch_media,
                 db=self.db,
+                journal=self.journal,
             )
             try:
                 if source == "max":
@@ -1674,8 +1727,12 @@ class AppRuntime:
                     source,
                     accepted,
                 )
+            except DuplicateEnqueueError:
+                self.journal.emit("message.duplicate",direction=direction)
             except Exception:  # noqa: BLE001
                 logger.exception("bridge handle_inbound failed")
+            finally:
+                correlation.reset(token)
 
 
 class _FailureResult:

@@ -3,6 +3,16 @@
 All notable changes to SHMAX are documented here.
 Format: Keep a Changelog; versioning: SemVer.
 
+## v0.1.3 — candidate
+
+- Fix Xray switching, recoverable rollback and Telegram adapter installation.
+- Recover MAX saved-session connections with one generation-aware listener.
+- Distinguish temporary verification failures from revoked authentication.
+- Add a private persistent Web UI event journal with bounded retention and aggregation.
+- Drain safe Xray diagnostics; reject empty payloads and permanent Telegram request failures.
+- Preserve v0.1.1 photo albums, native ID aliases, checkpoints and persistent sessions.
+
+
 ## 0.1.1 — 2026-10-12
 
 ### Fixed

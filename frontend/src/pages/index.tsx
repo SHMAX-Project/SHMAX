@@ -364,31 +364,7 @@ export function Diagnostics() {
   );
 }
 
-export function Logs() {
-  const [lines, setLines] = React.useState<string[]>([]);
-  const [error, setError] = React.useState<string | null>(null);
-  React.useEffect(() => {
-    (async () => {
-      try {
-        const j = await api<{ lines: string[] }>('/api/logs?tail=200');
-        setLines(j.lines || []);
-      } catch (e: any) { setError(e.message); }
-    })();
-  }, []);
-  return (
-    <>
-      <PageHeader title="Журнал" />
-      {error && <div className="alert alert-error" role="alert">{error}</div>}
-      {lines.length === 0 ? (
-        <EmptyState glyph="❢" title="Журнал пуст" hint="Записи появятся по мере работы SHMAX." />
-      ) : (
-        <pre className="mono small" style={{ whiteSpace: 'pre-wrap', background: 'var(--panel)', padding: '1rem', borderRadius: 'var(--radius)', border: '1px solid var(--border)', maxHeight: '60vh', overflow: 'auto' }}>
-          {lines.join('\n')}
-        </pre>
-      )}
-    </>
-  );
-}
+export { Journal as Logs } from "../components/Journal";
 
 export function Backups({ backups, setBackups }: { backups: any[] | null; setBackups: (b: any[]) => void }) {
   const [error, setError] = React.useState<string | null>(null);

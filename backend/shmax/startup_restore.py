@@ -526,6 +526,8 @@ async def restore_integrations(
         auto_state_path=auto_state_path,
     )
     mx = await restore_max(runtime)
+    if getattr(runtime,"max_recovery",None) is not None:
+        runtime.max_recovery.start()
     from .telegram_recovery import TelegramRecovery
     proxy_failures = 0
     async def prepare_proxy():

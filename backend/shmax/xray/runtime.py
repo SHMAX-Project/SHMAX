@@ -255,6 +255,25 @@ class XrayRuntimeManager:
                 # lost; nothing re-starts from scratch.
                 self._absorb_cancel()
 
+    async def _drain_stderr(self,proc):
+        import time
+        last_log=0.0
+        try:
+            while True:
+                chunk=await proc.stderr.read(4096)
+                if not chunk:return
+                text=chunk.decode(errors="replace").lower()
+                category=("TLSFailure" if "tls" in text or "certificate" in text else
+                          "DNSFailure" if "dns" in text or "resolve" in text else
+                          "TimeoutError" if "timeout" in text or "timed out" in text else "TransportUnavailable")
+                journal=getattr(self,"journal",None)
+                if journal:journal.emit("xray.transport_failure",component="xray",error_class=category,aggregate=True)
+                if time.monotonic()-last_log>30:
+                    logger.warning("xray diagnostic category=%s",category);last_log=time.monotonic()
+        except asyncio.CancelledError:raise
+        except Exception:
+            logger.warning("xray diagnostic reader stopped")
+
     async def _start_locked(self, config: dict) -> XrayStatus:
         if self.is_running:
             raise XrayError("xray already running — stop() first")
@@ -274,6 +293,7 @@ class XrayRuntimeManager:
             self._last_exit = -1
             raise XrayError(f"failed to spawn xray: {e}") from e
 
+        self._stderr_task=asyncio.create_task(self._drain_stderr(self._process),name="shmax.xray.stderr")
         try:
             exited = await self._wait_exit_or_stay(START_TIMEOUT)
         except asyncio.CancelledError:
@@ -288,20 +308,9 @@ class XrayRuntimeManager:
                 await self._reap_confirmed(proc)
             raise
         if exited:
-            stderr = b""
-            if self._process.stderr is not None:
-                try:
-                    stderr = await asyncio.wait_for(
-                        self._process.stderr.read(), timeout=1.0
-                    )
-                except Exception:  # noqa: BLE001
-                    pass
             self._last_exit = self._process.returncode
             self._process = None
-            raise XrayError(
-                f"xray exited during startup "
-                f"(code {self._last_exit}): {stderr[-300:].decode(errors='replace')}"
-            )
+            raise XrayError(f"xray exited during startup (code {self._last_exit})")
         # REAL readiness: local SOCKS must accept connections.
         try:
             socks_ready = await self._wait_socks_ready(START_TIMEOUT)
@@ -407,6 +416,10 @@ class XrayRuntimeManager:
         logger.info("xray stopped (reaped)")
 
     def _finish_stop(self, proc) -> None:
+        reader=getattr(self,"_stderr_task",None)
+        if reader is not None:
+            reader.cancel()
+            self._stderr_task=None
         """Clear manager state AFTER the child is confirmed dead."""
         # A negative code means our own SIGTERM — the expected stop
         # path, not a crash.
