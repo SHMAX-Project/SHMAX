@@ -41,6 +41,9 @@ async def test_reconnect_rebinds_one_consumer_and_delivers(runtime):
     rec.start()
     await eventually(lambda: rec.status["state"] == "HEALTHY")
     assert rec.status["attempts"] == 3
+    rec.status["last_success_at"]=12345
+    await rec.attempt()
+    assert rec.status["last_success_at"]==12345
     for n in range(4):
         old = a._events
         rec.trigger()

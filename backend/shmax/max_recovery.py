@@ -91,7 +91,7 @@ class MaxRecovery:
                     state="HEALTHY",
                     failure=None,
                     retry_in_seconds=None,
-                    last_success_at=int(time.time()),
+                    last_success_at=self.status["last_success_at"] or int(time.time()),
                 )
                 return True
             if self.status["state"] == "HEALTHY":
