@@ -3,7 +3,7 @@
 All notable changes to SHMAX are documented here.
 Format: Keep a Changelog; versioning: SemVer.
 
-## v0.1.2 — candidate
+## 0.1.2 — 2026-10-20
 
 - Fix Xray switching, recoverable rollback and Telegram adapter installation.
 - Recover MAX saved-session connections with one generation-aware listener.
@@ -11,6 +11,16 @@ Format: Keep a Changelog; versioning: SemVer.
 - Add a private persistent Web UI event journal with bounded retention and aggregation.
 - Drain safe Xray diagnostics; reject empty payloads and permanent Telegram request failures.
 - Preserve v0.1.1 photo albums, native ID aliases, checkpoints and persistent sessions.
+
+### Validation
+- Backend: 1002 passed, 9 skipped locally; frontend: 51 passed; Playwright: 26 passed.
+- Debian 13 amd64: 38 recovery/journal/queue regressions and 5 real-Xray checks passed.
+- Signed clean installation, v0.1.1 upgrade, forced cold rollback and journal persistence after a real container restart passed.
+- Journal stress: 100,000 synthetic events, 35.48 MiB before cleanup, indexed median query 0.43 ms.
+
+### Limits
+- Journal defaults: 90 days, 100,000 records, conservative 128 MiB SQLite-file budget; incremental cleanup and visible diagnostic-drop counters. It is not a filesystem quota or lossless audit ledger.
+- Telegram has no send idempotency key; a lost response after remote acceptance can still produce a duplicate on retry. Existing failed deliveries are not replayed automatically.
 
 
 ## 0.1.1 — 2026-10-12

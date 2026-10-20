@@ -1,26 +1,14 @@
 # Release process
 
-v0.1.0 is prepared locally, unpublished. Publication requires the owner's exact
-instruction “А ТЕПЕРЬ ВЫКЛАДЫВАЕМ” and resolution of the audit blockers.
+Current stable release: [v0.1.2](../../release/v0.1.2/RELEASE_NOTES.en.md). Publication and production deployment are separate actions requiring explicit owner authorization. Historical v0.1.0/v0.1.1 documents describe those releases; never replace their tags or assets.
 
-From a clean committed HEAD run `bash scripts/build-release.sh v0.1.0 [output-directory]`.
-Requires Python 3.12+, Node >=20, npm, Git and npm registry/cache access.
-The builder exports HEAD, checks VERSION and runs npm ci/build in the isolated
-export. It never consumes working frontend/dist or creates tags/pushes.
+1. Commit a clean public HEAD with consistent VERSION, Python/frontend metadata and documentation. Exclude private history, server data, backups and signing keys.
+2. Run `bash scripts/build-release.sh v0.1.2 OUTPUT` with Python 3.12+, Node >=20, npm, Git and registry/cache access. It exports committed source and runs npm ci/build in isolation, never using working dist/node_modules.
+3. Run `python scripts/check-release.py OUTPUT`; verify source/production contracts and the tested runtime. Documentation-only finalization must preserve application files; code changes need relevant tests.
+4. Sign with `python scripts/sign-release.py OUTPUT --key PRIVATE_KEY_PATH`. Keep the private key local and retain the existing public verification key.
+5. Complete backend/frontend/browser and isolated Debian upgrade/rollback/bootstrap checks. Stage RU/EN notes, installer, public key, changelog and validation without private/server metadata.
+6. With owner authorization, publish source, an immutable tag and draft Release; upload/verify assets, then publish stable/latest. Verify public download, signature, manifest and source commit. Deploy separately through the updater, never git pull.
 
-Outputs: `shmax-v0.1.0-source.tar.gz` (no frontend/dist), `shmax-v0.1.0.tar.gz`
-(with production frontend/dist and root compose.yaml), SHA256SUMS,
-release-manifest.json (`{version, channel, artifact, sha256}`), build-info.json
-(source HEAD, date, sizes and dependencies). Tar/Gzip timestamps and ownership
-are normalized using the commit timestamp; repeat builds of one HEAD must yield
-identical archives. The changing build-date sidecar is outside the archives.
-Updater manifest semantics are preserved.
+Outputs: `shmax-v0.1.2-source.tar.gz` without frontend/dist; `shmax-v0.1.2.tar.gz` with frontend/dist; signed `SHA256SUMS`, `release-manifest.json` and `build-info.json`. Tar/Gzip timestamps and ownership use the commit timestamp. The changing build-date sidecar is outside the archives. Actions packaging validates/stores runner artifacts without publishing a Release.
 
-Run `python scripts/check-release.py <output-directory>`, then extract outside
-the checkout and verify backend import/version, installer permissions and frontend.
-Rebuild after any HEAD change. Actions packaging validates and stores runner
-artifacts, never creates a GitHub Release. Actions have not run on GitHub yet.
-
-[Future publication runbook](../../release/v0.1.0/PUBLICATION_RUNBOOK.md) ·
-[Local publication status](../../release/v0.1.0/PUBLICATION_STATUS.md).
-Production updates use verified releases through UI/hostd, not git pull.
+[v0.1.2 runbook](../../release/v0.1.2/PUBLICATION_RUNBOOK.md) · [Testing](testing.md) · [Updates](updates.md).

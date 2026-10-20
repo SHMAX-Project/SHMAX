@@ -16,7 +16,7 @@ read and reply through each route.
 The goal is one dashboard for multiple workspaces while keeping conversations
 and team permissions separate.
 
-These are planned features, not v0.1.0 capabilities. The current release uses one
+These are planned features, not v0.1.2 capabilities. The current release uses one
 MAX account and one linked Telegram group; MAX connects directly. Future proxy
 compatibility and MAX availability in each environment need verification.
 Dates will follow design and testing.

@@ -17,7 +17,7 @@ Bootstrap скачивает последний опубликованный с�
 полный установщик. Docker Engine, Compose v2 и необходимые зависимости ставятся
 автоматически через официальные APT-репозитории. Firewall и SSH не перенастраиваются.
 
-Доступен стабильный выпуск [v0.1.0](https://github.com/SHMAX-Project/SHMAX/releases/tag/v0.1.0).
+Доступен стабильный выпуск [v0.1.2](https://github.com/SHMAX-Project/SHMAX/releases/tag/v0.1.2).
 Черновики и prerelease не устанавливаются.
 
 После проверки работоспособности установщик выведет адрес панели и ссылку мастера
@@ -34,7 +34,7 @@ Bootstrap скачивает последний опубликованный с�
 или самостоятельно перенести пакет на сервер. Скачайте со
 [страницы выпусков](https://github.com/SHMAX-Project/SHMAX/releases):
 
-- `shmax-v0.1.0.tar.gz` — полный production-пакет;
+- `shmax-v0.1.2.tar.gz` — полный production-пакет;
 - `SHA256SUMS` и `SHA256SUMS.sig` — контрольные суммы и подпись;
 - публичный ключ `deploy/bootstrap/release-public.pem` из официального репозитория.
 
@@ -43,8 +43,8 @@ Bootstrap скачивает последний опубликованный с�
 ```bash
 openssl dgst -sha256 -verify release-public.pem -signature SHA256SUMS.sig SHA256SUMS
 sha256sum -c SHA256SUMS --ignore-missing
-tar -xzf shmax-v0.1.0.tar.gz
-cd shmax-v0.1.0
+tar -xzf shmax-v0.1.2.tar.gz
+cd shmax-v0.1.2
 # Изучите полный установщик перед запуском.
 sudo bash deploy/installer/install.sh --mode install
 ```
@@ -65,7 +65,7 @@ sudo shmax update
 Обновление из вручную скачанного и проверенного production-архива:
 
 ```bash
-sudo shmax update /полный/путь/shmax-v0.1.0.tar.gz
+sudo shmax update /полный/путь/shmax-v0.1.2.tar.gz
 ```
 
 Оба сценария используют локальную транзакцию: сборка до остановки приложения,

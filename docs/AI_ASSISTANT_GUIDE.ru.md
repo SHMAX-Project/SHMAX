@@ -206,4 +206,4 @@ Socket activation unit не нужен. Boot-unit имеет конкретны�
 ## Release v0.1.0 / Публикация
 
 Debian 13 amd64: owner-confirmed live acceptance. ARMv7/ODROID-XU4: experimental; physical acceptance incomplete.
-v0.1.0 is published as a stable release. See [publication runbook](../release/v0.1.0/PUBLICATION_RUNBOOK.md) and [local status](../release/v0.1.0/PUBLICATION_STATUS.md). No publishing without explicit owner authorization and blocker resolution.
+Текущий стабильный выпуск — v0.1.2. [Изменения](../release/v0.1.2/RELEASE_NOTES.ru.md), [процесс релиза](ru/release-process.md), [журнал событий](ru/event-journal.md). Публикация и production deploy выполняются только по явному разрешению владельца.

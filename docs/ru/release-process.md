@@ -1,25 +1,14 @@
 # Процесс релиза
 
-v0.1.0 подготовлен локально, не опубликован. Владелец должен разрешить публикацию
-отдельной командой «А ТЕПЕРЬ ВЫКЛАДЫВАЕМ» после устранения блокеров аудита.
+Текущий стабильный выпуск — [v0.1.2](../../release/v0.1.2/RELEASE_NOTES.ru.md). Публикация и production deploy — отдельные действия по явному разрешению владельца. Исторические документы v0.1.0/v0.1.1 описывают состояние на момент тех выпусков; их теги и артефакты не заменяются.
 
-Из чистого committed HEAD: `bash scripts/build-release.sh v0.1.0 [output-directory]`.
-Нужны Python 3.12+, Node >=20, npm, Git и доступ к npm registry/cache.
-Builder экспортирует HEAD, проверяет VERSION, выполняет npm ci/build внутри
-изолированного экспорта, а не копирует working frontend/dist. Никаких тегов/push.
+1. Зафиксировать чистый public HEAD с согласованным `backend/shmax/VERSION`, Python/frontend metadata и документацией. Приватная история, серверные данные, backup и signing key не входят в public repository.
+2. Выполнить `bash scripts/build-release.sh v0.1.2 OUTPUT`. Нужны Python 3.12+, Node >=20, npm, Git и npm registry/cache. Builder экспортирует committed HEAD, проверяет VERSION и выполняет npm ci/build в изолированном экспорте; working dist/node_modules не используются.
+3. Проверить `python scripts/check-release.py OUTPUT`, состав source/production архивов и соответствие проверенному runtime. При изменении только документации подтвердить неизменность application files; изменение кода требует соответствующих тестов.
+4. Подписать стандартным `python scripts/sign-release.py OUTPUT --key PRIVATE_KEY_PATH`. Ключ остаётся в доверенной локальной среде; существующий публичный verification key не заменяется.
+5. Проверить backend/frontend/browser и изолированный Debian upgrade/rollback/bootstrap. Подготовить RU/EN notes, installer, public key, changelog и validation без private/server metadata.
+6. После разрешения владельца опубликовать исходники, неизменяемый тег и draft Release, загрузить и проверить assets; сделать выпуск stable/latest. Сверить публичную загрузку, подпись, manifest и source commit. Production обновляется отдельно штатным updater, а не git pull.
 
-Результат: `shmax-v0.1.0-source.tar.gz` (без frontend/dist),
-`shmax-v0.1.0.tar.gz` (с frontend/dist и root compose.yaml), SHA256SUMS,
-release-manifest.json (`{version, channel, artifact, sha256}`), build-info.json
-(HEAD, дата, размеры, зависимости). Tar/Gzip timestamps и владельцы нормализованы
-по commit timestamp; два прогона одного HEAD должны дать одинаковые архивы.
-Build date в sidecar меняется и не входит в архив. Manifest совместим с updater.
+Архивы: `shmax-v0.1.2-source.tar.gz` (без frontend/dist), `shmax-v0.1.2.tar.gz` (с frontend/dist), `SHA256SUMS` и подпись, `release-manifest.json`, `build-info.json`. Tar/Gzip timestamps и владельцы нормализованы по commit timestamp. Build-date sidecar находится вне архивов. Actions packaging проверяет сборку и сохраняет runner artifacts; сам не публикует Release.
 
-Проверить `python scripts/check-release.py <output-directory>`; извлечь архив вне
-checkout и проверить import/version, executable installer, наличие frontend/dist.
-Пересобрать после любого изменения HEAD. Actions packaging проверяет и сохраняет
-runner artifacts, не создаёт GitHub Release. CI ещё не выполнялся на GitHub.
-
-[Точный будущий runbook](../../release/v0.1.0/PUBLICATION_RUNBOOK.md) ·
-[Статус локальной подготовки](../../release/v0.1.0/PUBLICATION_STATUS.md).
-Обновление production — через UI/hostd и проверенный релиз, не git pull.
+[Runbook v0.1.2](../../release/v0.1.2/PUBLICATION_RUNBOOK.md) · [Тесты](testing.md) · [Обновления](updates.md).

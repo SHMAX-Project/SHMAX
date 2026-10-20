@@ -39,5 +39,4 @@ recovery завершает эпизод. После restart начинаетс�
 
 Файлы журнала переживают restart/update в существующем state volume. Обычный backup
 снимает events.db через SQLite backup API; portable backup уже snapshot-ит SQLite.
-Retention никогда не затрагивает другие persistent data. Старые десять failed-записей
-нужно разбирать отдельно; автоматического replay нет.
+Retention никогда не затрагивает другие persistent data. Ранее завершённые ошибкой доставки разбираются отдельно; автоматического replay нет.

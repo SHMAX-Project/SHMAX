@@ -36,3 +36,5 @@ Operations: [English guide](../AI_ASSISTANT_GUIDE.en.md).
 
 - [Roadmap](roadmap.md)
 - [First deployment experience](deployment-story.md)
+
+- [Persistent event journal](event-journal.md) — v0.1.2 filters, retention and privacy.

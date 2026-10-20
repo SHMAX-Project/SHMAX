@@ -3,8 +3,9 @@
 ## Before asking / Перед вопросом
 
 1. Open or refresh **Диагностика** to load current diagnostics; use the Telegram settings connection check if needed.
-2. Check `docs/ru/troubleshooting.md` (symptom-first).
-3. Collect a sanitized report (template below).
+2. In v0.1.2, filter the persistent event journal by integration/category and time; metadata excludes message text and credentials. See `docs/ru/event-journal.md`.
+3. Check `docs/ru/troubleshooting.md` (symptom-first).
+4. Collect a sanitized report (template below).
 
 ## How to ask / Как задать вопрос
 

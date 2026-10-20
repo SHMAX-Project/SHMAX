@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Validate the frozen public branding, screenshot provenance and license inventory."""
-import hashlib,json,pathlib,struct,tomllib
+import hashlib,json,pathlib,re,struct,tomllib
 root=pathlib.Path(__file__).resolve().parents[1]
 version=(root/'backend/shmax/VERSION').read_text().strip()
-assert version=='0.1.1'
+assert re.fullmatch(r'\d+\.\d+\.\d+',version),version
 assert tomllib.loads((root/'backend/pyproject.toml').read_text())['project']['version']==version
 assert json.loads((root/'frontend/package.json').read_text())['version']==version
 assert tomllib.loads((root/'backend/pyproject.toml').read_text())['project']['license']['text']=='AGPL-3.0-or-later'
@@ -13,8 +13,11 @@ assert 'SPDX-License-Identifier: AGPL-3.0-or-later' in (root/'frontend/public/sh
 for name in ('NOTICE','TRADEMARKS.md','THIRD_PARTY_NOTICES.md','release/v0.1.0/DEPENDENCY_LICENSES.json','release/v0.1.0/NODE_LICENSES.json'):
  assert (root/name).is_file(),name
 assert len(list((root/'third-party-licenses').rglob('*LICENSE*')))>100
-shots=json.loads((root/'release/v0.1.0/SCREENSHOTS.json').read_text())
-assert len(shots)==10
+manifest=root/f'release/v{version}/SCREENSHOTS.json'
+if not manifest.exists():manifest=root/'release/v0.1.0/SCREENSHOTS.json'
+shots=json.loads(manifest.read_text())
+assert len(shots)>=10
+assert {e['file'] for e in shots}=={p.name for p in (root/'docs/assets/screenshots').glob('*.png')}
 for entry in shots:
  p=root/'docs/assets/screenshots'/entry['file'];data=p.read_bytes()
  assert data[:8]==b'\x89PNG\r\n\x1a\n'
@@ -30,4 +33,4 @@ for name,size in [('favicon.png',32),('shmax-icon-256.png',256),('shmax-icon.png
  assert struct.unpack('>II',data[16:24])==(size,size)
  built=root/'frontend/dist'/name
  if built.exists():assert built.read_bytes()==data,name
-print('PASS: version, AGPL metadata, original SVG, dependency notices, 10 screenshot hashes/privacy metadata, icon sizes and compiled assets')
+print('PASS: version, AGPL metadata, original SVG, dependency notices, current screenshot hashes/privacy metadata, icon sizes and compiled assets')

@@ -12,3 +12,5 @@ Screenshot provenance is recorded separately in
 `message-flow.ru.svg` and `message-flow.en.svg` are original schematic diagrams
 with fictional messages. They are not screenshots of MAX or Telegram and use no
 third-party logos. They are licensed under AGPL-3.0-or-later.
+
+Current v0.1.2 event journal screenshots: [desktop](screenshots/event-journal-desktop.png), [mobile](screenshots/event-journal-mobile.png). Both use synthetic fixtures and real backend/SPA operations.

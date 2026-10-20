@@ -14,6 +14,7 @@ SHMAX — самостоятельный (self-hosted) шлюз MAX ↔ Telegram
 - Архитектура: docs/ru/architecture.md
 - Данные/файлы: docs/ru/data-persistence.md
 - Обновления: docs/ru/updates.md
+- Журнал событий: docs/ru/event-journal.md · docs/en/event-journal.md
 - Медиа/стикеры: docs/ru/media.md · docs/en/media.md
 - Бэкапы/восстановление: docs/ru/backups.md, docs/ru/restore.md
 - Безопасность: docs/ru/security.md, SECURITY.md
@@ -57,9 +58,10 @@ my.telegram.org, существующий BOT, без userbot/человечес
 - RU: docs/ru/telegram-group.md, docs/ru/users-acl.md
 - EN: docs/en/telegram-group.md, docs/en/users-acl.md
 
-## Публикация
+## Текущий выпуск
 
-v0.1.0 подготовлен, не опубликован. release/v0.1.0/PUBLICATION_RUNBOOK.md.
-Публичный кандидат имеет независимую историю и оригинальную уточку (AGPL-3.0-or-later).
-Настройки GitHub и Private Vulnerability Reporting ожидают подтверждения владельца.
-Статус: release/v0.1.0/PUBLICATION_STATUS.md.
+v0.1.2 — стабильный выпуск: saved-session recovery MAX, исправленное переключение
+Xray/Telegram, постоянный приватный журнал событий и ограниченные повторы доставки.
+Изменения: release/v0.1.2/RELEASE_NOTES.ru.md (EN: RELEASE_NOTES.en.md).
+Публикация и установка — по явному решению владельца. GitHub Private Vulnerability
+Reporting включён; правила: SECURITY.md. Процесс выпуска: docs/ru/release-process.md.

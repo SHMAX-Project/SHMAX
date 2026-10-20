@@ -3,7 +3,7 @@
 Обычная команда после установки нового updater:
 
 ```bash
-sudo shmax update /path/to/shmax-v0.1.0.tar.gz
+sudo shmax update /path/to/shmax-v0.1.2.tar.gz
 ```
 
 Старый CLI принимал только `update check` и `update apply`. Для первого перехода
@@ -11,7 +11,7 @@ sudo shmax update /path/to/shmax-v0.1.0.tar.gz
 системный Python и стандартную библиотеку. Выполните одну команду с полным путём:
 
 ```bash
-sudo /path/to/shmax update /path/to/shmax-v0.1.0.tar.gz
+sudo /path/to/shmax update /path/to/shmax-v0.1.2.tar.gz
 ```
 
 После успешного обновления он автоматически устанавливает обработчик обычной

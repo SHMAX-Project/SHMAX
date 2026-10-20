@@ -36,3 +36,7 @@ No live VM, accounts, customer messages or screenshot upload are involved.
 Legacy wizard screenshots were removed from current source because they predate
 current controls and include phone/pairing/subscription demo artifacts. They remain only in the private development archive and are absent from the
 independent public history. The current images use the original SHMAX duck.
+
+## v0.1.2 event journal
+
+`event-journal-desktop.png` and `event-journal-mobile.png` are actual production SPA screenshots from the local desktop/mobile Playwright run, using synthetic accounts and backend operations. No production messages, credentials or sessions are included. The original v0.1.0 screenshots remain historical assets.

@@ -22,3 +22,7 @@ are delivered as images/native Telegram stickers where possible; animated/video
 stickers use previews, or one text fallback when no preview is available.
 For password/corruption/rollback_failed see [restore](restore.md); preserve the
 safety copy and journal instead of deleting persistent data.
+
+## Temporary MAX failures in v0.1.2
+
+RECONNECTING and VERIFICATION_UNAVAILABLE mean recovery or an unavailable check, not proven session revocation. Check connectivity and the [event journal](event-journal.md), then allow bounded retries. Reauthenticate for AUTH_REQUIRED after a confirmed authentication failure. Do not delete session files to fix a network outage.

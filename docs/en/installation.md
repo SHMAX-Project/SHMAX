@@ -16,7 +16,7 @@ checks archive and file integrity, then runs the full installer. Missing Docker
 Engine, Compose v2 and dependencies are installed from official APT repositories.
 The installer does not reconfigure SSH or disable the firewall.
 
-Stable release [v0.1.0](https://github.com/SHMAX-Project/SHMAX/releases/tag/v0.1.0) is available.
+Stable release [v0.1.2](https://github.com/SHMAX-Project/SHMAX/releases/tag/v0.1.2) is available.
 Drafts and prereleases are rejected.
 
 After successful health checks, open the printed web address and setup link in your
@@ -29,7 +29,7 @@ updates do not start automatically. Partial deployments require repair, not a fr
 Manual installation remains supported. Download from
 [SHMAX Releases](https://github.com/SHMAX-Project/SHMAX/releases):
 
-- `shmax-v0.1.0.tar.gz`, the full production package;
+- `shmax-v0.1.2.tar.gz`, the full production package;
 - `SHA256SUMS` and `SHA256SUMS.sig`;
 - the official repository's `deploy/bootstrap/release-public.pem` verification key.
 
@@ -38,8 +38,8 @@ Check the public key fingerprint against the official release documentation, the
 ```bash
 openssl dgst -sha256 -verify release-public.pem -signature SHA256SUMS.sig SHA256SUMS
 sha256sum -c SHA256SUMS --ignore-missing
-tar -xzf shmax-v0.1.0.tar.gz
-cd shmax-v0.1.0
+tar -xzf shmax-v0.1.2.tar.gz
+cd shmax-v0.1.2
 # Inspect the full installer before execution.
 sudo bash deploy/installer/install.sh --mode install
 ```
@@ -59,7 +59,7 @@ sudo shmax update
 A manually downloaded and verified production archive:
 
 ```bash
-sudo shmax update /absolute/path/shmax-v0.1.0.tar.gz
+sudo shmax update /absolute/path/shmax-v0.1.2.tar.gz
 ```
 
 Both use the local transaction: build before downtime, verified cold backup,
