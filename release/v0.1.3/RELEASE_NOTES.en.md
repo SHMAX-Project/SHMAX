@@ -6,6 +6,8 @@
 - Caption limits use UTF-16 units; long text remains available for separate delivery. Durable queue checkpoints and native ID aliases are preserved.
 - Incoming-message processing exceptions create an ERROR `message.processing_failed` journal event with direction, correlation ID and a safe error class. Message bodies and exception text are excluded.
 
+- Portable backup snapshots exclude transient SQLite rollback journals (`-journal`) alongside `-wal`/`-shm`, avoiding a race when SQLite removes these files.
+
 The album defect existed in v0.1.1 and v0.1.2. This patch retains the other v0.1.2 improvements. No database migration or session-format change is required.
 
 ## Limits

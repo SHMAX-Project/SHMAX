@@ -8,6 +8,7 @@ Format: Keep a Changelog; versioning: SemVer.
 ### Fixed
 - MAX albums without text/caption and without a sender display name no longer raise AttributeError before durable enqueue.
 - Incoming-message processing failures now emit a sanitized ERROR journal event with direction and correlation ID instead of remaining only in technical logs.
+- Portable backup snapshots exclude transient SQLite rollback journals, preventing export failures when these files disappear.
 - Retain UTF-16 caption limits, long-text delivery, photo order, topic routing, checkpoints and native ID aliases.
 
 ### Validation and limits

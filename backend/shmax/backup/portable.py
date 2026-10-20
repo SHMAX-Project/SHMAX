@@ -118,7 +118,7 @@ def snapshot(data: Path, output: Path) -> dict:
                 if not src.is_file(): continue
                 rel=src.relative_to(data); name=rel.as_posix()
                 if not _safe_name(name): raise PortableError('Небезопасный путь данных.')
-                if src.name.endswith(('.log','.tmp','.pid','.pyc','-wal','-shm','.lock','.so','.dylib','.dll','.exe')) or src.name in {'setup_secret','current_update.json'} or any(p in {'cache','logs','tmp','__pycache__','bin','.venv'} for p in rel.parts): continue
+                if src.name.endswith(('.log','.tmp','.pid','.pyc','-wal','-shm','-journal','.lock','.so','.dylib','.dll','.exe')) or src.name in {'setup_secret','current_update.json'} or any(p in {'cache','logs','tmp','__pycache__','bin','.venv'} for p in rel.parts): continue
                 target=stage/rel;target.parent.mkdir(parents=True,exist_ok=True)
                 with src.open('rb') as f: magic=f.read(16)
                 if magic.startswith((b'\x7fELF', b'MZ')): continue

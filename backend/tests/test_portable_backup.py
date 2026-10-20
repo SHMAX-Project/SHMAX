@@ -145,3 +145,18 @@ def test_extended_tar_metadata_rejected_before_large_allocation(tmp_path,kind):
     with gzip.open(payload,'wb') as stream:stream.write(info.tobuf(format=tarfile.USTAR_FORMAT))
     with pytest.raises(PortableError):extract(payload,tmp_path/'stage')
     assert not (tmp_path/'stage').exists()
+
+
+def test_snapshot_never_reads_transient_sqlite_rollback_journal(appliance, tmp_path, monkeypatch):
+    state = appliance / 'state'
+    state.mkdir(exist_ok=True)
+    transient = state / 'events.db-journal'
+    transient.write_bytes(b'transient rollback journal')
+    original = Path.open
+    def disappearing_journal(path, *args, **kwargs):
+        if path == transient:
+            raise FileNotFoundError('SQLite removed its rollback journal')
+        return original(path, *args, **kwargs)
+    monkeypatch.setattr(Path, 'open', disappearing_journal)
+    manifest = snapshot(appliance, tmp_path / 'snapshot.tar.gz')
+    assert 'state/events.db-journal' not in {entry['path'] for entry in manifest['entries']}
