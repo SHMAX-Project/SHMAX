@@ -7,13 +7,13 @@ curl -fsSL https://raw.githubusercontent.com/SHMAX-Project/SHMAX/main/install.sh
 ```
 
 Debian 13 amd64 · [One-line installation](docs/en/installation.md#one-line-installation) · [Manual archive installation](docs/en/installation.md#manual-archive-installation).
-**Latest stable release: [SHMAX v0.1.2](https://github.com/SHMAX-Project/SHMAX/releases/latest).**
+**Latest stable release: [SHMAX v0.1.3](https://github.com/SHMAX-Project/SHMAX/releases/latest).**
 The installer selects the latest stable release and verifies its signature and integrity.
-[v0.1.2 release notes](release/v0.1.2/RELEASE_NOTES.en.md) · [Changelog](CHANGELOG.md).
+[v0.1.3 release notes](release/v0.1.3/RELEASE_NOTES.en.md) · [Changelog](CHANGELOG.md).
 
 ![SHMAX — MAX ↔ Telegram, self-hosted messaging bridge](docs/assets/shmax-social.png)
 
-[![Version](https://img.shields.io/badge/version-0.1.2-2563eb)](backend/shmax/VERSION)
+[![Version](https://img.shields.io/badge/version-0.1.3-2563eb)](backend/shmax/VERSION)
 [![CI](https://github.com/SHMAX-Project/SHMAX/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/SHMAX-Project/SHMAX/actions/workflows/ci.yml)
 [![License: AGPL v3+](https://img.shields.io/badge/license-AGPL--3.0--or--later-059669)](LICENSE)
 [![MAX ↔ Telegram](https://img.shields.io/badge/MAX-%E2%86%94%20Telegram-229ED9?logo=telegram&logoColor=white)](docs/en/architecture.md)
@@ -40,7 +40,15 @@ provides a web interface for connections, routing and user access.
 
 The diagram uses fictional messages to illustrate routing. Actual SHMAX screenshots appear below.
 
-## New in v0.1.2
+## New in v0.1.3
+
+- Fixed captionless MAX albums failing before enqueue when the sender display name is unavailable. All photos enter the durable queue and retain the Telegram topic.
+- Incoming-message processing failures now appear as ERROR events with direction and correlation ID. Message bodies and exception text are excluded from the journal.
+- Messages that failed before enqueue in older versions are not recovered automatically. A journal error does not create a separate Telegram notification.
+
+[v0.1.3 changes and validation](release/v0.1.3/RELEASE_NOTES.en.md).
+
+## Changes in v0.1.2
 
 - MAX reconnects after temporary disconnects using its saved session, without automatic SMS or logout.
 - Xray switching no longer fails with TransportConfig; failed switches attempt to restore the previous node, and Telegram recovers its connection.
@@ -59,7 +67,7 @@ The diagram uses fictional messages to illustrate routing. Actual SHMAX screensh
 
 ## Supported workflows
 
-| Task | v0.1.2 capabilities |
+| Task | v0.1.3 capabilities |
 |---|---|
 | MAX ↔ Telegram | Bidirectional messages and reply mapping |
 | Multiple MAX chats | A separate private Telegram forum topic for each connected chat |
@@ -203,7 +211,7 @@ remains supported: download → verify signature and checksum → extract → ru
 `sudo bash deploy/installer/install.sh --mode install`.
 
 Update with `sudo shmax update`, or use a local verified archive:
-`sudo shmax update /absolute/path/shmax-v0.1.2.tar.gz`.
+`sudo shmax update /absolute/path/shmax-v0.1.3.tar.gz`.
 
 [Installation and modes](docs/en/installation.md) · [First setup](docs/en/first-setup.md) ·
 [Troubleshooting](docs/en/troubleshooting.md).

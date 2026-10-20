@@ -7,13 +7,13 @@ curl -fsSL https://raw.githubusercontent.com/SHMAX-Project/SHMAX/main/install.sh
 ```
 
 Debian 13 amd64 · [Установка одной командой](docs/ru/installation.md#одной-командой) · [Ручная установка из архива](docs/ru/installation.md#ручная-установка-из-архива).
-**Последний стабильный выпуск: [SHMAX v0.1.2](https://github.com/SHMAX-Project/SHMAX/releases/latest).**
+**Последний стабильный выпуск: [SHMAX v0.1.3](https://github.com/SHMAX-Project/SHMAX/releases/latest).**
 Установщик выбирает последний стабильный выпуск и проверяет подпись и целостность пакета.
-[Изменения v0.1.2](release/v0.1.2/RELEASE_NOTES.ru.md) · [Changelog](CHANGELOG.md).
+[Изменения v0.1.3](release/v0.1.3/RELEASE_NOTES.ru.md) · [Changelog](CHANGELOG.md).
 
 ![SHMAX — MAX ↔ Telegram, self-hosted messaging bridge](docs/assets/shmax-social.png)
 
-[![Version](https://img.shields.io/badge/version-0.1.2-2563eb)](backend/shmax/VERSION)
+[![Version](https://img.shields.io/badge/version-0.1.3-2563eb)](backend/shmax/VERSION)
 [![CI](https://github.com/SHMAX-Project/SHMAX/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/SHMAX-Project/SHMAX/actions/workflows/ci.yml)
 [![License: AGPL v3+](https://img.shields.io/badge/license-AGPL--3.0--or--later-059669)](LICENSE)
 [![MAX ↔ Telegram](https://img.shields.io/badge/MAX-%E2%86%94%20Telegram-229ED9?logo=telegram&logoColor=white)](docs/ru/architecture.md)
@@ -40,7 +40,15 @@ SHMAX объединяет переписку в MAX и Telegram. Сообщен
 
 Пример показывает маршрут на вымышленных сообщениях. Реальный интерфейс SHMAX показан на скриншотах ниже.
 
-## Что нового в v0.1.2
+## Что нового в v0.1.3
+
+- Исправлена недоставка альбома без подписи, если MAX не передал имя отправителя. Все фотографии сохраняются в очереди и отправляются в выбранную тему Telegram.
+- Ошибка обработки входящего сообщения теперь видна в журнале как ERROR с направлением и идентификатором корреляции. Тексты сообщений и исключений в журнал не попадают.
+- Сообщения, упавшие до очереди в старых версиях, автоматически не восстанавливаются. Новая запись журнала не означает отдельное уведомление в Telegram.
+
+[Изменения и проверки v0.1.3](release/v0.1.3/RELEASE_NOTES.ru.md).
+
+## Изменения v0.1.2
 
 - MAX восстанавливает временные разрывы через сохранённую сессию; повторный SMS и ручной вход при обычном сетевом сбое не нужны.
 - Переключение Xray больше не прерывается ошибкой TransportConfig; при неудаче выполняется попытка вернуть прежний узел, Telegram восстанавливает соединение.
@@ -59,7 +67,7 @@ SHMAX объединяет переписку в MAX и Telegram. Сообщен
 
 ## Что поддерживается
 
-| Задача | Возможности v0.1.2 |
+| Задача | Возможности v0.1.3 |
 |---|---|
 | MAX ↔ Telegram | Двусторонняя передача сообщений и сопоставление ответов |
 | Несколько чатов MAX | Отдельная тема приватной Telegram-группы для каждого подключённого чата |
@@ -205,7 +213,7 @@ flowchart LR
 `sudo bash deploy/installer/install.sh --mode install`.
 
 Обычное обновление: `sudo shmax update`. Сохраняется и обновление из локального
-архива: `sudo shmax update /полный/путь/shmax-v0.1.2.tar.gz`.
+архива: `sudo shmax update /полный/путь/shmax-v0.1.3.tar.gz`.
 
 [Установка и режимы](docs/ru/installation.md) · [Первоначальная настройка](docs/ru/first-setup.md) ·
 [Решение проблем](docs/ru/troubleshooting.md).

@@ -26,3 +26,7 @@ safety copy and journal instead of deleting persistent data.
 ## Temporary MAX failures in v0.1.2
 
 RECONNECTING and VERIFICATION_UNAVAILABLE mean recovery or an unavailable check, not proven session revocation. Check connectivity and the [event journal](event-journal.md), then allow bounded retries. Reauthenticate for AUTH_REQUIRED after a confirmed authentication failure. Do not delete session files to fix a network outage.
+
+## Text arrived but a captionless album did not
+
+In v0.1.1/v0.1.2 an album without caption and sender display name could raise AttributeError before enqueue, visible only in technical logs. Upgrade to v0.1.3. Such an old message will not retry automatically; arrange any resend separately. In v0.1.3 processing errors appear as `message.processing_failed` journal events.

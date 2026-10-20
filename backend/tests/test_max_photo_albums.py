@@ -1,5 +1,6 @@
 """Real PyMax 2.4.1 models and durable album progress; no live credentials."""
 import copy
+from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace as NS
 
@@ -300,3 +301,51 @@ async def test_cancellation_during_download_removes_prepared_cache(tmp_path):
     assert not list(tmp_path.glob('*.jpg'))
     assert dest.calls==[]
     assert p['album_progress']['next']==0
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('text', ['', 'caption', '🦆' * 512, '🦆' * 513],
+                         ids=['no-caption', 'caption', '1024-utf16', '1026-utf16'])
+async def test_three_photos_without_sender_name_use_durable_queue(rt, tmp_path, text):
+    from shmax.queue.repository import DeliveryQueueRepository
+    from shmax.database.models import MaxAccount, TelegramAccount
+
+    async with rt.db.session() as session:
+        session.add_all([MaxAccount(id=1, label='fixture'), TelegramAccount(id=1, label='fixture')])
+        await session.commit()
+    n = replace(event(3), text=text)
+    assert n.sender.display_name is None
+    engine = object.__new__(BridgeEngine)
+    engine._config = NS(max_account_id=1, telegram_account_id=1)
+    engine._on_enqueue = None
+    engine.journal = None
+    media, fallback = await engine._prepare_media(n, 'max')
+    async with rt.db.session() as session:
+        engine._queue = DeliveryQueueRepository(session)
+        await engine._enqueue_max_to_tg(
+            event=n, text=text,
+            route=NS(telegram_chat_id='-100777', telegram_thread_id='52'),
+            reply_to_telegram_message_id=None, media=media, fallback=fallback,
+        )
+    rec = await rt._claim_one(120)
+    assert rec is not None
+    payload = rec.payload
+    assert len(payload['attachments']) == 3
+    fits = len(text.encode('utf-16-le')) // 2 <= 1024
+    assert payload['album_caption'] == (text if fits else '')
+    assert payload['text'] == ('' if fits else text)
+    dest = Destination()
+    async def fetch(source, attachment):
+        path = tmp_path / f'{attachment.payload["photo_id"]}.jpg'
+        path.write_bytes(b'fixture-image')
+        return NS(media_ref='photo:' + str(path), kind='photo')
+    rt._tg = dest
+    rt._fetch_media = fetch
+    result = await rt._deliver(rec)
+    assert len(result.all_external_ids) == (3 if fits else 4)
+    groups = [kw for kind, kw in dest.calls if kind == 'group']
+    assert len(groups) == 1 and len(groups[0]['media_refs']) == 3
+    assert (groups[0].get('caption') or '') == (text if fits else '')
+    assert all(kw['thread_id'] == '52' for kind, kw in dest.calls)
+    if not fits:
+        assert ''.join(kw['text'] for kind, kw in dest.calls if kind == 'text') == text

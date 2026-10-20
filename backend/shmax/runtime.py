@@ -1739,7 +1739,13 @@ class AppRuntime:
                 )
             except DuplicateEnqueueError:
                 self.journal.emit("message.duplicate",direction=direction)
-            except Exception:  # noqa: BLE001
+            except Exception as exc:  # noqa: BLE001
+                self.journal.emit(
+                    "message.processing_failed",
+                    component="bridge",
+                    direction=direction,
+                    error_class=type(exc).__name__,
+                )
                 logger.exception("bridge handle_inbound failed")
             finally:
                 correlation.reset(token)

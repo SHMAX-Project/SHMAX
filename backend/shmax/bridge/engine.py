@@ -684,9 +684,13 @@ class BridgeEngine:
 
         if media is not None and "media_items" in media:
             initial = str(media.get("caption") or "")
-            album_caption = (body + ("\n"+initial if initial else "")) if body else (attribute_caption(caption=initial, label=author.label) if initial else author.label)
-            media["album_caption"] = album_caption if len(album_caption.encode("utf-16-le"))//2 <= 1024 else author.label
-            body = "" if len(album_caption.encode("utf-16-le"))//2 <= 1024 else album_caption
+            if body:
+                album_caption = body + ("\n" + initial if initial else "")
+            else:
+                album_caption = attribute_caption(caption=initial, label=author.label) or ""
+            caption_fits = len(album_caption.encode("utf-16-le")) // 2 <= 1024
+            media["album_caption"] = album_caption if caption_fits else (author.label or "")
+            body = "" if caption_fits else album_caption
         if fallback:
             body = f"{body}\n{fallback}" if body else fallback
         payload = {

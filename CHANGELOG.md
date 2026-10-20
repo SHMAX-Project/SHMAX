@@ -3,6 +3,17 @@
 All notable changes to SHMAX are documented here.
 Format: Keep a Changelog; versioning: SemVer.
 
+## 0.1.3 — 2026-10-20
+
+### Fixed
+- MAX albums without text/caption and without a sender display name no longer raise AttributeError before durable enqueue.
+- Incoming-message processing failures now emit a sanitized ERROR journal event with direction and correlation ID instead of remaining only in technical logs.
+- Retain UTF-16 caption limits, long-text delivery, photo order, topic routing, checkpoints and native ID aliases.
+
+### Validation and limits
+- Added real SQLite queue and album-delivery regressions for three photos, missing attribution and caption length boundaries; added journal error/privacy regression.
+- No new database migration or session-format change. Pre-enqueue failures from old versions are not recovered automatically; journal errors do not create separate Telegram notifications.
+
 ## 0.1.2 — 2026-10-20
 
 - Fix Xray switching, recoverable rollback and Telegram adapter installation.

@@ -131,3 +131,24 @@ async def test_worker_stop_is_recorded_on_normal_shutdown(runtime):
     await runtime.stop()
     rows=runtime.journal.query(search='worker.stopped')['events']
     assert len(rows)==runtime.config.max_concurrent_workers
+
+
+@pytest.mark.asyncio
+async def test_inbound_processing_failure_is_visible_without_exception_contents(runtime, monkeypatch):
+    from shmax.bridge.engine import BridgeEngine
+    from shmax.adapters.max.base import MaxEvent
+
+    async def fail(*args, **kwargs):
+        raise AttributeError('private-message-secret')
+
+    monkeypatch.setattr(BridgeEngine, 'handle_max_event', fail)
+    await runtime._on_inbound('max', MaxEvent('processing-fault', 'max-dialog-1', 'm1', 'private-body'))
+    await runtime.journal.flush()
+    rows = runtime.journal.query(search='message.processing_failed')['events']
+    assert len(rows) == 1
+    row = rows[0]
+    assert row['severity'] == 'ERROR'
+    assert row['error_class'] == 'AttributeError'
+    assert row['direction'] == 'max_to_telegram'
+    assert row['correlation_id']
+    assert 'private-' not in json.dumps(rows)

@@ -154,4 +154,4 @@ Expired MAX sessions, invalid Telegram tokens and unavailable networks remain on
 ## Release v0.1.0 / Публикация
 
 Debian 13 amd64: owner-confirmed live acceptance. ARMv7/ODROID-XU4: experimental; physical acceptance incomplete.
-Current stable release: v0.1.2. See [release notes](../release/v0.1.2/RELEASE_NOTES.en.md), [release process](en/release-process.md) and [event journal](en/event-journal.md). Publication and production deployment require explicit owner authorization.
+Current stable release: v0.1.3. See [release notes](../release/v0.1.3/RELEASE_NOTES.en.md), [release process](en/release-process.md) and [event journal](en/event-journal.md). Publication and production deployment require explicit owner authorization.

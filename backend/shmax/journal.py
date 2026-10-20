@@ -35,6 +35,7 @@ CATALOG = {
     "update.rollback": ("WARNING", "UPDATE", "Откат завершён"),
     "message.received": ("INFO", "BRIDGE", "Сообщение получено"),
     "message.normalized": ("INFO", "BRIDGE", "Сообщение нормализовано"),
+    "message.processing_failed": ("ERROR", "BRIDGE", "Ошибка обработки входящего сообщения"),
     "message.queued": ("INFO", "DELIVERY", "Добавлено в очередь"),
     "message.duplicate": ("DEBUG", "BRIDGE", "Повторное событие пропущено"),
     "attachment.unsupported": ("WARNING", "DELIVERY", "Неподдерживаемое вложение"),
@@ -95,6 +96,7 @@ CATEGORIES = {
     "UPDATE",
 }
 ERRORS = {
+    "AttributeError",
     "TimeoutError",
     "ConnectionError",
     "ConnectionRefusedError",

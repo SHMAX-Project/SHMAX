@@ -29,3 +29,7 @@ individual message successes remain independently correlated.
 The existing state volume persists across updates/restarts. Standard backups use
 SQLite snapshotting for the journal; portable snapshots already handle SQLite.
 Retention never prunes application databases, sessions, media, keys or backups.
+
+## Processing failure before enqueue — v0.1.3
+
+`message.processing_failed` is an ERROR with direction and correlation ID. An incoming event failed processing; a delivery queue row may not exist yet. Exception text and message contents are excluded. No separate Telegram notification is sent.
