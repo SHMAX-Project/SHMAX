@@ -22,10 +22,12 @@ assert hashlib.sha256((stage/name).read_bytes()).hexdigest()==expected
 with tarfile.open(stage/name) as t:t.extract('gitleaks',stage,filter='data')
 PY
 cd "$ROOT"
+REVIEWED="release/v$(cat backend/shmax/VERSION)/gitleaks-reviewed-fixtures.ignore"
+[[ -f "$REVIEWED" ]] || REVIEWED="release/v0.1.0/gitleaks-reviewed-fixtures.ignore"
 # Isolated test fixtures are reviewed individually in the redacted baseline.
 # Only exact reviewed fingerprints are allowed; arbitrary credentials fail closed.
 "$STAGE/gitleaks" git --redact=100 --no-banner --log-opts=--all \
- --gitleaks-ignore-path release/v0.1.0/gitleaks-reviewed-fixtures.ignore \
+ --gitleaks-ignore-path "$REVIEWED" \
  --report-format json --report-path "$STAGE/report.json" > "$STAGE/log" 2>&1 && CODE=0 || CODE=$?
 python3 - "$STAGE/report.json" <<'PY'
 import json,pathlib,sys
