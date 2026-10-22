@@ -7,9 +7,9 @@ curl -fsSL https://raw.githubusercontent.com/SHMAX-Project/SHMAX/main/install.sh
 ```
 
 Debian 13 amd64 · [One-line installation](docs/en/installation.md#one-line-installation) · [Manual archive installation](docs/en/installation.md#manual-archive-installation).
-**Latest stable release: [SHMAX v0.1.3](https://github.com/SHMAX-Project/SHMAX/releases/latest).**
+**Latest stable release: [SHMAX v0.2.0](https://github.com/SHMAX-Project/SHMAX/releases/latest).**
 The installer selects the latest stable release and verifies its signature and integrity.
-[v0.1.3 release notes](release/v0.1.3/RELEASE_NOTES.en.md) · [Changelog](CHANGELOG.md).
+[v0.2.0 release notes](release/v0.2.0/RELEASE_NOTES.en.md) · [Changelog](CHANGELOG.md).
 
 ![SHMAX — MAX ↔ Telegram, self-hosted messaging bridge](docs/assets/shmax-social.png)
 
@@ -40,9 +40,9 @@ provides a web interface for connections, routing and user access.
 
 The diagram uses fictional messages to illustrate routing. Actual SHMAX screenshots appear below.
 
-## In development: v0.2.0
+## New in v0.2.0
 
-This branch prepares v0.2.0; the last published stable release remains v0.1.3.
+Separate team groups, administrator overview and independent MAX/Telegram connections. [Changes and validation](release/v0.2.0/RELEASE_NOTES.en.md).
 
 - [Multiple groups and administrator overview](docs/en/multi-group.md), explicit group grants, automatic topics and both directions of conversation.
 - [Independent MAX direct/proxy/Xray networking](docs/en/max-network.md).
@@ -77,13 +77,15 @@ This branch prepares v0.2.0; the last published stable release remains v0.1.3.
 
 ## Supported workflows
 
-| Task | v0.1.3 capabilities |
+| Task | v0.2.0 capabilities |
 |---|---|
 | MAX ↔ Telegram | Bidirectional messages and reply mapping |
-| Multiple MAX chats | A separate private Telegram forum topic for each connected chat |
+| Multiple MAX chats | Topics across multiple groups; each chat may have several destinations |
+| Administrator overview | Automatic topics for new MAX chats and both sides of conversations |
+| MAX and Telegram networking | Independent direct, HTTP, SOCKS5 or Xray selection |
 | Attachments | MAX → Telegram albums of 2–10 photos, documents and supported video; [details and limits](docs/en/media.md) |
-| Team access | Participant approval, roles, blocking and operator attribution |
-| Server operations | Web dashboard, persistent event journal, diagnostics, backups and updates with rollback |
+| Team access | Per-group send grants, global blocking and sender attribution |
+| Server operations | Resource graphs, groups, event journal, historical backup import and updates with rollback |
 | One-line installation | Verified on clean Debian 13 amd64; manual installation also supported |
 | Other architectures | Docker build targets: arm64 and arm/v7; [platform details](docs/en/architecture.md) |
 
@@ -94,6 +96,8 @@ This branch prepares v0.2.0; the last published stable release remains v0.1.3.
 3. Receive messages in that topic and reply from Telegram — SHMAX sends replies back to the MAX chat.
 
 ## Stable release validation
+
+**v0.2.0:** 58 frontend tests, desktop/mobile setup and layout checks, 74 album/media/fanout regressions, and 8 historical backup formats passed. Debian acceptance: 164 passed, 1 environment skip; signed upgrade, component restart and full VM reboot verified. [Evidence and limits](release/v0.2.0/VALIDATION.md).
 
 **v0.1.2:** 1002 backend tests passed, 9 skipped locally; 51 frontend tests and 26 desktop/mobile Playwright scenarios passed. Debian 13 amd64: 38 recovery/journal/queue regressions and 5 real-Xray checks; signed clean install, v0.1.1 → v0.1.2 upgrade, cold rollback and journal persistence after restart passed. [Details](release/v0.1.2/RELEASE_NOTES.en.md).
 
@@ -115,7 +119,7 @@ VM data-preservation checks used synthetic settings and session files.
 
 **What do I need?** A regular MAX account, your own Telegram bot and a private supergroup with topics enabled. The bot needs message sending and topic management permissions; disable Privacy Mode.
 
-**Do I need a separate MAX account?** v0.1.2 connects one regular MAX account. Administrators may choose a dedicated work account.
+**Do I need a separate MAX account?** v0.2.0 connects one regular MAX account. Administrators may choose a dedicated work account.
 
 **Where is my data?** On your server in `/var/lib/shmax`. Updates preserve it; keep backups to protect against disk failure.
 
@@ -123,7 +127,7 @@ VM data-preservation checks used synthetic settings and session files.
 
 **Which attachments work?** Photos, documents and supported video. Animated stickers may become static images or text fallbacks. [Media limits](docs/en/media.md).
 
-**Does MAX support proxies?** v0.1.2 connects to MAX directly. MAX proxies, multiple accounts and route permissions are on the [roadmap](docs/en/roadmap.md).
+**Does MAX support proxies?** v0.2.0 supports independent direct, HTTP, SOCKS5 and Xray connections for MAX. Multiple MAX accounts remain on the [roadmap](docs/en/roadmap.md).
 
 [Full FAQ](docs/en/faq.md) · [Contribute](CONTRIBUTING.md).
 
@@ -221,7 +225,7 @@ remains supported: download → verify signature and checksum → extract → ru
 `sudo bash deploy/installer/install.sh --mode install`.
 
 Update with `sudo shmax update`, or use a local verified archive:
-`sudo shmax update /absolute/path/shmax-v0.1.3.tar.gz`.
+`sudo shmax update /absolute/path/shmax-v0.2.0.tar.gz`.
 
 [Installation and modes](docs/en/installation.md) · [First setup](docs/en/first-setup.md) ·
 [Troubleshooting](docs/en/troubleshooting.md).

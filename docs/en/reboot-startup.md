@@ -17,3 +17,7 @@ checks; ordinary LAN bindings are never widened to wildcard. After the address
 appears, exact port publication and host readiness are verified; incorrect or
 missing mappings trigger recreation. Wait/retry checks are bounded; systemd
 retries failures with backoff.
+
+## Host address and automatic startup
+
+The configured bind address must survive reboot: use a DHCP reservation or persistent host addressing. SHMAX waits for that address; it cannot reserve a DHCP lease. After an upgrade, check application and hostd versions, host-address readiness, MAX/Telegram, published ports and journal; repeat after an authorized reboot without manually starting services. Do not widen the bind address to bypass an addressing error. v0.2.0 was verified through component restarts and a full existing Debian VM reboot with data preserved.

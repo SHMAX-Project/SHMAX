@@ -1,6 +1,6 @@
 # Event journal and technical logs
 
-In v0.1.2 the **Logs / Журнал** page is a persistent application event journal, not a file tail. It shows incoming messages, queue activity, delivery attempts/results, MAX/Telegram/Xray states, startup and administrator actions. Use filters, search, dates, details and refresh. See [retention and privacy](event-journal.md).
+Since v0.1.2 the **Logs / Журнал** page is a persistent application event journal, not a file tail. It shows incoming messages, queue activity, delivery attempts/results, MAX/Telegram/Xray states, startup and administrator actions. Use filters, search, dates, details and refresh. See [retention and privacy](event-journal.md).
 
 The administrator-only SQLite journal lives at `/var/lib/shmax/state/events.db` and survives restarts/updates. Defaults are 90 days, 100,000 records and a conservative 128 MiB file budget. Cleanup is incremental; overload may drop diagnostic events, with counters visible in the UI. Message text, recipients and credentials are excluded.
 

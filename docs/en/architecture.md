@@ -2,14 +2,15 @@
 
 ```mermaid
 flowchart TD
-    MAX[MAX user] <--> PMAX[PyMax adapter]
-    PMAX <--> BR[Bridge engine]
-    BR <--> Q[Delivery queue + mapping + echo registry]
+    MAX[MAX account] <--> MN[MAX direct / proxy / own Xray]
+    MN <--> PMAX[PyMax adapter]
+    PMAX <--> BR[Bridge engine + group grants]
+    BR <--> Q[Durable per-destination queue + mapping]
     Q <--> TG[aiogram adapter]
-    TG --> XRAY[Xray process optional loopback SOCKS]
-    XRAY --> BAPI[Telegram Bot API]
-    TG --> BAPI
-    BAPI --> FORUM[Forum group topics]
+    TG <--> TN[Telegram direct / proxy / own Xray]
+    TN <--> API[Telegram Bot API]
+    API <--> G1[Team forum groups and selected chats]
+    API <--> GA[Admin overview with automatic topics]
 ```
 
 Host: Debian 13 runs Docker (SHMAX container), `shmax-hostd`
@@ -32,7 +33,7 @@ orchestration.
 
 Optional MTProto **bot** sync discovers silent members; `chat_member` updates membership. New users stay unapproved (`read_only`); Telegram admin grants no SHMAX admin. API Hash is encrypted in SecretStore; the session exists only in memory. The bridge works without sync configuration. See [Telegram group](telegram-group.md#automatic-participant-discovery) for network, backup and Privacy Mode limitations.
 
-MAX always stays direct. Bot API polling has no session file. Auxiliary Telethon
+MAX has an independent direct, HTTP, SOCKS5 or Xray connection; see [MAX networking](max-network.md). Bot API polling has no session file. Auxiliary Telethon
 sync verifies bot identity, receives no updates and never replaces the aiogram
 poller. Its session is memory-only; API Hash is in SecretStore and users in the DB.
 Runs serialize and disconnect on completion/cancellation. Pages have up to 200
@@ -52,3 +53,7 @@ Portable UI → CSRF/owner API → authenticated disk staging → hostd job ID
 inode is preserved: only persistent subdirectories are swapped. Destination
 .env/compose deployment settings remain local. See [restore](restore.md) and
 [media](media.md).
+
+## v0.2.0
+
+Routes, source/sender labels and send grants are configured per Telegram group. A MAX chat can have multiple destinations; administrator overview groups create topics automatically. Durable jobs and message mappings are destination-specific; albums retain their members and topic in each group. MAX networking is independent of Telegram. See [groups and access](multi-group.md), [MAX networking](max-network.md) and [media](media.md).

@@ -6,7 +6,7 @@
 4. On “Как настроить SHMAX?”, choose “Восстановить из резервной копии”. No MAX or Telegram setup is required first.
 5. Upload the file, enter its password and inspect version/date/contents/warnings. Active data remains unchanged before confirmation.
 6. Confirm that the source is stopped and start restore.
-7. After restart, log in with the destination owner's credentials. Open the dashboard without repeating steps 2–9; verify routes, users, signatures, both directions and reboot.
+7. After restart, log in with the destination owner's credentials. Open the dashboard without repeating steps 2–10; verify routes, users, signatures, both directions and reboot.
 
 The destination owner becomes the only web owner regardless of imported ID/username collisions. Imported web users, sessions and setup tokens are removed and cookie-signing secret rotated. Telegram user ACL/roles/approval/blocking/signatures are retained; unknown participants are not auto-approved. Completed queue rows, mappings and idempotency keys remain. Pending/retry/processing rows are quarantined as failed with `migration_review_required`; inspect before retry because the source may already have sent them. Media cache is excluded.
 

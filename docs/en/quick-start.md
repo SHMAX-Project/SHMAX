@@ -14,7 +14,7 @@ the container, waits for `/health/ready`, and — for a FIRST
 install only — prints the one-time setup URL + QR code.
 Upgrade/repair never require a setup token.
 
-Then open the URL in your LAN and follow the 9-step wizard
+Then open the URL in your LAN and follow the 10-step wizard
 (first-setup.md).
 
 Check `systemctl status shmax-boot.service`,

@@ -16,6 +16,10 @@ Migration preserves groups, routes, signatures, saved sessions and queued record
 
 Take a cold backup on the original server before upgrading. Restore a verified pre-upgrade backup to return to the old schema; reverse migration would lose group data and is refused. Updater cold snapshots without an application manifest remain a separate offline recovery mechanism.
 
-One MAX account is supported. New Telegram groups must support forum topics. Telegram membership determines read visibility. Metric history stays in memory for up to one hour and resets on restart. Network paths were tested locally without sending real messages.
+One MAX account is supported. New Telegram groups must support forum topics. Telegram membership determines read visibility. Metric history stays in memory for up to one hour and resets on restart. Network paths were tested without sending real test messages. The existing Debian deployment recovered MAX and Telegram after the signed upgrade and full reboot.
 
-GitHub publication is a separate action. Existing-server upgrades use the signed archive, a verified cold backup and MAX/Telegram recovery checks.
+## Validation and security
+
+The signed upgrade, schema migration, host helper, preserved settings/queues, component restart and full VM reboot were verified on an existing Debian 13 amd64 deployment. Album/media/fanout regressions, desktop/mobile setup and layout, and imports from all four previous release backup writers passed. [Detailed evidence and limits](VALIDATION.md).
+
+Use the signed archives below; keep `SHA256SUMS` and `SHA256SUMS.sig` together and verify with the unchanged trusted public key. Private keys and server backups are excluded. Existing v0.1.0–v0.1.3 releases remain unchanged.

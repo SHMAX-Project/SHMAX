@@ -29,4 +29,4 @@ RECONNECTING and VERIFICATION_UNAVAILABLE mean recovery or an unavailable check,
 
 ## Text arrived but a captionless album did not
 
-In v0.1.1/v0.1.2 an album without caption and sender display name could raise AttributeError before enqueue, visible only in technical logs. Upgrade to v0.1.3. Such an old message will not retry automatically; arrange any resend separately. In v0.1.3 processing errors appear as `message.processing_failed` journal events.
+In v0.1.1/v0.1.2 an album without caption and sender display name could raise AttributeError before enqueue, visible only in technical logs. Upgrade to v0.2.0 (the fix was introduced in v0.1.3). Such an old message will not retry automatically; arrange any resend separately. In v0.1.3 processing errors appear as `message.processing_failed` journal events.

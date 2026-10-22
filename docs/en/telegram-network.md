@@ -11,7 +11,7 @@ mode persists across restarts; proxy failures never fall back to Direct.
 The first bot `getMe` uses the saved network without starting polling. Fix
 connectivity before retrying token verification. Open bot settings from Telegram
 and the Telegram Network wizard step to change modes, then check the connection.
-MAX always stays direct.
+MAX has an independent direct, HTTP, SOCKS5 or Xray connection; see [MAX networking](max-network.md).
 
 Optional full member sync requires Telegram MTProto access. Its auxiliary client
 uses saved SOCKS/HTTP/Xray or MTProxy settings; without a proxy it connects directly.

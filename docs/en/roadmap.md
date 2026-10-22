@@ -1,11 +1,10 @@
 # SHMAX roadmap
 
-## Prepared for v0.2.0
+## Available in v0.2.0
 
 Multiple Telegram groups, explicit group grants, automatic administrator overview
 topics, both directions of conversation, independent MAX networking, resource
-graphs and ten-step onboarding. These remain development-branch capabilities
-until v0.2.0 is published.
+graphs and ten-step onboarding. These capabilities are included in v0.2.0.
 
 [Groups](multi-group.md) · [MAX network](max-network.md) · [Dashboard](dashboard.md).
 

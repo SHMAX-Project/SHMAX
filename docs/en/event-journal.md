@@ -1,4 +1,4 @@
-# Persistent event journal (v0.1.2)
+# Persistent event journal (v0.1.2–v0.2.0)
 
 The administrator Journal page uses `/api/journal`, authenticated server-side,
 with 50-row cursor pagination (maximum 200), filters, bounded search, UTC storage

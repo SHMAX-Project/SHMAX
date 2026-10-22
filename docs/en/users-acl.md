@@ -24,3 +24,7 @@ On a Telegram user card, an administrator can edit “Подпись в MAX”, 
 Clear restores the Telegram display name, then @username or the safe fallback. Telegram → MAX text, replies, media captions and text fallbacks receive exactly one prefix. MAX → Telegram author resolution remains unchanged.
 
 Values are trimmed; empty values clear the override. Cyrillic, Latin, emoji and ordinary punctuation are allowed, up to 64 Unicode characters. Newlines and control characters are rejected. Mutation requires an administrative session and CSRF and changes no approval, blocking, role or membership. Member sync, Telegram profile renames and Telegram-admin changes never overwrite the local signature.
+
+## v0.2.0
+
+Routes, source/sender labels and send grants are configured per Telegram group. A MAX chat can have multiple destinations; administrator overview groups create topics automatically. Durable jobs and message mappings are destination-specific; albums retain their members and topic in each group. MAX networking is independent of Telegram. See [groups and access](multi-group.md), [MAX networking](max-network.md) and [media](media.md).

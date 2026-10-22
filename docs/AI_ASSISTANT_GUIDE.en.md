@@ -6,13 +6,14 @@ it fully before advising.
 ## Identity
 
 SHMAX is a self-hosted MAX ↔ Telegram gateway. An ordinary MAX
-account is bridged into a private Telegram supergroup with forum
-topics (one MAX chat = one topic); replies flow both ways; authors
+account is bridged into private Telegram supergroups with forum
+topics (one MAX chat can have multiple destinations); replies flow both ways; authors
 are attributed `[Name]:`; media carries captions.
 
 ## Platforms
 
-Debian 13; ODROID-XU4/ARMv7 (~2 GiB). Docker + Compose v2 + systemd.
+Verified: Debian 13 amd64. arm64 and ODROID-XU4/ARMv7 are experimental
+build targets without completed physical acceptance. Docker + Compose v2 + systemd.
 
 ## Architecture
 
@@ -31,7 +32,7 @@ sessions/, state/, backups/ 0600, cache/); /run/shmax/hostd.sock.
 
 ## Facts
 
-- Wizard: Admin, MAX, Telegram network, Bot, Group
+- Wizard: Admin, MAX network, MAX, Telegram network, Bot, Group
   (`/shmax_connect <CODE>`), MAX chats, Users, Test, Finish.
 - MAX 2FA must be enabled in the official MAX app if demanded.
 - First bot getMe uses the saved network (non-polling); the
@@ -74,13 +75,14 @@ shmax version; shmax status; shmax doctor
 
 ```yaml
 product: SHMAX
-bridge: MAX(user account) <-> Telegram bot <-> forum supergroup
-platform: [debian-13, odroid-xu4-armv7]
+bridge: MAX(user account) <-> Telegram bot <-> multiple forum supergroups
+platform_verified: [debian-13-amd64]
+platform_experimental: [arm64, odroid-xu4-armv7]
 deployment_dir: /opt/shmax
 data_dir: /var/lib/shmax
 hostd_socket: /run/shmax/hostd.sock
 web_port_default: 8787
-wizard_steps: [admin, max, telegram-network, telegram-bot,
+wizard_steps: [admin, max-network, max, telegram-network, telegram-bot,
                telegram-group, max-chats, users, test, finish]
 update_source: github-releases
 persistence_invariant: app-disposable-data-persistent
@@ -91,7 +93,7 @@ persistence_invariant: app-disposable-data-persistent
 
 Optional MTProto **bot** sync discovers silent members; `chat_member` updates membership. New users stay unapproved (`read_only`); Telegram admin grants no SHMAX admin. API Hash is encrypted in SecretStore; the session exists only in memory. The bridge works without sync configuration. See [Telegram group](en/telegram-group.md#automatic-participant-discovery) for network, backup and Privacy Mode limitations.
 
-MAX always stays direct. Optional full sync requires API ID/API Hash from
+MAX uses independent direct/HTTP/SOCKS5/Xray networking (see [MAX network](en/max-network.md)). Optional full sync requires API ID/API Hash from
 my.telegram.org; it uses the existing BOT, without a human userbot or Telegram
 phone/OTP/QR login in SHMAX. Silent members do not need to message the bot. Users
 has “Синхронизировать с Telegram”; missing settings and failures do not stop
@@ -102,7 +104,7 @@ Check administrator rights and a live message.
 Local archives may be unencrypted and include the master key: protect them as
 secrets. Portable v2 UI export/download always encrypts one .shmax file with an
 owner-chosen password. Fresh onboarding offers restore immediately after owner
-creation, bypassing steps 2–9. Hostd stages/migrates, stops/swaps/starts and checks
+creation, bypassing steps 2–10. Hostd stages/migrates, stops/swaps/starts and checks
 readiness, rolling back failures. Legacy in-process restore is blocked in production;
 use legacy CLI only offline after taking a safety copy.
 
@@ -146,12 +148,16 @@ Creating the administrator remains mandatory. Afterwards choose Start setup, Res
 
 Click the entire SHMAX branding block, or Dashboard inside the wizard. Cancel / Back also exits the wizard. Unsaved changes require confirmation; leaving neither saves entered values, cancels MAX authorization nor deletes configuration.
 
-Configure components individually: MAX → MAX settings (`/max/settings`); Telegram → Network settings, Bot settings or Group settings. These editors reuse the actual existing controls without the nine-step wizard. MAX authentication and the bot Check and save action explicitly persist their results; save/return or cancel leads back to the component page. An empty bot token does not replace the stored token. Continue initial setup on the dashboard resumes at MAX without recreating the administrator.
+Configure components individually: MAX → MAX settings (`/max/settings`); Telegram → Network settings, Bot settings or Group settings. These editors reuse the actual existing controls without the ten-step wizard. MAX authentication and the bot Check and save action explicitly persist their results; save/return or cancel leads back to the component page. An empty bot token does not replace the stored token. Continue initial setup on the dashboard resumes at MAX networking without recreating the administrator.
 
 Expired MAX sessions, invalid Telegram tokens and unavailable networks remain on their relevant settings/status pages and never automatically restart onboarding. All sections continue to require administrator authentication.
 
 
-## Release v0.1.0 / Публикация
+## Release v0.2.0 / Публикация
 
 Debian 13 amd64: owner-confirmed live acceptance. ARMv7/ODROID-XU4: experimental; physical acceptance incomplete.
-Current stable release: v0.1.3. See [release notes](../release/v0.1.3/RELEASE_NOTES.en.md), [release process](en/release-process.md) and [event journal](en/event-journal.md). Publication and production deployment require explicit owner authorization.
+Current stable release: v0.2.0. See [release notes](../release/v0.2.0/RELEASE_NOTES.en.md), [release process](en/release-process.md) and [event journal](en/event-journal.md). Publication and production deployment require explicit owner authorization.
+
+## Groups and networks in v0.2.0
+
+One MAX account serves multiple Telegram forum groups. Administrators configure destinations, actual-sender/chat labels and send grants per group; a global block takes precedence. Telegram membership controls reading. Administrator overview groups automatically create topics for new chats and mirror both directions after confirmed MAX delivery. MAX and Telegram use independent networking and Xray processes. See [groups](en/multi-group.md), [MAX network](en/max-network.md) and [validation](../release/v0.2.0/VALIDATION.md).

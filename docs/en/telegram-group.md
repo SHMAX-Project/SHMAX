@@ -52,3 +52,7 @@ See [Telegram network](telegram-network.md) for connectivity limitations and
 ### Local signature and synchronization
 
 “Подпись в MAX” (`nickname`) is configured on the SHMAX user card. Sync refreshes Telegram name, username, membership and Telegram-admin status while preserving the local signature and ACL. After a Telegram profile rename, “Анна” still produces `[Анна]: Клиенту уже ответили.` The Telegram profile is unchanged. See [Users and ACL](users-acl.md#signature-in-max).
+
+## v0.2.0
+
+Routes, source/sender labels and send grants are configured per Telegram group. A MAX chat can have multiple destinations; administrator overview groups create topics automatically. Durable jobs and message mappings are destination-specific; albums retain their members and topic in each group. MAX networking is independent of Telegram. See [groups and access](multi-group.md), [MAX networking](max-network.md) and [media](media.md).

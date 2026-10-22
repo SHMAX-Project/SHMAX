@@ -1,4 +1,4 @@
-# Скриншоты v0.1.0 / Screenshots
+# Скриншоты / Screenshots v0.2.0
 
 **DEMO, не реальные подключения.** Production React SPA и реальный FastAPI
 backend работают в изолированном временном окружении. ONLY external MAX/Telegram
@@ -11,8 +11,7 @@ proof of a live service connection. UI/DOM/internal APIs are not replaced.
 Диагностика показывает нейтральный ephemeral /tmp demo path, not a server path.
 Mac Darwin/arm64 is the demo host, not a claim of live platform acceptance.
 
-Desktop width 1440 CSS pixels (900 high; users full-page 951 high); mobile
-375×812 CSS pixels / 750×1624 PNG. Actual screenshot captures, no retouching.
+Desktop viewport width is 1440 CSS pixels; mobile is 375 CSS pixels (DPR 2). Full-page captures may be taller than the viewport. Exact dimensions, hashes and capture provenance for every image are recorded in [the v0.2.0 manifest](../../../release/v0.2.0/SCREENSHOTS.json). Actual screenshot captures, no retouching. New dashboard/group/network demonstrations use synthetic API fixtures and explicit DEMO labels; unchanged older images retain their historical provenance.
 
 | File | Actual route | State |
 |---|---|---|

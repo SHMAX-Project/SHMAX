@@ -1,5 +1,7 @@
 # Testing
 
+Current release: [v0.2.0 validation and limits](../../release/v0.2.0/VALIDATION.md). Older results below are retained as historical evidence.
+
 - Backend: `cd backend && .venv/bin/python -m pytest`, one process. Controlled boundaries: MAX test-fake, local Bot API, injected GitHub HTTP and tmp_path.
 - Frontend: `cd frontend && npm run test:unit && npm run build`, including TypeScript.
 - Browser: `npm run test:e2e`, sequential desktop-1440x900 / mobile-375x812, real backend/SPA with synthetic external services.

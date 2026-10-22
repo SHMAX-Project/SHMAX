@@ -21,3 +21,7 @@ The SDK reads `photoIds` from the initialization URL before uploading. SHMAX use
 `document:` and `file:` references both use SDK `File`, preserving the original filename separately from the cache path. Saved Messages (`chat_id=0`) is a valid destination for text, photos, documents, converted static stickers and replies.
 
 Transient failures retain bounded retries (eight attempts); unsupported schema and authentication/session failures retain the queue row and cache for manual review. Lost final confirmation after upload stops automatic resend with `delivery_confirmation_uncertain_review_before_retry`: check MAX before retrying. Manual retry resets attempts on the same row and idempotency key. This does not remove the existing at-least-once limitation after external delivery and failed mapping persistence. Upload diagnostics contain operation, known schema names, query-ID presence, status and correlation only; SDK media logs are redacted within the current task context.
+
+## v0.2.0
+
+Routes, source/sender labels and send grants are configured per Telegram group. A MAX chat can have multiple destinations; administrator overview groups create topics automatically. Durable jobs and message mappings are destination-specific; albums retain their members and topic in each group. MAX networking is independent of Telegram. See [groups and access](multi-group.md), [MAX networking](max-network.md) and [media](media.md).

@@ -6,19 +6,15 @@
 
 ```mermaid
 flowchart TD
-    subgraph MAX
-        U[Пользователь MAX]
-    end
-    subgraph "Контейнер SHMAX"
-        PYMAX[PyMax-адаптер] --> BR[Bridge engine]
-        BR --> Q[Очередь доставки + mapping]
-        Q --> TG[aiogram-адаптер]
-        TG --> XRAY[Xray-процесс, опционально]
-    end
-    U <--> PYMAX
-    TG --> B[Bot API]
-    XRAY --> B
-    B --> F[Форум-группа, темы]
+    MAX[MAX account] <--> MN[MAX direct / proxy / own Xray]
+    MN <--> PMAX[PyMax adapter]
+    PMAX <--> BR[Bridge engine + group grants]
+    BR <--> Q[Durable per-destination queue + mapping]
+    Q <--> TG[aiogram adapter]
+    TG <--> TN[Telegram direct / proxy / own Xray]
+    TN <--> API[Telegram Bot API]
+    API <--> G1[Team forum groups and selected chats]
+    API <--> GA[Admin overview with automatic topics]
 ```
 
 ## Диаграмма хоста
@@ -44,10 +40,10 @@ flowchart TD
 | MAX-адаптер (PyMax) | вход в MAX | аккаунт MAX | `sessions/max/` | DEGRADED MAX, 2FA-запросы |
 | Telegram-адаптер (aiogram) | бот | Bot API | настройки и runtime; файловой сессии нет | 401/409, poller |
 | Member-sync (Telethon) | импорт участников существующим ботом | MTProto, проверка bot ID | сессия только в памяти; API Hash в SecretStore, участники в БД | неполный импорт; мост продолжает работу |
-| Telegram-сеть | транспорт выбор | прокси/Xray | state | Telegram DOWN |
+| Telegram-сеть | транспорт выбор | прокси/Xray | state | соответствующее подключение DOWN |
 | Xray-процесс | локальный SOCKS | 127.0.0.1:порт | ephemeral config 0600 | Telegram через Xray недоступен |
-| Очередь + mapping + echo-registry | доставка ровно-один-раз-на-практике | внутренняя | таблицы БД | дубли, потеря ответов |
-| ACL | fail-closed | внутренняя | `telegram_users` | «не могу писать в MAX» |
+| Очередь + mapping + echo-registry | постоянные попытки доставки и идемпотентность; неоднозначный результат требует проверки | внутренняя | таблицы БД | дубли, потеря ответов |
+| ACL | fail-closed | внутренняя | `telegram_users`, `telegram_group_access` | «не могу писать в MAX» |
 | Watchdog/супервизоры | здоровье, один poller | внутренняя | `state/watchdogs.json` | DEGRADED без реконнекта |
 | Инсталлятор | деплой | root на хосте | `/opt/shmax` | — |
 | shmax-hostd | ограниченные host-операции | unix-сокет 0660, БЕЗ произвольных команд | нет | «host helper unavailable» |
@@ -64,7 +60,7 @@ flowchart TD
 
 Синхронизация Telegram обнаруживает молчавших участников через MTProto **бота**, а `chat_member` обновляет членство. Новые участники остаются не одобрены (`read_only`); Telegram admin не даёт SHMAX admin. API Hash хранится в SecretStore, сессия — только в памяти. Без необязательных настроек мост работает. Подробности, ограничения сети, backup и Privacy Mode: [Telegram-группа](telegram-group.md#автоматическое-обнаружение-участников).
 
-MAX всегда direct. Вспомогательный клиент не принимает обновления и не заменяет
+Сеть MAX независима от Telegram: direct, HTTP, SOCKS5 или Xray; см. [сеть MAX](max-network.md). Вспомогательный клиент не принимает обновления и не заменяет
 aiogram poller. Он проверяет идентичность бота, отключается при завершении/отмене;
 запуски сериализованы. Страницы до 200 участников, максимум 20 000, таймаут 180 с;
 один FloodWait до 30 с допускает одну повторную попытку. Превышение предела или
@@ -82,3 +78,7 @@ Portable UI → CSRF/owner API → disk-backed authenticated staging → hostd j
 не заменяется целиком: сохраняется inode Docker mount, меняются только постоянные
 подкаталоги. Deployment .env/compose нового хоста не импортируются.
 См. [восстановление](restore.md) и [медиа](media.md).
+
+## v0.2.0
+
+Настройки маршрутов, подписей источника/автора и прав отправки задаются отдельно по Telegram-группам. Один чат MAX может иметь несколько назначений; админский обзор создаёт темы автоматически. Постоянные задания и соответствия сообщений разделены по назначениям; альбомы сохраняют состав и тему в каждой группе. Сеть MAX настраивается независимо от Telegram. См. [группы и права](multi-group.md), [сеть MAX](max-network.md), [медиа](media.md).

@@ -9,14 +9,14 @@
 SHMAX — самостоятельный шлюз **MAX ↔ Telegram** для собственного
 сервера. MAX-аккаунт обычного пользователя подключается к SHMAX;
 сообщения выбранных чатов MAX появляются в приватной
-Telegram-супергруппе с форум-темами (один чат MAX = одна тема);
+Telegram-супергруппах с форум-темами (один чат MAX может иметь несколько назначений);
 ответы ходят в обе стороны; автор подписан `[Имя]:`; медиа
 доставляется с подписью.
 
 ## Поддерживаемая платформа
 
-Debian 13; также ODROID-XU4 / ARMv7 (armhf), ~2 ГиБ RAM. Docker +
-Compose v2. systemd.
+Проверено: Debian 13 amd64. arm64 и ODROID-XU4 / ARMv7 — экспериментальные
+цели сборки, физическая приёмка не завершена. Docker + Compose v2, systemd.
 
 ## Архитектура (кратко)
 
@@ -50,9 +50,9 @@ Compose v2. systemd.
 - Health: `/health/live`, `/health/ready` — ВНУТРЕННИЕ проверки
   контейнера. Отсутствие публикации порта они НЕ показывают.
 
-## Мастер настройки (ровно 9 шагов)
+## Мастер настройки (ровно 10 шагов)
 
-Admin → MAX (SMS/OTP, 2FA) → Telegram сеть → Telegram бот →
+Admin → MAX сеть → MAX (SMS/OTP, 2FA) → Telegram сеть → Telegram бот →
 Telegram группа (`/shmax_connect <КОД>`) → MAX чаты →
 Пользователи → Проверка → Готово.
 
@@ -71,7 +71,7 @@ Telegram группа (`/shmax_connect <КОД>`) → MAX чаты →
   Portable v2 экспортируется/скачивается из UI одним обязательно зашифрованным
   .shmax. Пароль задаёт владелец, не запрашивайте его для диагностики.
   После создания нового владельца onboarding предлагает восстановление вместо
-  шагов 2–9. Hostd останавливает контейнер, мигрирует staging, меняет каталоги,
+  шагов 2–10. Hostd останавливает контейнер, мигрирует staging, меняет каталоги,
   проверяет readiness и откатывает неудачу. Старый production API in-process
   restore заблокирован; legacy CLI используйте только offline со safety-копией.
 
@@ -127,15 +127,17 @@ shmax version && shmax status && shmax doctor
 ```yaml
 product: SHMAX
 kind: self-hosted gateway
-bridge: MAX(user account) <-> Telegram bot <-> forum supergroup
-platform: [debian-13, odroid-xu4-armv7]
+bridge: MAX(user account) <-> Telegram bot <-> multiple forum supergroups
+platform_verified: [debian-13-amd64]
+platform_experimental: [arm64, odroid-xu4-armv7]
 deployment_dir: /opt/shmax
 data_dir: /var/lib/shmax
 hostd_socket: /run/shmax/hostd.sock
 web_port_default: 8787
-wizard_steps: [admin, max, telegram-network, telegram-bot,
+wizard_steps: [admin, max-network, max, telegram-network, telegram-bot,
                telegram-group, max-chats, users, test, finish]
 tg_transports: [direct, socks5, http, xray-subscription]
+max_transports: [direct, socks5, http, xray-subscription]
 update_source: github-releases
 channels: [stable, beta]
 update_install: manual-only-via-hostd
@@ -149,7 +151,7 @@ pairing_command: /shmax_connect <CODE>
 
 Синхронизация Telegram обнаруживает молчавших участников через MTProto **бота**, а `chat_member` обновляет членство. Новые участники остаются не одобрены (`read_only`); Telegram admin не даёт SHMAX admin. API Hash хранится в SecretStore, сессия — только в памяти. Без необязательных настроек мост работает. Подробности, ограничения сети, backup и Privacy Mode: [Telegram-группа](ru/telegram-group.md#автоматическое-обнаружение-участников).
 
-MAX всегда direct. Полная синхронизация требует необязательные API ID/API Hash
+MAX использует независимую сеть direct/HTTP/SOCKS5/Xray (см. [сеть MAX](ru/max-network.md)). Полная синхронизация требует необязательные API ID/API Hash
 из my.telegram.org. Используется существующий BOT, без человеческого userbot,
 OTP/QR/телефона в SHMAX. Молчавшим участникам не нужно писать боту. Ручная кнопка
 «Синхронизировать с Telegram» — в Users; пропущенные настройки и ошибки не
@@ -198,12 +200,16 @@ Socket activation unit не нужен. Boot-unit имеет конкретны�
 
 Нажмите блок SHMAX (включая значок и подпись) или «На главную» в мастере. «Отмена / Назад» также позволяет выйти из мастера. Несохранённые изменения требуют подтверждения; выход не сохраняет введённые значения, не отменяет MAX-авторизацию и не удаляет конфигурацию.
 
-Настраивайте компоненты отдельно: MAX → «Настройки MAX» (`/max/settings`); Telegram → «Настройки сети», «Настройки бота», «Настройки группы». Эти страницы используют реальные существующие средства настройки без девяти шагов мастера. Авторизация MAX и «Проверить и сохранить» бота записывают результат явно; кнопка сохранения/возврата или отмены возвращает в раздел компонента. Пустой токен не заменяет сохранённый. На главной выберите «Продолжить первоначальную настройку», чтобы вернуться к шагу MAX, а не создавать администратора заново.
+Настраивайте компоненты отдельно: MAX → «Настройки MAX» (`/max/settings`); Telegram → «Настройки сети», «Настройки бота», «Настройки группы». Эти страницы используют реальные существующие средства настройки без десяти шагов мастера. Авторизация MAX и «Проверить и сохранить» бота записывают результат явно; кнопка сохранения/возврата или отмены возвращает в раздел компонента. Пустой токен не заменяет сохранённый. На главной выберите «Продолжить первоначальную настройку», чтобы вернуться к шагу сети MAX, а не создавать администратора заново.
 
 Истёкшая сессия MAX, неверный токен Telegram и недоступная сеть показываются в соответствующем разделе и не запускают мастер автоматически. Все разделы по-прежнему требуют входа администратора.
 
 
-## Release v0.1.0 / Публикация
+## Release v0.2.0 / Публикация
 
 Debian 13 amd64: owner-confirmed live acceptance. ARMv7/ODROID-XU4: experimental; physical acceptance incomplete.
-Текущий стабильный выпуск — v0.1.3. [Изменения](../release/v0.1.3/RELEASE_NOTES.ru.md), [процесс релиза](ru/release-process.md), [журнал событий](ru/event-journal.md). Публикация и production deploy выполняются только по явному разрешению владельца.
+Текущий стабильный выпуск — v0.2.0. [Изменения](../release/v0.2.0/RELEASE_NOTES.ru.md), [процесс релиза](ru/release-process.md), [журнал событий](ru/event-journal.md). Публикация и production deploy выполняются только по явному разрешению владельца.
+
+## Группы и сети v0.2.0
+
+Один аккаунт MAX обслуживает несколько форум-групп Telegram. Администратор задаёт назначения, подписи чата/реального автора и права отправки отдельно для каждой группы; глобальная блокировка имеет приоритет. Чтение определяется членством Telegram. Админские обзоры автоматически создают темы новых чатов и получают обе стороны переписки после подтверждённой доставки в MAX. MAX и Telegram используют независимые настройки и процессы Xray. См. [группы](ru/multi-group.md), [сеть MAX](ru/max-network.md), [проверки](../release/v0.2.0/VALIDATION.md).

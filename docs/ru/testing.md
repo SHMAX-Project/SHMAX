@@ -1,5 +1,7 @@
 # Тесты
 
+Текущий выпуск: [v0.2.0 — проверки и ограничения](../../release/v0.2.0/VALIDATION.md). Результаты старых выпусков ниже сохранены как история.
+
 - Backend: `cd backend && .venv/bin/python -m pytest` в одном процессе. Внешние границы контролируются: MAX test-fake, локальный Bot API, инъекция GitHub HTTP, tmp_path.
 - Frontend: `cd frontend && npm run test:unit && npm run build` (включает TypeScript).
 - Playwright: `npm run test:e2e`, последовательно desktop-1440x900 / mobile-375x812 с настоящим backend/SPA и синтетическими внешними сервисами.
