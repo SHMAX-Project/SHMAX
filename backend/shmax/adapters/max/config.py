@@ -15,7 +15,7 @@ Override via ``SHMAX_MAX_DEVICE_TYPE=android|ios|web|desktop``.
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Literal
 
@@ -76,6 +76,7 @@ class PyMaxAdapterConfig:
     device_type: MaxDeviceType = "android"
     reconnect: bool = True
     log_level: str = "WARNING"
+    proxy_url: str | None = field(default=None, repr=False)
 
     @classmethod
     def from_env(cls) -> "PyMaxAdapterConfig":

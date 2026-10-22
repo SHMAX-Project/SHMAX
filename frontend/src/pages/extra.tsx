@@ -70,7 +70,7 @@ export function StorageManager() {
     <div className="card">
       <h3>{t('storage.title', 'Хранилище')}</h3>
       {info ? (
-        <table>
+        <div className="table-scroll" role="region" aria-label="Таблица данных" tabIndex={0}><table>
           <thead><tr><th>Подсистема</th><th>Размер</th></tr></thead>
           <tbody>
             <tr><td>Database</td><td>{fmt(info.database_bytes)}</td></tr>
@@ -80,7 +80,7 @@ export function StorageManager() {
             <tr><td>Logs</td><td>{fmt(info.logs_bytes)}</td></tr>
             <tr><td><strong>Total</strong></td><td><strong>{fmt(info.total_bytes)}</strong></td></tr>
           </tbody>
-        </table>
+        </table></div>
       ) : <div className="muted">Загрузка…</div>}
       <div className="row" style={{ marginTop: '0.75rem' }}>
         <button onClick={clearCache} disabled={busy}>{t('storage.clearCache', 'Очистить кэш')}</button>
@@ -222,7 +222,7 @@ export function RecentActivity() {
       {err && <div className="tag warn">{err}</div>}
       {rows && rows.length === 0 && <div className="muted">Пока нет действий.</div>}
       {rows && rows.length > 0 && (
-        <table>
+        <div className="table-scroll" role="region" aria-label="Таблица данных" tabIndex={0}><table>
           <thead><tr><th>Когда</th><th>Кто</th><th>Действие</th><th>Цель</th></tr></thead>
           <tbody>
             {rows.map((r, i) => (
@@ -234,7 +234,7 @@ export function RecentActivity() {
               </tr>
             ))}
           </tbody>
-        </table>
+        </table></div>
       )}
     </div>
   );

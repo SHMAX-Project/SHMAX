@@ -373,6 +373,8 @@ async def test_media_with_text_delivers_both(env):
         }
 
     class _ShimRuntime:
+        from shmax.config import RuntimeMode
+        runtime_mode = RuntimeMode.TEST
         _tg = _TgStub()
         _max = _MaxStub()
 
@@ -452,6 +454,8 @@ async def test_media_with_caption_uses_native_caption(env):
             return type("R", (), {"external_message_id": "mx-d"})()
 
     class _ShimRuntime:
+        from shmax.config import RuntimeMode
+        runtime_mode = RuntimeMode.TEST
         _tg = _TgStub()
         _max = _MaxStub()
 

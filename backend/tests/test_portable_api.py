@@ -71,3 +71,20 @@ def test_export_password_attempts_rate_limited(client):
     for _ in range(5):
         assert client.post('/api/portable/export',json={'password':'strong-password','confirmation':'different-password'}).status_code==400
     assert client.post('/api/portable/export',json={'password':'strong-password','confirmation':'strong-password'}).status_code==429
+
+@pytest.mark.parametrize('encrypted',[False,True])
+def test_import_legacy_backup_uses_same_owner_preview_gate(client,tmp_path,encrypted):
+    from shmax.backup.manager import create_backup,create_encrypted_backup
+    archive=tmp_path/'legacy.shmax'
+    kwargs={'data_dir':client.app.state.paths.root,'out_path':archive,'shmax_version':'0.1.3'}
+    if encrypted:create_encrypted_backup(**kwargs,passphrase='eight123')
+    else:create_backup(**kwargs)
+    uploaded=client.post('/api/portable/import',content=archive.read_bytes(),headers={'Content-Type':'application/octet-stream'})
+    assert uploaded.status_code==200
+    identity=uploaded.json()['job_id']
+    response=client.post(f'/api/portable/{identity}/inspect',json={'password':'eight123' if encrypted else ''})
+    assert response.status_code==200,response.text
+    assert response.json()['compatible'] and response.json()['source_format']=='legacy-v1'
+    assert client.get('/api/auth/session').json()['authenticated']
+    # Preview never starts a restore or replaces the active database/session.
+    assert not (client.app.state.paths.root/'backups/portable'/identity/'confirmed').exists()

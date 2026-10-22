@@ -15,7 +15,7 @@ import { HelpPage, WIZARD_HELP, WizardHelpCard, TROUBLESHOOTING } from './help';
 
 describe('wizard help cards', () => {
   it('every wizard step except admin-lite has help content', () => {
-    for (const id of ['admin', 'max', 'telegram-network', 'telegram-bot', 'telegram-group', 'max-chats', 'users', 'test', 'finish'] as const) {
+    for (const id of ['admin', 'max-network', 'max', 'telegram-network', 'telegram-bot', 'telegram-group', 'max-chats', 'users', 'test', 'finish'] as const) {
       expect(WIZARD_HELP[id], `help for ${id}`).toBeTruthy();
     }
   });

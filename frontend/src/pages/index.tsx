@@ -1,4 +1,5 @@
 import { maxSessionLabel } from '../ui';
+import { DashboardOverview } from '../dashboard-overview';
 import { useTranslation } from 'react-i18next';
 import { useNavigationSafety } from '../navigation';
 import { PortableExport } from "../portable-backup";
@@ -47,7 +48,7 @@ export function Admin({ onCreated }: { onCreated?: () => Promise<void> }) {
     <section className="wizard-step" aria-label="Шаг: Администратор">
       <StepIndicator stepId="admin" />
       <div className="wizard-step-header">
-        <div className="eyebrow">Шаг 1 из 9</div>
+        <div className="eyebrow">Шаг 1 из 10</div>
         <h2>Создайте администратора</h2>
         <p className="wizard-help">Эта учётная запись управляет SHMAX.</p>
       </div>
@@ -103,7 +104,7 @@ export function Dashboard({ status, reload, setupComplete = true }: { status: St
         </span>
       </PageHeader>
 
-      {!setupComplete && <div className="card" data-testid="incomplete-setup"><h2>{t('setupUx.incomplete')}</h2><div className="row"><Link className="btn-ghost" to="/max/settings">{t('setupUx.max')}</Link><Link className="btn-ghost" to="/telegram/network">{t('setupUx.telegram')}</Link><Link className="btn-ghost" to="/setup/max">{t('setupUx.continue')}</Link></div></div>}
+      {!setupComplete && <div className="card" data-testid="incomplete-setup"><h2>{t('setupUx.incomplete')}</h2><div className="row"><Link className="btn-ghost" to="/max/settings">{t('setupUx.max')}</Link><Link className="btn-ghost" to="/telegram/network">{t('setupUx.telegram')}</Link><Link className="btn-ghost" to="/setup/max/network">{t('setupUx.continue')}</Link></div></div>}
       <div className="status-grid">
         <div className="status-cell" data-testid="dashboard-max">
           <span className="name">MAX</span>
@@ -138,6 +139,7 @@ export function Dashboard({ status, reload, setupComplete = true }: { status: St
         <WatchdogCard adapter="max" label="MAX" canonical={status.max} reload={reload} />
         <WatchdogCard adapter="telegram" label="Telegram" canonical={status.telegram} reload={reload} />
       </div>
+      <DashboardOverview />
       <RecentActivity />
     </section>
   );
@@ -180,6 +182,7 @@ export function MaxPage({ status, reload }: { status: StatusSnapshot['max'] | nu
             {busy ? <><span className="spinner" aria-hidden /> Переподключаем…</> : 'Переподключить'}
           </button>
           <Link className="btn-ghost" to="/max/settings">Настройки MAX</Link>
+          <Link className="btn-ghost" to="/max/network">Сеть MAX и Xray</Link>
         </div>
       </div>
     </section>
@@ -242,92 +245,7 @@ export function TelegramPage({ status, reload }: { status: StatusSnapshot['teleg
 }
 
 /** Telegram users management (shell page, mirrors wizard step). */
-export function UsersPage() {
-  const [data, setData] = React.useState<{ users: Array<{
-    user_id: string; display_name: string | null; username: string | null;
-    nickname: string | null; role: string; approved: boolean; blocked: boolean;
-    membership?: string | null; is_admin?: boolean;
-  }> } | null>(null);
-  const [error, setError] = React.useState<string | null>(null);
-  const [busy, setBusy] = React.useState(false);
-
-  const reload = React.useCallback(async () => {
-    setBusy(true);
-    try { setData(await api('/api/telegram/users')); }
-    catch (e: any) { setError(e.message); }
-    finally { setBusy(false); }
-  }, []);
-  React.useEffect(() => { reload(); }, [reload]);
-
-  async function setField(userId: string, action: 'approval' | 'blocked', body: Record<string, unknown>) {
-    setError(null);
-    try {
-      await api(`/api/telegram/users/${encodeURIComponent(userId)}/${action}`, {
-        method: 'PATCH', body: JSON.stringify(body),
-      });
-      await reload();
-    } catch (e: any) { setError(e.message); }
-  }
-
-  return (
-    <section>
-      <PageHeader title="Пользователи">
-        <button className="btn-ghost btn-sm" onClick={reload} disabled={busy}>Обновить</button>
-      </PageHeader>
-      {error && <div className="alert alert-error" role="alert">{error}</div>}
-      <MemberSync onSync={reload} />
-      {!data && <Spinner label="Загружаем…" />}
-      {data && data.users.length === 0 && (
-        <EmptyState glyph="☺" title="Пользователей пока нет"
-          hint="Пользователи появятся после синхронизации, событий вступления или видимых боту сообщений." />
-      )}
-      {data && data.users.length > 0 && (
-        <ul className="user-list">
-          {data.users.map((u) => (
-            <li className="user-row" key={u.user_id}>
-              <div className="user-row-main">
-                <strong>{u.display_name || u.username || u.user_id}</strong>
-                {u.username && <span className="muted small">@{u.username}</span>}
-                <span className="muted small">ID {u.user_id}</span>
-                {u.membership && <span className="muted small">Telegram: {u.membership}{u.is_admin ? " · администратор группы" : ""}</span>}
-                {u.blocked
-                  ? <span className="badge error">заблокирован</span>
-                  : u.approved
-                    ? <span className="badge ok">одобрен · {u.role}</span>
-                    : <span className="badge warn">ожидает подтверждения</span>}
-              </div>
-              <UserSignature user={u} onSaved={reload} />
-              <div className="user-row-controls">
-                <label className="row-check">
-                  <input type="checkbox" checked={u.approved} disabled={busy}
-                    onChange={(e) => setField(u.user_id, 'approval', {
-                      approved: e.target.checked,
-                      role: e.target.checked && (u.role || 'read_only') === 'read_only'
-                        ? 'operator'
-                        : (u.role || 'read_only'),
-                    })} />
-                  <span>Одобрить</span>
-                </label>
-                <label className="row-check">
-                  <input type="checkbox" checked={u.blocked} disabled={busy}
-                    onChange={(e) => setField(u.user_id, 'blocked', { blocked: e.target.checked })} />
-                  <span>Заблокировать</span>
-                </label>
-                <label>
-                  <span>Роль</span>
-                  <select value={u.role || 'read_only'} disabled={busy}
-                    onChange={(e) => setField(u.user_id, 'approval', { approved: u.approved, role: e.target.value })}>
-                    {['read_only', 'operator', 'admin', 'owner'].map((r) => <option key={r} value={r}>{r}</option>)}
-                  </select>
-                </label>
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
-  );
-}
+export { GroupUsersPage as UsersPage } from '../group-users';
 
 export function Diagnostics() {
   const [items, setItems] = React.useState<DoctorResult[] | null>(null);
@@ -350,7 +268,7 @@ export function Diagnostics() {
       {error && <div className="alert alert-error" role="alert">{error}</div>}
       {!items && <Spinner label="Запускаем проверки…" />}
       {items && (
-        <table>
+        <div className="table-scroll" role="region" aria-label="Таблица данных" tabIndex={0}><table>
           <thead><tr><th>Проверка</th><th>Статус</th><th>Детали</th></tr></thead>
           <tbody>
             {items.map((it, i) => (
@@ -361,7 +279,7 @@ export function Diagnostics() {
               </tr>
             ))}
           </tbody>
-        </table>
+        </table></div>
       )}
       <SupportBundle />
     </>
@@ -404,7 +322,7 @@ export function Backups({ backups, setBackups }: { backups: any[] | null; setBac
         <EmptyState glyph="⌸" title="Резервных копий пока нет." hint="Создайте первую копию перед важными изменениями." />
       )}
 {backups && backups.length > 0 && (
-        <table>
+        <div className="table-scroll" role="region" aria-label="Таблица данных" tabIndex={0}><table>
           <thead><tr><th>Копия</th><th>Версия</th><th>Создана</th><th>Размер</th><th>Формат</th></tr></thead>
           <tbody>
             {backups.map((b) => (
@@ -417,7 +335,7 @@ export function Backups({ backups, setBackups }: { backups: any[] | null; setBac
               </tr>
             ))}
           </tbody>
-        </table>
+        </table></div>
       )}
       <p className="muted small"><a href="/help">Нужна помощь?</a></p>
     </>
@@ -552,7 +470,7 @@ export function Chats({ routes }: { routes: RouteRow[] | null }) {
           hint="Подключите MAX и Telegram-группу — темы создадутся автоматически." />
       )}
       {rows && rows.length > 0 && (
-        <table>
+        <div className="table-scroll" role="region" aria-label="Маршруты MAX и Telegram" tabIndex={0}><table>
           <thead>
             <tr>
               <th>MAX чат</th>
@@ -577,7 +495,7 @@ export function Chats({ routes }: { routes: RouteRow[] | null }) {
               </tr>
             ))}
           </tbody>
-        </table>
+        </table></div>
       )}
     </>
   );

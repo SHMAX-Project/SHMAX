@@ -113,6 +113,7 @@ class MessageMapRepository:
                 max_account_id=max_account_id,
                 max_chat_id=max_chat_id,
                 max_message_id=max_message_id,
+                telegram_chat_id=telegram_chat_id,
             )
             if existing is None:
                 raise
@@ -193,13 +194,16 @@ class MessageMapRepository:
         max_account_id: int,
         max_chat_id: str,
         max_message_id: str,
+        telegram_chat_id: Optional[str] = None,
     ) -> Optional[MappingRecord]:
         stmt = select(MessageMap).where(
             MessageMap.max_account_id == max_account_id,
             MessageMap.max_chat_id == max_chat_id,
             MessageMap.max_message_id == max_message_id,
         )
-        row = (await self._session.execute(stmt)).scalar_one_or_none()
+        if telegram_chat_id is not None:
+            stmt = stmt.where(MessageMap.telegram_chat_id == telegram_chat_id)
+        row = (await self._session.execute(stmt.order_by(MessageMap.id))).scalars().first()
         return _to_record(row) if row else None
 
     async def find_by_telegram(

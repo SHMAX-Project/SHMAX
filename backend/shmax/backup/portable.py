@@ -3,7 +3,7 @@
 Only magic/version, salt and nonce prefix are public. Each 1 MiB record
 and the mandatory end record authenticate the header, index and length.
 Files are fully authenticated before validation/extraction; no active data
-is touched by this module. The local v1 backup format remains separate.
+is touched by this module. Local v1 input is converted by legacy_import before the same validation gate.
 """
 from __future__ import annotations
 import gzip

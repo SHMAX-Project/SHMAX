@@ -4,6 +4,7 @@ import json
 import sqlite3
 from types import SimpleNamespace as NS
 import pytest
+import pytest_asyncio
 from telethon.tl.types import ChannelParticipant, ChannelParticipantAdmin, ChannelParticipantCreator
 from telethon.errors import FloodWaitError
 from shmax.telegram_members.sync import MemberSyncService, observe_membership
@@ -11,6 +12,13 @@ from shmax.security.secret_store import SecretStore
 from shmax.users.repository import TelegramUsersRepository
 from shmax.database.models import TelegramAccount
 from shmax.active_target import upsert_and_activate_target
+
+@pytest_asyncio.fixture
+async def paired(db):
+    async with db.session() as s:
+        account=TelegramAccount(label='fixture');s.add(account);await s.commit()
+    await upsert_and_activate_target(db,account_id=account.id,chat_id='-100123',title='Fixture',
+        is_forum=True,chat_type='supergroup',bot_status='administrator')
 
 class Client:
     def __init__(self):
@@ -49,7 +57,7 @@ def service(db,tmp_path,client):
     return svc
 
 @pytest.mark.asyncio
-async def test_existing_silent_members_pagination_acl_and_idempotence(db,tmp_path):
+async def test_existing_silent_members_pagination_acl_and_idempotence(db,paired,tmp_path):
     client=Client(); svc=service(db,tmp_path,client)
     stats=await svc.sync('-100123')
     assert (stats.status,stats.found,stats.new,stats.updated)==('ok',251,251,0)
@@ -75,7 +83,7 @@ async def test_existing_silent_members_pagination_acl_and_idempotence(db,tmp_pat
     assert not list(tmp_path.rglob('*.session'))
 
 @pytest.mark.asyncio
-async def test_not_configured_and_failure(db,tmp_path):
+async def test_not_configured_and_failure(db,paired,tmp_path):
     svc=MemberSyncService(db=db,secret_store=SecretStore(tmp_path/'secrets'))
     assert (await svc.sync()).status=='not_configured'
     client=Client();svc=service(db,tmp_path,client)
@@ -85,7 +93,7 @@ async def test_not_configured_and_failure(db,tmp_path):
     assert (await svc.sync('-100123')).status=='unavailable'
 
 @pytest.mark.asyncio
-async def test_identity_rejects_human_or_other_bot(db,tmp_path):
+async def test_identity_rejects_human_or_other_bot(db,paired,tmp_path):
     client=Client();svc=service(db,tmp_path,client)
     for identity in (NS(id=1,bot=False),NS(id=99,bot=True)):
         client.identity=identity
@@ -93,7 +101,7 @@ async def test_identity_rejects_human_or_other_bot(db,tmp_path):
         assert not client.requests and client.closed
 
 @pytest.mark.asyncio
-async def test_flood_wait_is_bounded(db,tmp_path,monkeypatch):
+async def test_flood_wait_is_bounded(db,paired,tmp_path,monkeypatch):
     client=Client();svc=service(db,tmp_path,client)
     client.error=FloodWaitError(request=None,capture=1)
     sleeps=[]
@@ -105,7 +113,7 @@ async def test_flood_wait_is_bounded(db,tmp_path,monkeypatch):
     assert (await svc.sync('-100123')).status=='rate_limited' and len(client.requests)==1
 
 @pytest.mark.asyncio
-async def test_concurrency_cancellation_schedule(db,tmp_path):
+async def test_concurrency_cancellation_schedule(db,paired,tmp_path):
     client=Client();svc=service(db,tmp_path,client);client.pause=asyncio.Event()
     task=asyncio.create_task(svc.sync('-100123'))
     while not client.requests: await asyncio.sleep(0)
@@ -144,7 +152,7 @@ def test_migration_fresh_and_upgrade(tmp_path,start):
         with sqlite3.connect(path) as con: con.execute("INSERT INTO telegram_users(user_id,role,approved,blocked,first_seen_at) VALUES ('30','operator',1,0,CURRENT_TIMESTAMP)")
     command.upgrade(cfg,'head')
     with sqlite3.connect(path) as con:
-        assert con.execute('SELECT version_num FROM alembic_version').fetchone()[0]=='0011_telegram_message_alias'
+        assert con.execute('SELECT version_num FROM alembic_version').fetchone()[0]=='0012_multi_group'
         assert {'membership','source','is_admin'} <= {r[1] for r in con.execute('PRAGMA table_info(telegram_users)')}
         assert 'membership' not in {r[1] for r in con.execute('PRAGMA table_info(admin_sessions)')}
         if start: assert con.execute("SELECT role,approved,is_admin FROM telegram_users WHERE user_id='30'").fetchone()==('operator',1,0)
@@ -167,7 +175,7 @@ async def test_join_leave_promotion_preserves_explicit_acl(db):
         assert user.approved and user.blocked and user.nickname=='Local'
 
 @pytest.mark.asyncio
-async def test_timeout_and_shutdown_disconnect_active_manual_run(db,tmp_path,monkeypatch):
+async def test_timeout_and_shutdown_disconnect_active_manual_run(db,paired,tmp_path,monkeypatch):
     client=Client();svc=service(db,tmp_path,client);client.pause=asyncio.Event()
     monkeypatch.setattr('shmax.telegram_members.sync.SYNC_TIMEOUT_SECONDS',0.02)
     assert (await svc.sync('-100123')).status=='timeout' and client.closed
@@ -179,7 +187,7 @@ async def test_timeout_and_shutdown_disconnect_active_manual_run(db,tmp_path,mon
     assert task.cancelled() and client.closed
 
 @pytest.mark.asyncio
-async def test_total_limit_not_reported_as_complete(db,tmp_path,monkeypatch):
+async def test_total_limit_not_reported_as_complete(db,paired,tmp_path,monkeypatch):
     client=Client();svc=service(db,tmp_path,client)
     monkeypatch.setattr('shmax.telegram_members.sync.MAX_PARTICIPANTS',200)
     assert (await svc.sync('-100123')).status=='participant_limit'

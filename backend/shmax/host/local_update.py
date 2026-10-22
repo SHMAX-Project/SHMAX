@@ -98,6 +98,56 @@ def redact(text: str) -> str:
     return text
 
 
+def sync_host_runtime(source: Path, host_lib: Path, saved: Path):
+    """Keep backup validation/version/migrations aligned with the new container.
+
+    Save every replaced file and record newly introduced paths before mutation,
+    so the outer update transaction can restore the previous host runtime.
+    Dependencies stay in the existing dedicated host virtual environment.
+    """
+    files=[]
+    for name in ('shmax','alembic'):
+        files.extend(p for p in (source/'backend'/name).rglob('*')
+                     if p.is_file() and '__pycache__' not in p.parts and p.suffix!='.pyc')
+    files.append(source/'backend/alembic.ini')
+    added=[]
+    saved.mkdir(parents=True,exist_ok=False)
+    plan=saved/'added-files.json'
+    plan.write_text('[]')
+    for original in sorted(files):
+        rel=original.relative_to(source/'backend')
+        target=host_lib/rel
+        if target.is_symlink():raise LocalUpdateError('unexpected host runtime symlink')
+        if target.exists():
+            backup=saved/'previous'/rel;backup.parent.mkdir(parents=True,exist_ok=True)
+            backup_tmp=backup.with_name(backup.name+'.save.tmp')
+            try:
+                shutil.copy2(target,backup_tmp);os.replace(backup_tmp,backup)
+            finally:backup_tmp.unlink(missing_ok=True)
+        else:
+            added.append(str(rel));plan.write_text(json.dumps(added))
+        target.parent.mkdir(parents=True,exist_ok=True)
+        temporary=target.with_name(target.name+'.update.tmp')
+        try:
+            shutil.copyfile(original,temporary);temporary.chmod(0o644)
+            os.replace(temporary,target)
+        finally:temporary.unlink(missing_ok=True)
+
+
+def restore_host_runtime(host_lib: Path, saved: Path):
+    if not saved.is_dir():return
+    plan=saved/'added-files.json'
+    for rel in json.loads(plan.read_text()) if plan.exists() else []:
+        path=host_lib/rel
+        path.unlink(missing_ok=True)
+    previous=saved/'previous'
+    if previous.exists():
+        for original in previous.rglob('*'):
+            if original.is_file():
+                target=host_lib/original.relative_to(previous)
+                target.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(original,target)
+
+
 class LocalReleaseUpdater:
     def __init__(self, opt=Path('/opt/shmax'), data=Path('/var/lib/shmax'), backups=Path('/var/backups/shmax'), timeout=180):
         self.opt, self.data, self.backups, self.timeout = Path(opt), Path(data), Path(backups), timeout
@@ -251,15 +301,7 @@ class LocalReleaseUpdater:
                 retained=self.opt/'releases'/stamp;retained.parent.mkdir(exist_ok=True);shutil.copytree(source,retained)
                 host_lib=Path('/opt/shmax-hostd/lib')
                 if (host_lib/'shmax').is_dir():
-                    # Update the CLI/update code used by subsequent host requests.
-                    # Current hostd process remains running; dependencies unchanged.
-                    for rel in ['shmax/host/local_update.py','shmax/host/updater.py','shmax/cli/main.py','shmax/host/release_download.py']:
-                        installed=host_lib/rel; saved=self.report/'host-code'/rel
-                        saved.parent.mkdir(parents=True,exist_ok=True)
-                        if installed.is_file():shutil.copy2(installed,saved)
-                        temporary=installed.with_suffix('.update.tmp')
-                        shutil.copyfile(source/'backend'/rel,temporary)
-                        temporary.chmod(0o644);os.replace(temporary,installed)
+                    sync_host_runtime(source,host_lib,self.report/'host-runtime')
                 # First owner-invoked bootstrap installs local-update capability;
                 # legacy commands keep using the separate existing host runtime.
                 updater_dir=Path('/opt/shmax-updater')
@@ -276,10 +318,7 @@ class LocalReleaseUpdater:
                 return self.report
             except BaseException as exc:
                 if stopped:
-                    saved_host=self.report/'host-code'
-                    if saved_host.exists():
-                        for saved in saved_host.rglob('*'):
-                            if saved.is_file():shutil.copy2(saved,Path('/opt/shmax-hostd/lib')/saved.relative_to(saved_host))
+                    restore_host_runtime(Path('/opt/shmax-hostd/lib'),self.report/'host-runtime')
                     (self.opt/'.env').write_bytes(old_env)
                     os.chmod(self.opt/'.env',old_stat.st_mode&0o7777)
                     os.chown(self.opt/'.env',old_stat.st_uid,old_stat.st_gid)

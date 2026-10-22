@@ -355,5 +355,7 @@ def _strip_marker(text: str) -> str:
 
 
 class _Shim:
+    from shmax.config import RuntimeMode
+    runtime_mode = RuntimeMode.TEST
     def __init__(self, mx):
         self._max = mx

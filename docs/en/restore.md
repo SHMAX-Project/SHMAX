@@ -33,3 +33,16 @@ stat -c '%u:%g:%a' /run/shmax/hostd.sock
 ```
 
 Never publish archives, passwords, tokens, subscription URLs, API Hash or SecretStore keys.
+
+## Previous-release backups in v0.2.0
+
+The owner restore UI accepts portable v2 and original local v1 gzip-tar/SHMX1
+backups. The contents determine the format. Enter the original password for
+encrypted v1 (including eight-character passwords); leave it blank for plain
+v1. Full authentication/checksums and schema validation precede conversion into
+private portable staging. The existing hostd restore transaction, safety
+snapshot, rollback and destination-owner rebinding remain in effect. Pending
+source deliveries remain quarantined for review rather than replayed on a new
+host. A missing SecretStore key or corrupt database is rejected without
+changing active data. Updater cold snapshots without an application manifest
+remain a separate offline rollback format.

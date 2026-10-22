@@ -38,3 +38,7 @@ Operations: [English guide](../AI_ASSISTANT_GUIDE.en.md).
 - [First deployment experience](deployment-story.md)
 
 - [Persistent event journal](event-journal.md) — v0.1.2 filters, retention and privacy.
+
+- [MAX networking](max-network.md)
+- [Groups and administrator overview](multi-group.md)
+- [Dashboard resources](dashboard.md)

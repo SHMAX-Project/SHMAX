@@ -1,0 +1,20 @@
+import React from 'react';
+import {it,expect,vi,beforeEach} from 'vitest';
+import {render,screen,cleanup} from '@testing-library/react';
+import {MemoryRouter} from 'react-router-dom';
+import '@testing-library/jest-dom/vitest';
+import {DashboardOverview} from './dashboard-overview';
+import {api} from './api';
+vi.mock('./api',()=>({api:vi.fn()}));
+const mock=vi.mocked(api);
+beforeEach(()=>{cleanup();mock.mockReset();});
+it('shows resource charts and distinguishes validated groups from a live bot connection',async()=>{
+ const samples=[100,105].map(at=>({at,cpu_percent:at===100?null:25,memory_percent:50,memory_used:1024**3,memory_total:2*1024**3,disk_percent:30,disk_used:3*1024**3,disk_total:10*1024**3,load_1:0.2,container_memory_used:null,container_memory_limit:null,container_cpu_percent:null}));
+ mock.mockResolvedValue({resources:{samples,scope:'linux_host',interval_seconds:5,history_since:100},groups:[{id:1,chat_id:'-1',title:'Команда A',enabled:true,validated:true,admin_hub:false,auto_add_chats:false,routes:2,disabled_routes:0}],queue:{},max_network:{mode:'xray',xray:{state:'running'}}});
+ const {container}=render(<MemoryRouter><DashboardOverview/></MemoryRouter>);
+ expect(await screen.findByText('Команда A')).toBeInTheDocument();
+ expect(screen.getByRole('img',{name:'CPU сервера: 25.0 процентов'})).toBeInTheDocument();
+ expect(screen.getByText(/Текущее соединение Telegram показано выше/)).toBeInTheDocument();
+ expect(screen.getByRole('link',{name:'Настроить подключение MAX'})).toHaveAttribute('href','/max/network');
+ expect(container.innerHTML).not.toContain('NaN');
+});

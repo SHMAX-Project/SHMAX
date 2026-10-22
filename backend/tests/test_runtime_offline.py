@@ -73,6 +73,9 @@ async def runtime(tmp_path):
         s.add(MaxAccount(label="primary", status="connected"))
         s.add(TelegramAccount(label="primary", status="connected"))
         await s.commit()
+        from shmax.active_target import upsert_and_activate_target
+        await upsert_and_activate_target(db,account_id=1,chat_id="tg-chat-1",title="Fixture",
+            is_forum=False,chat_type="supergroup",bot_status="administrator")
     async with db.session() as s:
         from shmax.routing.repository import RoutesRepository
         await RoutesRepository(s).upsert(

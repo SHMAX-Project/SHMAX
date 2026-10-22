@@ -989,6 +989,13 @@ class AppRuntime:
             except Exception:  # noqa: BLE001
                 logger.warning("xray stop on shutdown failed")
 
+        max_network=getattr(self,'max_network',None)
+        if max_network is not None:
+            try:await max_network.manager.stop()
+            except Exception:logger.warning('MAX Xray shutdown failed')
+        history=getattr(self,'resource_history',None)
+        if history is not None:await history.close()
+
         try:
             await self.notification_outbox.close()
         except Exception:  # noqa: BLE001
@@ -1215,10 +1222,15 @@ class AppRuntime:
 
     async def _deliver(self, rec: Any) -> Any:
         payload = rec.payload
+        if payload.get('group_version') == 2 or self.runtime_mode.value == 'production':
+            from .multi_group import prepare_destination, prepare_lazy_media
+            await prepare_destination(self, rec)
+        if payload.get('group_version') == 2:
+            await prepare_lazy_media(self, rec)
         direction = Direction(rec.direction)
         text = payload.get("text", "")
         target_chat_id = rec.target_chat_id
-        thread_id = rec.target_thread_id
+        thread_id = payload.get("target_thread_id", rec.target_thread_id)
         # Field names differ per direction (see BridgeEngine).
         if direction == Direction.MAX_TO_TELEGRAM:
             reply_to_external_id = payload.get("reply_to_telegram_message_id")
@@ -1259,8 +1271,15 @@ class AppRuntime:
                 if previous_ids:
                     from types import SimpleNamespace
                     await self._record_mapping(rec, SimpleNamespace(external_message_id=previous_ids[0], all_external_ids=previous_ids))
+                async def fetch_album(source, attachment):
+                    if payload.get('group_version') == 2:
+                        from .multi_group import owned_media
+                        return await owned_media(self, rec, payload.get('media_origin', source), attachment)
+                    return await self._fetch_media(source, attachment)
                 return await deliver_album(payload=payload, chat_id=target_chat_id, thread_id=thread_id,
-                    reply_to=reply_ref, adapter=self._tg, fetch=self._fetch_media, save=save_album,
+                    reply_to=reply_ref, adapter=self._tg,
+                    fetch=fetch_album,
+                    save=save_album,
                     terminal=rec.attempts+1 >= RetryPolicy().max_attempts)
             if media_ref:
                 # Caption composition is STRUCTURAL (surgical review):
@@ -1394,7 +1413,7 @@ class AppRuntime:
                         max_message_id=payload["max_message_id"],
                         telegram_account_id=telegram_account_id,
                         telegram_chat_id=rec.target_chat_id,
-                        telegram_thread_id=rec.target_thread_id,
+                        telegram_thread_id=payload.get("target_thread_id", rec.target_thread_id),
                         telegram_message_id=str(ext_id),
                         outbound_marker_value=m,
                     )
@@ -1683,11 +1702,8 @@ class AppRuntime:
         return stored
 
     async def _on_inbound(self, source: str, event) -> None:
-        from sqlalchemy import select as _select
-
-        from .database.models import TelegramTarget
-        from .users.repository import TelegramUsersRepository
-        from .queue.repository import DuplicateEnqueueError
+        from .domain.models import NormalizedMessage
+        if not isinstance(event,NormalizedMessage):event=_normalize_inbound(source,event)
         from .journal import message_correlation, correlation
         cid=message_correlation(source,getattr(getattr(event,"chat",None),"external_id",""),getattr(event,"external_id",""))
         token=correlation.set(cid)
@@ -1695,60 +1711,11 @@ class AppRuntime:
         self.journal.emit("message.received",component=source,direction=direction)
         self.journal.emit("message.normalized",component=source,direction=direction)
 
-        # Audit P0 #7: the fail-closed TG→MAX ACL needs the
-        # CONFIGURED target chat — loaded from the canonical
-        # TelegramTarget, never guessed. When no target exists the
-        # bridge config carries no target and every TG→MAX send
-        # is denied ("not configured" ≠ "accept everything").
-        target_chat_id: Optional[str] = None
-        target_forum = False
-        async with self.db.session() as s:
-            target = (await s.execute(_select(TelegramTarget).limit(1))).scalars().first()
-            if target is not None:
-                target_chat_id = str(target.chat_id)
-                target_forum = bool(target.is_forum)
-        async with self.db.session() as s:
-            engine = BridgeEngine(
-                config=BridgeConfig(
-                    max_account_id=1,
-                    telegram_account_id=1,
-                    telegram_target_chat_id=target_chat_id,
-                    telegram_target_forum=target_forum,
-                ),
-                routes=RoutesRepository(s),
-                mapping=MessageMapRepository(s),
-                queue=DeliveryQueueRepository(s),
-                max_adapter=self._max,
-                telegram_adapter=self._tg,
-                acl=__import__("shmax.auth.pairing", fromlist=["AclService"]).AclService(s),
-                users=TelegramUsersRepository(self.db),
-                on_enqueue=self.wakeup,
-                media_fetcher=self._fetch_media,
-                db=self.db,
-                journal=self.journal,
-            )
-            try:
-                if source == "max":
-                    accepted = await engine.handle_max_event(event)
-                else:
-                    accepted = await engine.handle_telegram_event(event)
-                logger.info(
-                    "_on_inbound: %s event accepted=%s",
-                    source,
-                    accepted,
-                )
-            except DuplicateEnqueueError:
-                self.journal.emit("message.duplicate",direction=direction)
-            except Exception as exc:  # noqa: BLE001
-                self.journal.emit(
-                    "message.processing_failed",
-                    component="bridge",
-                    direction=direction,
-                    error_class=type(exc).__name__,
-                )
-                logger.exception("bridge handle_inbound failed")
-            finally:
-                correlation.reset(token)
+        try:
+            from .multi_group import handle_inbound
+            await handle_inbound(self, source, event)
+        finally:
+            correlation.reset(token)
 
 
 class _FailureResult:

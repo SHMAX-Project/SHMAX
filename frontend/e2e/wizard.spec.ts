@@ -109,12 +109,24 @@ test.describe('SHMAX full wizard flow', () => {
     await page.locator('a.brand:visible').first().click();
     await page.waitForURL(/\/dashboard$/);
     await page.getByRole('link', { name: 'Продолжить первоначальную настройку' }).click();
-    await page.waitForURL(/\/setup\/max$/);
+    await page.waitForURL(/\/setup\/max\/network$/);
     await expect(page.getByRole('link', { name: 'На главную', exact: true })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Отмена / Назад' })).toBeVisible();
     await page.locator('a.brand').click();
     await page.waitForURL(/\/dashboard$/);
     await page.getByRole('link', { name: 'Продолжить первоначальную настройку' }).click();
+
+    // Probe only the external MAX network boundary; no live account or SMS.
+    await page.waitForURL(/\/setup\/max\/network$/);
+    await page.route('**/api/max/network/probe', route => route.fulfill({
+      status:200,contentType:'application/json',body:JSON.stringify({ok:true,detail:'MAX доступен (test network boundary)'})
+    }));
+    await expect(page.getByRole('button',{name:'Далее: вход в MAX'})).toBeDisabled();
+    await page.getByRole('button',{name:'Проверить сохранённое подключение'}).click();
+    await expect(page.getByRole('button',{name:'Далее: вход в MAX'})).toBeEnabled();
+    await assertNoHorizontalScroll(page);
+    await shot(page,testInfo.project.name,'02-max-network');
+    await page.getByRole('button',{name:'Далее: вход в MAX'}).click();
 
     // 2. MAX step: phone → auth start → OTP appears automatically.
     // ------------------------------------------------------------------
@@ -153,7 +165,7 @@ test.describe('SHMAX full wizard flow', () => {
     // direct is UNREACHABLE in this environment; go through Xray.
     // ------------------------------------------------------------------
     await page.waitForURL(/\/setup\/telegram\/network$/);
-    await expect(page.getByRole('heading', { name: 'Telegram сеть' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Сеть Telegram' })).toBeVisible();
     await page.getByRole('button', { name: /Напрямую/ }).click();
     await page.getByRole('button', { name: /Проверить соединение/ }).click();
     // Direct must FAIL (reachability URL points at a dead port) —
@@ -349,7 +361,7 @@ test.describe('SHMAX full wizard flow', () => {
     }
     await shot(page, testInfo.project.name, '16-dashboard');
     // All authorized pages retain keyboard-accessible home branding.
-    for (const route of ['max', 'telegram', 'chats', 'users', 'diagnostics', 'logs', 'backups', 'updates', 'settings', 'help', 'max/settings', 'telegram/settings', 'chats/settings']) {
+    for (const route of ['max', 'telegram', 'chats', 'users', 'diagnostics', 'logs', 'backups', 'updates', 'settings', 'help', 'max/settings', 'max/network', 'telegram/settings', 'chats/settings']) {
       await page.goto(`${backend}/${route}`);
       const home = page.locator('a.brand:visible').first();
       await home.focus();
@@ -393,7 +405,7 @@ test.describe('SHMAX full wizard flow', () => {
     } } });
     await expect(async () => {
       await page.getByRole('button', { name: 'Обновить', exact: true }).click();
-      await expect(signatureRow).toContainText('администратор группы');
+      await expect(signatureRow).toContainText('администратор Telegram');
     }).toPass({ timeout: 15_000 });
     await expect(signatureRow.getByLabel('Подпись в MAX')).toHaveValue('Анна 😈');
     await expect(signatureRow.getByRole('checkbox').first()).not.toBeChecked();

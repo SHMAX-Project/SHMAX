@@ -67,6 +67,7 @@ import { EmptyState, Spinner, StatusBadge } from './ui';
 export type WizardStepId =
   | 'admin'
   | 'max'
+  | 'max-network'
   | 'telegram-bot'
   | 'telegram-network'
   | 'telegram-group'
@@ -84,17 +85,15 @@ export interface WizardStep {
 
 export const wizardSteps: readonly WizardStep[] = [
   { id: 'admin', order: 1, title: 'Администратор', route: '/setup/admin' },
-  { id: 'max', order: 2, title: 'MAX аккаунт', route: '/setup/max' },
-  // Surgical acceptance: the NETWORK step comes FIRST — bot
-  // validation needs Telegram access which may require the proxy
-  // configured here. One source of truth for the order.
-  { id: 'telegram-network', order: 3, title: 'Telegram сеть', route: '/setup/telegram/network' },
-  { id: 'telegram-bot', order: 4, title: 'Telegram бот', route: '/setup/telegram' },
-  { id: 'telegram-group', order: 5, title: 'Telegram группа', route: '/setup/telegram/group' },
-  { id: 'max-chats', order: 6, title: 'MAX чаты', route: '/setup/chats' },
-  { id: 'users', order: 7, title: 'Пользователи', route: '/setup/users' },
-  { id: 'test', order: 8, title: 'Проверка', route: '/setup/test' },
-  { id: 'finish', order: 9, title: 'Готово', route: '/setup/finish' },
+  { id: 'max-network', order: 2, title: 'Сеть MAX', route: '/setup/max/network' },
+  { id: 'max', order: 3, title: 'MAX аккаунт', route: '/setup/max' },
+  { id: 'telegram-network', order: 4, title: 'Сеть Telegram', route: '/setup/telegram/network' },
+  { id: 'telegram-bot', order: 5, title: 'Telegram бот', route: '/setup/telegram' },
+  { id: 'telegram-group', order: 6, title: 'Telegram группа', route: '/setup/telegram/group' },
+  { id: 'max-chats', order: 7, title: 'MAX чаты', route: '/setup/chats' },
+  { id: 'users', order: 8, title: 'Пользователи', route: '/setup/users' },
+  { id: 'test', order: 9, title: 'Проверка', route: '/setup/test' },
+  { id: 'finish', order: 10, title: 'Готово', route: '/setup/finish' },
 ];
 
 export const wizardTotalSteps = wizardSteps.length;

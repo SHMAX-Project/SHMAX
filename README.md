@@ -13,7 +13,7 @@ Debian 13 amd64 · [Установка одной командой](docs/ru/inst
 
 ![SHMAX — MAX ↔ Telegram, self-hosted messaging bridge](docs/assets/shmax-social.png)
 
-[![Version](https://img.shields.io/badge/version-0.1.3-2563eb)](backend/shmax/VERSION)
+[![Version](https://img.shields.io/badge/version-0.2.0-2563eb)](backend/shmax/VERSION)
 [![CI](https://github.com/SHMAX-Project/SHMAX/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/SHMAX-Project/SHMAX/actions/workflows/ci.yml)
 [![License: AGPL v3+](https://img.shields.io/badge/license-AGPL--3.0--or--later-059669)](LICENSE)
 [![MAX ↔ Telegram](https://img.shields.io/badge/MAX-%E2%86%94%20Telegram-229ED9?logo=telegram&logoColor=white)](docs/ru/architecture.md)
@@ -24,7 +24,7 @@ Debian 13 amd64 · [Установка одной командой](docs/ru/inst
 [![Self-hosted](https://img.shields.io/badge/hosting-self--hosted-475569)](docs/ru/architecture.md)
 
 SHMAX объединяет переписку в MAX и Telegram. Сообщения из выбранных чатов MAX
-поступают в темы приватной Telegram-группы; ответы из Telegram отправляются
+поступают в темы выбранных приватных Telegram-групп; ответы из Telegram отправляются
 обратно в соответствующие чаты MAX. Шлюз работает на вашем сервере и предоставляет
 веб-интерфейс для настройки подключений, маршрутов и доступа пользователей.
 
@@ -39,6 +39,17 @@ SHMAX объединяет переписку в MAX и Telegram. Сообщен
 ![Иллюстрация: MAX → тема Telegram → ответ в MAX](docs/assets/message-flow.ru.svg)
 
 Пример показывает маршрут на вымышленных сообщениях. Реальный интерфейс SHMAX показан на скриншотах ниже.
+
+## В разработке: v0.2.0
+
+Эта ветка готовит v0.2.0; последний опубликованный stable пока v0.1.3.
+
+- [Несколько Telegram-групп и админский обзор](docs/ru/multi-group.md): явные привязки, права отправки по группам, автоматические темы новых чатов и обе стороны переписки.
+- [Отдельная сеть MAX](docs/ru/max-network.md): Direct, HTTP/SOCKS5 и собственный Xray, независимо от Telegram.
+- [Дашборд с графиками](docs/ru/dashboard.md): ресурсы сервера/контейнера, очередь и список подключённых групп.
+- [Мастер из 10 шагов](docs/ru/first-setup.md) и импорт старых копий v1 вместе с переносимыми v2.
+- При обычном обновлении настройки и сеансы сохраняются; схема и существующие права мигрируют. Особенности очереди и безопасного отката описаны в [обновлении](docs/ru/updates.md).
+
 
 ## Что нового в v0.1.3
 
@@ -113,7 +124,7 @@ SHMAX объединяет переписку в MAX и Telegram. Сообщен
 
 **Какие вложения доступны?** Фото, документы и поддерживаемое видео. Анимированные стикеры могут передаваться статическим представлением или текстовой заглушкой. [Ограничения медиа](docs/ru/media.md).
 
-**Работает ли MAX через прокси?** В v0.1.2 MAX подключается напрямую. Прокси MAX, несколько аккаунтов и права на отдельные маршруты входят в [дорожную карту](docs/ru/roadmap.md).
+**Работает ли MAX через прокси?** В v0.2.0 добавлена [отдельная сеть MAX](docs/ru/max-network.md). Несколько аккаунтов и права на отдельные темы остаются в [дорожной карте](docs/ru/roadmap.md).
 
 [Полный FAQ](docs/ru/faq.md) · [Помочь проекту](CONTRIBUTING.md).
 

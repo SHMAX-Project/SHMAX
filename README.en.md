@@ -13,7 +13,7 @@ The installer selects the latest stable release and verifies its signature and i
 
 ![SHMAX — MAX ↔ Telegram, self-hosted messaging bridge](docs/assets/shmax-social.png)
 
-[![Version](https://img.shields.io/badge/version-0.1.3-2563eb)](backend/shmax/VERSION)
+[![Version](https://img.shields.io/badge/version-0.2.0-2563eb)](backend/shmax/VERSION)
 [![CI](https://github.com/SHMAX-Project/SHMAX/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/SHMAX-Project/SHMAX/actions/workflows/ci.yml)
 [![License: AGPL v3+](https://img.shields.io/badge/license-AGPL--3.0--or--later-059669)](LICENSE)
 [![MAX ↔ Telegram](https://img.shields.io/badge/MAX-%E2%86%94%20Telegram-229ED9?logo=telegram&logoColor=white)](docs/en/architecture.md)
@@ -39,6 +39,16 @@ provides a web interface for connections, routing and user access.
 ![Illustration: MAX → Telegram topic → reply in MAX](docs/assets/message-flow.en.svg)
 
 The diagram uses fictional messages to illustrate routing. Actual SHMAX screenshots appear below.
+
+## In development: v0.2.0
+
+This branch prepares v0.2.0; the last published stable release remains v0.1.3.
+
+- [Multiple groups and administrator overview](docs/en/multi-group.md), explicit group grants, automatic topics and both directions of conversation.
+- [Independent MAX direct/proxy/Xray networking](docs/en/max-network.md).
+- [Resource graphs and group status](docs/en/dashboard.md).
+- [Ten-step setup](docs/en/first-setup.md), preserved in-place configuration and import of old v1 backups alongside portable v2.
+
 
 ## New in v0.1.3
 

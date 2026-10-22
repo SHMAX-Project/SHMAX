@@ -33,6 +33,7 @@ CATALOG = {
     "update.success": ("SUCCESS", "UPDATE", "Обновление завершено"),
     "update.failed": ("ERROR", "UPDATE", "Обновление не выполнено"),
     "update.rollback": ("WARNING", "UPDATE", "Откат завершён"),
+    "routing.topic_created": ("SUCCESS", "BRIDGE", "Создана тема для нового чата MAX"),
     "message.received": ("INFO", "BRIDGE", "Сообщение получено"),
     "message.normalized": ("INFO", "BRIDGE", "Сообщение нормализовано"),
     "message.processing_failed": ("ERROR", "BRIDGE", "Ошибка обработки входящего сообщения"),

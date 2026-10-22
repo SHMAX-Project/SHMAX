@@ -19,7 +19,7 @@ sudo bash deploy/installer/install.sh --mode install
    и QR-код. Для upgrade/repair ссылка не требуется (A10).
 
 Дальше откройте ссылку с телефона/ПК в LAN и пройдите мастер из
-9 шагов (см. [first-setup.md](first-setup.md)).
+10 шагов (см. [first-setup.md](first-setup.md)).
 
 Полезные команды сразу после установки:
 

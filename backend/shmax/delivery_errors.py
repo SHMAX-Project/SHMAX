@@ -22,7 +22,10 @@ def permanent_delivery_error(exc):
 def safe_delivery_error(exc):
     name = type(exc).__name__
     if isinstance(exc, InvalidPayload):
-        return "InvalidPayload:empty_outbound_payload"
+        codes={'route changed':'route_changed','target disabled':'target_disabled','group grant revoked':'group_grant_revoked',
+               'automatic overview disabled':'automatic_overview_disabled','route disabled':'route_disabled',
+               'legacy delivery requires review':'legacy_delivery_requires_review'}
+        return 'InvalidPayload:'+codes.get(str(exc),'empty_outbound_payload')
     from aiogram.exceptions import TelegramBadRequest
 
     if isinstance(exc, TelegramBadRequest):

@@ -21,6 +21,9 @@ class PasswordRequest(BaseModel):
     password: str = Field(min_length=10,max_length=256)
     confirmation: str | None = Field(default=None,max_length=256)
 
+class ImportPasswordRequest(BaseModel):
+    password:str=Field(default='',max_length=256)
+
 
 def install_routes(app, *, db, layout, settings, require_admin, require_csrf, limiter):
     from fastapi.exceptions import RequestValidationError
@@ -124,13 +127,20 @@ def install_routes(app, *, db, layout, settings, require_admin, require_csrf, li
             shutil.rmtree(job,ignore_errors=True);raise
 
     @app.post('/api/portable/{identity}/inspect',dependencies=deps)
-    async def inspect(identity: str,req: PasswordRequest,request: Request):
+    async def inspect(identity: str,req: ImportPasswordRequest,request: Request):
         username=request.state.session_user;job=owned_job(identity,username);rate('portable_decrypt',username)
         if (job/'confirmed').exists():raise HTTPException(409,'Восстановление уже запущено.')
         async with operations:
             (job/'payload.tar.gz').unlink(missing_ok=True);shutil.rmtree(job/'preview-stage',ignore_errors=True)
             try:
-                await asyncio.to_thread(portable.decrypt,job/'upload.shmax',job/'payload.tar.gz',req.password)
+                with (job/'upload.shmax').open('rb') as source:magic=source.read(len(portable.MAGIC))
+                legacy=magic!=portable.MAGIC
+                if legacy:
+                    from ..backup.legacy_import import convert
+                    await asyncio.to_thread(convert,job/'upload.shmax',job/'payload.tar.gz',req.password)
+                else:
+                    if len(req.password)<10:raise HTTPException(422,'Пароль переносимой копии должен содержать 10–256 символов.')
+                    await asyncio.to_thread(portable.decrypt,job/'upload.shmax',job/'payload.tar.gz',req.password)
                 manifest=await asyncio.to_thread(portable.extract,job/'payload.tar.gz',job/'preview-stage')
             except portable.PortableError as exc:
                 (job/'payload.tar.gz').unlink(missing_ok=True)
@@ -138,7 +148,7 @@ def install_routes(app, *, db, layout, settings, require_admin, require_csrf, li
                 raise HTTPException(400,str(exc))
             (job/'validated').write_text(portable.digest(job/'payload.tar.gz'));os.chmod(job/'validated',0o600)
             limiter.reset('portable_decrypt',username)
-            return {'job_id':identity,'application_version':manifest['application_version'],'created_at':manifest['created_at'],'schema_revision':manifest['schema_revision'],'contents':sorted({e['path'].split('/')[0] for e in manifest['entries']}),'compatible':True,'warnings':['Остановите старый SHMAX перед восстановлением: два экземпляра не должны одновременно использовать один Telegram Bot/MAX аккаунт.','Новый владелец сохранит свой логин и пароль. Старые веб-сеансы и веб-администраторы не импортируются.','Незавершённые доставки будут приостановлены для ручной проверки, чтобы не повторять сообщения.','MAX или Telegram могут потребовать повторную авторизацию; остальные настройки сохранятся.']}
+            return {'job_id':identity,'application_version':manifest['application_version'],'created_at':manifest['created_at'],'schema_revision':manifest['schema_revision'],'contents':sorted({e['path'].split('/')[0] for e in manifest['entries']}),'compatible':True,'source_format':'legacy-v1' if legacy else 'portable-v2','warnings':['Остановите старый SHMAX перед восстановлением: два экземпляра не должны одновременно использовать один Telegram Bot/MAX аккаунт.','Новый владелец сохранит свой логин и пароль. Старые веб-сеансы и веб-администраторы не импортируются.','Незавершённые доставки будут приостановлены для ручной проверки, чтобы не повторять сообщения.','MAX или Telegram могут потребовать повторную авторизацию; остальные настройки сохранятся.']}
 
     @app.post('/api/portable/{identity}/restore',dependencies=deps)
     async def restore(identity: str,request: Request):

@@ -3,6 +3,27 @@
 All notable changes to SHMAX are documented here.
 Format: Keep a Changelog; versioning: SemVer.
 
+## 0.2.0 — 2026-10-22
+
+- Route each MAX chat to one or more Telegram groups; preserve existing connected groups when pairing another.
+- Manage explicit send grants per Telegram group. Discovery and Telegram admin status do not grant SHMAX permission; a global block still wins.
+- Add administrator overview groups with automatic forum topics on the first new message, including confirmed Telegram → MAX replies.
+- Attribute incoming messages to the MAX chat and actual sender when available; configure labels independently per destination.
+- Keep separate durable delivery, retry and message mappings per group. Revalidate current routes, enabled groups and send grants before delivery.
+- Add independent MAX direct, HTTP CONNECT, SOCKS5 and Xray networking. Keep Telegram's selection separate and restore MAX sessions without automatic SMS.
+- Add resource graphs and a group overview to the dashboard. Separate Linux host and cgroup metrics; keep a bounded one-hour history since app start.
+- Put MAX networking before account authentication in the ten-step setup wizard.
+- Keep the separate host backup service, version and migration files aligned with the upgraded application; retain its previous files for rollback.
+- Contain wide route/diagnostic/backup tables on mobile and use consistent form controls.
+
+### Migration and limits
+- Migration 0012 preserves existing routes, message aliases, queue references and current-group grants; previously disabled groups stay disabled.
+- Schema downgrade requires restoring the verified pre-upgrade cold backup; it must not collapse fanout mappings.
+- Legacy queued Telegram → MAX jobs without a recorded sender require review rather than automatic replay. Existing MAX → Telegram jobs must still match an enabled destination.
+- Telegram members can read all messages in their Telegram group. Revoke Telegram membership to remove read access; SHMAX grants control sending to MAX.
+- Admin overview starts with new messages; it does not backfill private history. Telegram topic creation has no remote idempotency key, so a lost API response can leave an unused topic.
+- One MAX account remains supported. Per-chat grants within a group, multiple MAX accounts and persistent long-term metrics are outside this release.
+
 ## 0.1.3 — 2026-10-20
 
 ### Fixed

@@ -75,6 +75,21 @@ from .providers import (
 
 logger = logging.getLogger(__name__)
 
+
+class _ProxyLogFilter(logging.Filter):
+    def filter(self,record):
+        # Upstream logs full proxy URLs at DEBUG/INFO, including passwords.
+        message=record.getMessage()
+        if 'proxy' in message.lower() and '://' in message:
+            record.msg='MAX proxy transport event'
+            record.args=();record.exc_info=None;record.exc_text=None
+        return True
+
+
+_proxy_logger=logging.getLogger('pymax.transport.tcp')
+if not any(isinstance(f,_ProxyLogFilter) for f in _proxy_logger.filters):
+    _proxy_logger.addFilter(_ProxyLogFilter())
+
 # PyMax imports are deferred so the rest of SHMAX keeps working
 # even on a host that does not yet have ``maxapi-python`` installed.
 _PyMaxClient: Any = None
@@ -159,9 +174,9 @@ def _classify_pymax_error(exc: BaseException) -> Exception:
     if isinstance(exc, _PyMaxPyMaxError):
         # Base class for everything PyMax raises; treat as transport
         # by default and let the adapter narrow further on context.
-        return MaxTransportError(str(exc))
+        return MaxTransportError(type(exc).__name__)
     if isinstance(exc, (ConnectionError, EOFError, OSError, TimeoutError)):
-        return MaxConnectionError(str(exc))
+        return MaxConnectionError(type(exc).__name__)
     if isinstance(exc, FileNotFoundError):
         return MaxSessionError(str(exc))
     return exc
@@ -240,6 +255,7 @@ class PyMaxMaxAdapter(MaxAdapter):
             relogin=False,
             log_level=cfg.log_level,
             device_type=_device_type_to_enum(cfg.device_type),
+            **({'proxy': cfg.proxy_url} if cfg.proxy_url else {}),
         )
         # ``_handle`` must exist before handler registration so
         # handlers can push into the asyncio queue without an
@@ -275,12 +291,12 @@ class PyMaxMaxAdapter(MaxAdapter):
         @client.on_message()
         async def _on_msg(msg: Any, _client: Any) -> None:
             if self._handle is handle:
-                handle.events.put_nowait(self._from_pymax_message(msg))
+                handle.events.put_nowait(self._from_pymax_message(msg, _client))
 
         @client.on_message_edit()
         async def _on_edit(msg: Any, _client: Any) -> None:
             if self._handle is handle:
-                handle.events.put_nowait(self._from_pymax_message(msg))
+                handle.events.put_nowait(self._from_pymax_message(msg, _client))
 
         @client.on_disconnect()
         async def _on_disconnect(exc: Any, _reconnect: bool, _delay: float) -> None:
@@ -293,14 +309,26 @@ class PyMaxMaxAdapter(MaxAdapter):
     # ------------------------------------------------------------------
     # Translation PyMax <-> our domain
     # ------------------------------------------------------------------
+    async def resolve_sender_name(self, sender_id: str):
+        """Best-effort lookup of this sender; never the account owner's name."""
+        if not self._handle or not sender_id or not str(sender_id).lstrip('-').isdigit():
+            return None
+        import asyncio
+        user=await asyncio.wait_for(self._handle.client._app.api.users.get_user(int(sender_id)),2)
+        for item in getattr(user,'names',[]) or []:
+            name=getattr(item,'name',None) or ' '.join(x for x in (getattr(item,'first_name',None),getattr(item,'last_name',None)) if x)
+            if name:return name
+        return None
+
     @staticmethod
-    def _from_pymax_message(msg: Any) -> MaxEvent:
+    def _from_pymax_message(msg: Any, client: Any = None) -> MaxEvent:
         return MaxEvent(
             event_id=str(msg.id),
             chat_id=str(msg.chat_id) if msg.chat_id is not None else "",
             sender_id=str(msg.sender) if msg.sender is not None else "",
             text=msg.text or "",
             raw=msg,
+            metadata={"chat_title": next((getattr(chat,'title',None) for chat in (getattr(client,'chats',[]) or []) if str(getattr(chat,'id',''))==str(msg.chat_id)), None)},
         )
 
     @staticmethod
@@ -355,19 +383,18 @@ class PyMaxMaxAdapter(MaxAdapter):
         otherwise.
         """
         if phone:
-            self._config = PyMaxAdapterConfig(
-                phone=phone,
-                session_dir=self._config.session_dir,
-                session_name=self._config.session_name,
-                app_version=self._config.app_version,
-                reconnect=self._config.reconnect,
-                log_level=self._config.log_level,
-            )
+            from dataclasses import replace
+            self._config = replace(self._config, phone=phone)
         await super().prepare_sms(phone=phone)
 
     @property
     def generation(self):
         return getattr(self, "_generation", 0)
+
+    def configure_proxy(self, proxy_url: str | None) -> None:
+        """Apply only while disconnected; the caller owns the recovery lock."""
+        from dataclasses import replace
+        self._config = replace(self._config, proxy_url=proxy_url)
 
     async def connect_saved(self) -> None:
         if not self._session_file_exists():
@@ -388,7 +415,9 @@ class PyMaxMaxAdapter(MaxAdapter):
             # ``MaxAuthError`` from a provider failure gets translated
             # by the provider path; here we only catch transport / session.
             if isinstance(translated, MaxError):
-                raise translated from e
+                raise translated from None
+            if isinstance(e, Exception) and self._config.proxy_url:
+                raise MaxConnectionError(type(e).__name__) from None
             raise
         self._handle.started = True
 
@@ -463,7 +492,11 @@ class PyMaxMaxAdapter(MaxAdapter):
             raise MediaFailure("max.download", "untrusted_media_url")
         written = 0
         try:
-            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=35)) as http:
+            connector=None
+            if self._config.proxy_url:
+                from aiohttp_socks import ProxyConnector
+                connector=ProxyConnector.from_url(self._config.proxy_url,rdns=True)
+            async with aiohttp.ClientSession(connector=connector,timeout=aiohttp.ClientTimeout(total=35)) as http:
                 async with http.get(url, allow_redirects=False) as resp:
                     if resp.status != 200:
                         raise MediaFailure("max.download", "http_response_failed")
@@ -480,7 +513,7 @@ class PyMaxMaxAdapter(MaxAdapter):
             raise
         except Exception as exc:
             dest.unlink(missing_ok=True)
-            raise MediaFailure("max.download", "transport_failed") from exc
+            raise MediaFailure("max.download", "transport_failed") from None
         return written
 
     async def disconnect(self) -> None:
@@ -506,7 +539,7 @@ class PyMaxMaxAdapter(MaxAdapter):
         except BaseException as e:
             translated = _classify_pymax_error(e)
             if isinstance(translated, MaxError):
-                raise translated from e
+                raise translated from None
             raise
 
     async def get_profile(self) -> MaxProfile:
@@ -527,7 +560,7 @@ class PyMaxMaxAdapter(MaxAdapter):
         except BaseException as e:
             translated = _classify_pymax_error(e)
             if isinstance(translated, MaxError):
-                raise translated from e
+                raise translated from None
             raise
         return [self._from_pymax_chat(c) for c in chats]
 
@@ -593,7 +626,7 @@ class PyMaxMaxAdapter(MaxAdapter):
         except BaseException as e:
             translated = _classify_pymax_error(e)
             if isinstance(translated, MaxError):
-                raise translated from e
+                raise translated from None
             raise
 
     async def send_media(

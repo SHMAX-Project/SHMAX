@@ -353,6 +353,7 @@ def normalize_max(event: Any) -> NormalizedMessage:
             transport="max",
             external_id=str(chat_id),
             kind=ChatKind.DIALOG,
+            title=metadata.get("chat_title"),
         ),
         sender=SenderRef(
             transport="max",

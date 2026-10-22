@@ -1,18 +1,8 @@
-"""Single active Telegram target (audit P1 #5, surgical).
+"""Connected Telegram groups.
 
-V1 invariant: EXACTLY ONE active Telegram target, enforced by a
-REAL ``is_active`` column. Pairing a new group runs in ONE
-serialized transaction (``BEGIN IMMEDIATE`` on SQLite):
-
-  1. create/update the selected target,
-  2. set its validation facts,
-  3. deactivate EVERY other target,
-  4. commit.
-
-The resolver filters ``is_active == true`` explicitly — never a
-``LIMIT 1`` over arbitrary rows. Concurrent pairings serialize on
-the SQLite write lock; after both complete exactly one target is
-active.
+Pairing preserves other groups. The oldest enabled group is the compatibility
+default for initial setup and explicitly selected system notifications;
+message routing and per-group access use the actual destination instead.
 """
 
 from __future__ import annotations
@@ -26,9 +16,7 @@ from .database.models import TelegramTarget
 
 
 async def get_active_target(db: Database) -> Optional[TelegramTarget]:
-    """The single canonical active target: the row with
-    ``is_active`` set. Falls back to the newest validated row only
-    for pre-migration data without any active row."""
+    """Return the oldest enabled group, including failed validation facts."""
     async with db.session() as s:
         # P1 #5: the active row resolves REGARDLESS of its current
         # validation state — an invalidated target must still be
@@ -38,7 +26,7 @@ async def get_active_target(db: Database) -> Optional[TelegramTarget]:
             await s.execute(
                 select(TelegramTarget)
                 .where(TelegramTarget.is_active.is_(True))
-                .order_by(TelegramTarget.cached_at.desc())
+                .order_by(TelegramTarget.id.asc())
                 .limit(1)
             )
         ).scalars().first()
@@ -54,13 +42,9 @@ async def upsert_and_activate_target(
     chat_type: Optional[str],
     bot_status: Optional[str],
 ) -> TelegramTarget:
-    """Create/update the selected target and make it the ONLY
-    active one — in ONE serialized transaction.
+    """Validate and enable this group in a serialized transaction.
 
-    Concurrent pairings of groups A and B serialize on the SQLite
-    write lock (BEGIN IMMEDIATE): each transaction leaves exactly
-    one active row, and the last commit wins. Never zero, never a
-    deactivated row.
+    Concurrent pairings preserve all other connected groups and their grants.
     """
     import datetime as _dt
 
@@ -90,16 +74,6 @@ async def upsert_and_activate_target(
         target.validated_at = now
         target.is_active = True
         target.cached_at = now
-        # Deactivate every other target in the SAME transaction.
-        await s.execute(
-            update(TelegramTarget)
-            .where(TelegramTarget.chat_id != chat_id)
-            .values(
-                is_active=False,
-                missing_permissions='["цель деактивирована: заменена новой группой"]',
-                validated_at=None,
-            )
-        )
         await s.commit()
         await s.refresh(target)
         return target

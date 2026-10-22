@@ -1,9 +1,7 @@
 # Users and ACL
 
 Fail-closed: Telegram users cannot write to MAX until approved.
-Per-user approve/block/role (owner/admin/operator/read_only) and
-nickname (used for author attribution). The MAX side is checked
-too (view_chat). Blocked and read-only users cannot send.
+Administrators select a Telegram group and grant approval and a send role for that group. A grant in one group never grants access in another. Global blocks still apply everywhere. Nicknames are shared profile settings. Blocked, unapproved, read-only and departed members cannot send. Telegram membership controls who can read the group: SHMAX cannot hide individual topics from other group members. MAX sender labels identify authors; they are not Telegram permission grants.
 
 
 ## Member synchronization

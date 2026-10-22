@@ -59,6 +59,8 @@ class RoutesRepository:
         stmt = select(Route).where(
             Route.max_account_id == max_account_id,
             Route.max_chat_id == max_chat_id,
+            Route.telegram_account_id == telegram_account_id,
+            Route.telegram_chat_id == telegram_chat_id,
         )
         row = (await self._session.execute(stmt)).scalar_one_or_none()
         if row is None:
@@ -82,13 +84,19 @@ class RoutesRepository:
         await self._session.refresh(row)
         return _to_record(row)
 
-    async def find_by_max(self, *, max_account_id: int, max_chat_id: str) -> Optional[RouteRecord]:
-        stmt = select(Route).where(
-            Route.max_account_id == max_account_id,
-            Route.max_chat_id == max_chat_id,
-        )
-        row = (await self._session.execute(stmt)).scalar_one_or_none()
+    async def find_by_max(self, *, max_account_id: int, max_chat_id: str,
+                          telegram_chat_id: Optional[str] = None) -> Optional[RouteRecord]:
+        stmt = select(Route).where(Route.max_account_id == max_account_id, Route.max_chat_id == max_chat_id)
+        if telegram_chat_id is not None:
+            stmt = stmt.where(Route.telegram_chat_id == telegram_chat_id)
+        row = (await self._session.execute(stmt.order_by(Route.id))).scalars().first()
         return _to_record(row) if row else None
+
+    async def list_by_max(self, *, max_account_id: int, max_chat_id: str) -> list[RouteRecord]:
+        rows = (await self._session.execute(select(Route).where(
+            Route.max_account_id == max_account_id, Route.max_chat_id == max_chat_id,
+            Route.enabled.is_(True)).order_by(Route.id))).scalars().all()
+        return [_to_record(r) for r in rows]
 
     async def find_by_telegram(
         self,

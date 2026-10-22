@@ -104,6 +104,8 @@ class MaxRecovery:
             await rt.stop_max_listener()
             try:
                 await asyncio.wait_for(adapter.disconnect(), timeout=5)
+                network=getattr(rt,'max_network',None)
+                if network is not None:await network.ensure()
                 # This method installs an auth flow which rejects *before* SMS is
                 # requested. A saved file alone does not prove it contains a token.
                 connect = getattr(adapter, "connect_saved", None)

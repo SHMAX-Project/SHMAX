@@ -116,3 +116,22 @@ def asyncio_run_test(mgr: XrayRuntimeManager, config: dict) -> tuple[bool, str]:
     import asyncio
 
     return asyncio.run(mgr.test_config(config))
+
+
+@pytest.mark.skipif(_find_binary() is None, reason='Xray binary unavailable')
+def test_max_xray_independent_http_inbound_accepted(xray_binary):
+    from shmax.max_network import with_http
+    manager=XrayRuntimeManager(binary_path=xray_binary)
+    config=with_http(_config_for(_link('tcp','reality'),port=10990),10990)
+    ok,detail=asyncio_run_test(manager,config)
+    assert ok,detail
+    assert all(i['listen']=='127.0.0.1' for i in config['inbounds'])
+
+
+@pytest.mark.skipif(_find_binary() is None, reason='Xray binary unavailable')
+def test_max_socks_bridge_for_sdk_uploads_accepted(xray_binary):
+    from shmax.max_network import socks_bridge
+    manager=XrayRuntimeManager(binary_path=xray_binary)
+    config=socks_bridge({'mode':'socks5','host':'127.0.0.1','port':10991,'username':'test-user','password':'synthetic-test-only'},10990)
+    ok,detail=asyncio_run_test(manager,config)
+    assert ok,detail

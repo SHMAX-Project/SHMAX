@@ -54,6 +54,11 @@ class BridgeConfig:
     # Whether the configured target is a forum (topics). When
     # True, only events whose topic maps to a route are accepted.
     telegram_target_forum: bool = False
+    group_mode: bool = False
+    telegram_target_id: Optional[int] = None
+    show_source_chat: bool = True
+    show_sender: bool = True
+    route_override: object = None
 
 
 class BridgeEngine:
@@ -140,6 +145,9 @@ class BridgeEngine:
             if self._media_fetcher is None:
                 failures.append(label)
                 continue
+            if getattr(getattr(self, '_config', None), 'group_mode', False):
+                return ([{"media_kind": label, "lazy_attachment": {"kind": label, "payload": a.payload, "caption": a.caption},
+                          "media_origin": source, "caption": a.caption}], [])
             try:
                 stored = await self._media_fetcher(source, a)
             except Exception as e:  # noqa: BLE001
@@ -249,7 +257,7 @@ class BridgeEngine:
         # MAX event, a mapped MAX chat route, and an active
         # Telegram target (route resolution below enforces the
         # latter two).
-        if direction == Direction.TELEGRAM_TO_MAX:
+        if direction == Direction.TELEGRAM_TO_MAX and not getattr(self._config, 'group_mode', False):
             sender_principal = self._resolve_sender_principal(event, direction)
             decision = await self._acl.check(
                 principal=sender_principal,
@@ -281,7 +289,7 @@ class BridgeEngine:
 
         if direction == Direction.MAX_TO_TELEGRAM:
             reply_to_telegram_message_id = await self._resolve_reply_target(
-                event=event, dest_transport="telegram"
+                event=event, dest_transport="telegram", route=route
             )
             media, fallback = await self._prepare_media(event, "max")
             effective_text = self._suppress_structural_caption(
@@ -297,7 +305,7 @@ class BridgeEngine:
             )
         else:
             reply_to_max_message_id = await self._resolve_reply_target(
-                event=event, dest_transport="max"
+                event=event, dest_transport="max", route=route
             )
             media, fallback = await self._prepare_media(event, "telegram")
             effective_text = self._suppress_structural_caption(
@@ -375,7 +383,7 @@ class BridgeEngine:
         return media_entry, fallback
 
     async def _resolve_reply_target(
-        self, *, event: NormalizedMessage, dest_transport: str
+        self, *, event: NormalizedMessage, dest_transport: str, route=None
     ) -> Optional[str]:
         """Translate ``event.reply_to`` into the message id of the
         destination transport.
@@ -391,6 +399,16 @@ class BridgeEngine:
         if event.reply_to is None:
             return None
         ref = event.reply_to
+        if getattr(self._config, 'group_mode', False):
+            # A reference from another conversation must never select a
+            # message outside this route, even if the ID exists locally.
+            if route is None or ref.transport != event.source:
+                return None
+            if ref.chat_external_id and ref.chat_external_id != event.chat.external_id:
+                return None
+            if ref.transport == 'telegram' and ref.thread_id is not None:
+                if ref.thread_id != event.metadata.get('thread_id'):
+                    return None
         if ref.transport == dest_transport:
             return ref.message_external_id
         if ref.transport == "max":
@@ -398,8 +416,13 @@ class BridgeEngine:
                 max_account_id=self._config.max_account_id,
                 max_chat_id=ref.chat_external_id or event.chat.external_id,
                 max_message_id=ref.message_external_id,
+                **({"telegram_chat_id": self._config.telegram_target_chat_id} if getattr(self._config, 'group_mode', False) else {}),
             )
             if mapped is not None and mapped.telegram_message_id is not None:
+                if getattr(self._config, 'group_mode', False) and (
+                    mapped.telegram_thread_id or ''
+                ) != (route.telegram_thread_id or ''):
+                    return None
                 return mapped.telegram_message_id
             return None
         if ref.transport == "telegram":
@@ -417,6 +440,8 @@ class BridgeEngine:
                 telegram_message_id=ref.message_external_id,
             )
             if mapped is not None and mapped.max_message_id is not None:
+                if getattr(self._config, 'group_mode', False) and mapped.max_chat_id != route.max_chat_id:
+                    return None
                 return mapped.max_message_id
             return None
         return None
@@ -526,6 +551,9 @@ class BridgeEngine:
                 "ACL denied TG→MAX: user=%s is blocked", row.user_id
             )
             return False
+        if getattr(self._config, 'group_mode', False):
+            from ..group_access import can_send
+            return await can_send(self._db, self._config.telegram_target_id, row.user_id)
         if not row.approved:
             logger.info(
                 "ACL denied TG→MAX: user=%s is not approved", row.user_id
@@ -566,6 +594,7 @@ class BridgeEngine:
                 max_account_id=self._config.max_account_id,
                 max_chat_id=event.chat.external_id,
                 max_message_id=event.external_id,
+                **({"telegram_chat_id": self._config.telegram_target_chat_id} if getattr(self._config, 'group_mode', False) else {}),
             )
         return await self._mapping.find_by_telegram(
             telegram_account_id=self._config.telegram_account_id,
@@ -576,9 +605,12 @@ class BridgeEngine:
 
     async def _resolve_route(self, direction: Direction, event: NormalizedMessage):
         if direction == Direction.MAX_TO_TELEGRAM:
+            if getattr(self._config, 'group_mode', False) and self._config.route_override is not None:
+                return self._config.route_override
             return await self._routes.find_by_max(
                 max_account_id=self._config.max_account_id,
                 max_chat_id=event.chat.external_id,
+                **({"telegram_chat_id": self._config.telegram_target_chat_id} if getattr(self._config, 'group_mode', False) else {}),
             )
         # TG→MAX route resolution. Audit P0 #7: never silently
         # fall back from an unknown topic. When the configured
@@ -666,17 +698,25 @@ class BridgeEngine:
             telegram_first_name=getattr(event.sender, "display_name", None),
             telegram_username=None,
         )
+        if getattr(self._config, 'group_mode', False):
+            from .provenance import source_label
+            from types import SimpleNamespace
+            author = SimpleNamespace(label=source_label(
+                getattr(route, 'label', None) or getattr(event.chat, 'title', None),
+                getattr(event.sender, 'display_name', None),
+                getattr(event.sender, 'external_id', None),
+                show_chat=self._config.show_source_chat, show_sender=self._config.show_sender))
         body = text or ""
         if text and author.label:
             body = attribute_text(text=text, label=author.label)
-        elif not text and author.label and media is not None and str(
+        elif not text and author.label and media is not None and (getattr(self._config, 'group_mode', False) or str(
             media.get("caption") or ""
-        ).strip():
+        ).strip()):
             # Body suppressed (structural caption dedup): attribute
             # the media caption instead so Telegram still sees the
             # author exactly once.
             media["caption"] = attribute_caption(
-                caption=str(media["caption"]), label=author.label
+                caption=str(media.get("caption") or ""), label=author.label
             )
             body = ""
         if media is not None and media.get("media_kind") == "sticker" and not body and author.label:
@@ -687,7 +727,7 @@ class BridgeEngine:
             if body:
                 album_caption = body + ("\n" + initial if initial else "")
             else:
-                album_caption = attribute_caption(caption=initial, label=author.label) or ""
+                album_caption = (initial if getattr(self._config, 'group_mode', False) and initial else attribute_caption(caption=initial, label=author.label)) or ""
             caption_fits = len(album_caption.encode("utf-16-le")) // 2 <= 1024
             media["album_caption"] = album_caption if caption_fits else (author.label or "")
             body = "" if caption_fits else album_caption
@@ -720,7 +760,14 @@ class BridgeEngine:
             payload.update(media)
         from ..journal import correlation
         payload["journal_correlation"] = correlation.get()
+        if getattr(self._config, 'group_mode', False):
+            payload.update(group_version=2, route_id=getattr(route, 'id', None),
+                           auto_admin_route=getattr(route, 'id', None) is None,
+                           source_chat_title=getattr(route, 'label', None) or getattr(event.chat, 'title', None) or 'Чат MAX',
+                           media_origin='max')
         idem = f"max:{event.chat.external_id}:{event.external_id}:max_to_telegram"
+        if getattr(self._config, 'group_mode', False):
+            idem += f":{route.telegram_chat_id}"
         await self._queue.enqueue(
             direction=payload["direction"],
             target_chat_id=payload["target_chat_id"],
@@ -811,14 +858,25 @@ class BridgeEngine:
             payload.update(media)
         from ..journal import correlation
         payload["journal_correlation"] = correlation.get()
+        if getattr(self._config, 'group_mode', False):
+            payload.update(group_version=2, route_id=route.id,
+                           sender_telegram_user_id=event.sender.external_id if event.sender else None,
+                           mirror_body=text,
+                           mirror_caption=next((a.caption for a in event.attachments if a.caption), None),
+                           mirror_fallback=fallback)
         idem = f"tg:{event.chat.external_id}:{event.external_id}:tg_to_max"
-        await self._queue.enqueue(
+        queued = await self._queue.enqueue(
             direction=payload["direction"],
             target_chat_id=payload["target_chat_id"],
             payload=payload,
             target_thread_id=None,
             idempotency_key=idem,
+            **({"commit": False} if getattr(self._config, 'group_mode', False) else {}),
         )
+        if getattr(self._config, 'group_mode', False):
+            from ..multi_group import enqueue_mirrors
+            await enqueue_mirrors(self, event, route, payload, queued.id)
+            await self._queue._session.commit()
         if self.journal:self.journal.emit("message.queued",direction=payload["direction"])
         if self._on_enqueue is not None:
             await self._on_enqueue()

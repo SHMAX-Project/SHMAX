@@ -195,13 +195,14 @@ class TelegramTarget(Base):
     validated_at: Mapped[Optional[_dt.datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
-    # P1 #5 (surgical): the single-active-target invariant is a
-    # REAL column, not an ordering convention. Exactly one row may
-    # carry is_active=True; pairing swaps it inside ONE serialized
-    # transaction. Resolvers filter on it explicitly.
+    # Each group is enabled independently. Pairing another group preserves it.
     is_active: Mapped[bool] = mapped_column(
         Boolean, default=False, nullable=False
     )
+    is_admin_hub: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    auto_add_chats: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    show_source_chat: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    show_sender: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     cached_at: Mapped[_dt.datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow
     )
@@ -260,6 +261,21 @@ class TelegramUser(Base):
     )
 
 
+class TelegramGroupAccess(Base):
+    """Explicit per-group grants; discovery never grants permission."""
+    __tablename__ = "telegram_group_access"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    target_id: Mapped[int] = mapped_column(ForeignKey("telegram_targets.id", ondelete="CASCADE"), nullable=False)
+    user_id: Mapped[str] = mapped_column(ForeignKey("telegram_users.user_id", ondelete="CASCADE"), nullable=False)
+    role: Mapped[str] = mapped_column(String(16), default="read_only", nullable=False)
+    approved: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    blocked: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    membership: Mapped[Optional[str]] = mapped_column(String(16), nullable=True)
+    is_admin: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    source: Mapped[Optional[str]] = mapped_column(String(16), nullable=True)
+    __table_args__ = (UniqueConstraint("target_id", "user_id", name="uq_group_access_user"),)
+
+
 # ---------------------------------------------------------------------
 # Routing / ACL
 # ---------------------------------------------------------------------
@@ -289,7 +305,9 @@ class Route(Base):
         UniqueConstraint(
             "max_account_id",
             "max_chat_id",
-            name="uq_routes_max",
+            "telegram_account_id",
+            "telegram_chat_id",
+            name="uq_routes_max_destination",
         ),
         UniqueConstraint(
             "telegram_account_id",
@@ -352,7 +370,9 @@ class MessageMap(Base):
             "max_account_id",
             "max_chat_id",
             "max_message_id",
-            name="uq_msgmap_max",
+            "telegram_account_id",
+            "telegram_chat_id",
+            name="uq_msgmap_max_destination",
         ),
         UniqueConstraint(
             "telegram_account_id",
@@ -397,6 +417,7 @@ class DeliveryQueueItem(Base):
 
     __tablename__ = "delivery_queue"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    depends_on_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, index=True)
     direction: Mapped[str] = mapped_column(String(32), nullable=False)
     target_chat_id: Mapped[str] = mapped_column(String(64), nullable=False)
     target_thread_id: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)

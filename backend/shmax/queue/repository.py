@@ -23,7 +23,7 @@ import os
 from dataclasses import dataclass
 from typing import Any, Optional
 
-from sqlalchemy import select, update
+from sqlalchemy import select, update, delete
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import select as sa_select
@@ -97,6 +97,8 @@ class DeliveryQueueRepository:
         reply_mapping_id: Optional[int] = None,
         available_at: Optional[_dt.datetime] = None,
         idempotency_key: Optional[str] = None,
+        depends_on_id: Optional[int] = None,
+        commit: bool = True,
     ) -> QueueRecord:
         row = DeliveryQueueItem(
             direction=direction,
@@ -109,10 +111,14 @@ class DeliveryQueueRepository:
             next_attempt_at=available_at
             or _dt.datetime.now(_dt.timezone.utc),
             idempotency_key=idempotency_key,
+            depends_on_id=depends_on_id,
         )
         self._session.add(row)
         try:
-            await self._session.commit()
+            if commit:
+                await self._session.commit()
+            else:
+                await self._session.flush()
         except IntegrityError as e:
             await self._session.rollback()
             raise DuplicateEnqueueError(
@@ -146,11 +152,15 @@ class DeliveryQueueRepository:
         now = _dt.datetime.now(_dt.timezone.utc)
         lease_until = now + _dt.timedelta(seconds=lease_seconds)
         marker_worker = worker_id or _worker_marker()
+        from sqlalchemy.orm import aliased
+        parent = aliased(DeliveryQueueItem)
+        delivered_parents = sa_select(parent.id).where(parent.status == "delivered")
         eligible_ids_subquery = (
             sa_select(DeliveryQueueItem.id)
             .where(
                 DeliveryQueueItem.status.in_(["pending", "retry"]),
                 DeliveryQueueItem.next_attempt_at <= now,
+                DeliveryQueueItem.depends_on_id.is_(None) | DeliveryQueueItem.depends_on_id.in_(delivered_parents),
                 # Either never claimed, or lease has expired.
                 (DeliveryQueueItem.lease_until.is_(None))
                 | (DeliveryQueueItem.lease_until < now),
@@ -284,22 +294,47 @@ class DeliveryQueueRepository:
                 claimed_at=None,
             )
         )
+        await self._session.execute(update(DeliveryQueueItem).where(
+            DeliveryQueueItem.depends_on_id == queue_id,
+            DeliveryQueueItem.status.in_(["pending", "retry"])
+        ).values(status="failed", last_error="DependencyFailed", lease_until=None))
         await self._session.commit()
 
     async def reset_for_retry(self, *, queue_id: int) -> bool:
         """Manually move a failed item back to ``pending``.
 
         Operator-facing action surfaced through the Web UI as
-        "Повторить". Does NOT reset ``attempts``; the worker
-        keeps counting so the operator can see how many
-        retries the item has already had.
+        "Повторить". Starts a fresh retry budget while preserving the
+        same durable item and its idempotency key.
         """
         row = await self._session.get(DeliveryQueueItem, queue_id)
-        if row is None or row.status != "failed":
+        if row is None or row.status not in {'failed','retry'}:
             return False
+        if row.depends_on_id is not None:
+            parent=await self._session.get(DeliveryQueueItem,row.depends_on_id)
+            if parent is None or parent.status=='failed':return False
         row.status = "pending"
+        row.attempts = 0
         row.last_error = None
         row.next_attempt_at = _dt.datetime.now(_dt.timezone.utc)
+        await self._session.execute(update(DeliveryQueueItem).where(
+            DeliveryQueueItem.depends_on_id == queue_id,
+            DeliveryQueueItem.status == 'failed', DeliveryQueueItem.last_error == 'DependencyFailed'
+        ).values(status='pending', attempts=0, last_error=None, next_attempt_at=row.next_attempt_at))
+        await self._session.commit()
+        return True
+
+    async def purge(self, *, queue_id:int) -> bool:
+        row=await self._session.get(DeliveryQueueItem,queue_id)
+        if row is None or row.status=='processing':return False
+        children=update(DeliveryQueueItem).where(DeliveryQueueItem.depends_on_id==queue_id)
+        if row.status=='delivered':
+            # Their confirmed MAX mapping remains durable after queue cleanup.
+            await self._session.execute(children.values(depends_on_id=None))
+        else:
+            await self._session.execute(children.where(DeliveryQueueItem.status.in_(['pending','retry']))
+                .values(status='failed',last_error='DependencyFailed'))
+        await self._session.execute(delete(DeliveryQueueItem).where(DeliveryQueueItem.id==queue_id))
         await self._session.commit()
         return True
 

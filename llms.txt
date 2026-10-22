@@ -65,3 +65,9 @@ v0.1.3 — исправление альбомов без подписи/име�
 Изменения: release/v0.1.3/RELEASE_NOTES.ru.md (EN: RELEASE_NOTES.en.md).
 Публикация и установка — по явному решению владельца. GitHub Private Vulnerability
 Reporting включён; правила: SECURITY.md. Процесс выпуска: docs/ru/release-process.md.
+
+Development v0.2.0: docs/ru/multi-group.md, docs/ru/max-network.md,
+docs/ru/dashboard.md and docs/ru/first-setup.md document multi-group routing,
+independent MAX networking, resources and ten-step setup. Published stable
+remains v0.1.3 until an explicit release is performed. Old v1 backups are
+converted in private staging before the existing owner/hostd restore gate.

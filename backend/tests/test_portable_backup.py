@@ -119,13 +119,16 @@ def test_compatible_previous_schema_migrates_forward(appliance,tmp_path):
     from alembic import command
     from shmax.database.migrations import _make_alembic_config,ALEMBIC_DIR
     from shmax.backup.portable import validate_stage,schema_revision
-    cfg=_make_alembic_config('sqlite:///'+str(appliance/'db/shmax.db'));cfg.set_main_option('script_location',str(ALEMBIC_DIR))
-    command.downgrade(cfg,'0009_sent_native')
-    payload=tmp_path/'previous';snapshot(appliance,payload)
+    import shutil
+    old=tmp_path/'previous-appliance';(old/'db').mkdir(parents=True)
+    shutil.copytree(appliance/'secrets',old/'secrets')
+    cfg=_make_alembic_config('sqlite:///'+str(old/'db/shmax.db'));cfg.set_main_option('script_location',str(ALEMBIC_DIR))
+    command.upgrade(cfg,'0009_sent_native')
+    payload=tmp_path/'previous';snapshot(old,payload)
     stage=tmp_path/'stage';manifest=extract(payload,stage)
     assert manifest['schema_revision']=='0009_sent_native'
     validate_stage(stage,manifest,migrate=True)
-    assert schema_revision(stage/'db/shmax.db')=='0011_telegram_message_alias'
+    assert schema_revision(stage/'db/shmax.db')=='0012_multi_group'
 
 
 def test_source_binaries_and_deployment_binding_excluded(appliance,tmp_path):

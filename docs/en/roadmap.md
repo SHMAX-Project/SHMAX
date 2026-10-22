@@ -1,24 +1,16 @@
 # SHMAX roadmap
 
-## From a bridge to a message router
+## Prepared for v0.2.0
 
-The next direction is unified routing across accounts, groups and teams.
-Administrators will define where messages originate, where they go, and who may
-read and reply through each route.
+Multiple Telegram groups, explicit group grants, automatic administrator overview
+topics, both directions of conversation, independent MAX networking, resource
+graphs and ten-step onboarding. These remain development-branch capabilities
+until v0.2.0 is published.
 
-| Direction | Planned behavior | Status |
-|---|---|---|
-| Multiple accounts | Multiple MAX accounts in one instance, with separate connections and health states | Planned |
-| Message router | Explicit routes between account chats, Telegram groups and topics, managed in the web dashboard | Planned |
-| Route permissions | User access to specific groups and routes across accounts, with separate send permissions | Planned |
-| MAX networking | MAX proxy settings independent of Telegram, with connectivity checks including servers outside Russia | Planned |
+[Groups](multi-group.md) · [MAX network](max-network.md) · [Dashboard](dashboard.md).
 
-The goal is one dashboard for multiple workspaces while keeping conversations
-and team permissions separate.
+## Next directions
 
-These are planned features, not v0.1.2 capabilities. The current release uses one
-MAX account and one linked Telegram group; MAX connects directly. Future proxy
-compatibility and MAX availability in each environment need verification.
-Dates will follow design and testing.
-
-Share use cases through [GitHub Issues](https://github.com/SHMAX-Project/SHMAX/issues).
+Multiple MAX accounts, per-topic send permissions in addition to group grants,
+and long-term metrics/threshold alerts. Telegram membership still controls
+reading. Timing follows design and validation.

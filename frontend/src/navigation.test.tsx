@@ -37,6 +37,10 @@ beforeEach(() => {
     if (path === '/api/max/auth/state') body = { state: authenticatedMax ? 'authenticated' : 'not_started' };
     if (path === '/api/max/profile') body = { display_name: 'Existing MAX', user_id: '42' };
     if (path === '/api/telegram/token/preview') body = { saved: true, preview: '123…' };
+    if (path === '/api/max/network') body = {mode:'direct',nodes:[],xray:{state:'not_configured'}};
+    if (path === '/api/telegram/groups') body = {groups: []};
+    if (path === '/api/routes') body = [];
+    if (path === '/api/max/chats') body = {chats: []};
     if (path === '/api/telegram/member-sync') body = { configured: false, running: false, status: 'not_configured' };
     if (path === '/api/recent-activity') body = { items: [] };
     return new Response(JSON.stringify(body), { status: 200, headers: { 'Content-Type': 'application/json' } });
@@ -94,7 +98,7 @@ it('skip persists dismissal independently of completion, opens dashboard and per
   expect(screen.getByTestId('dashboard-telegram')).toHaveTextContent('Не настроен');
   expect(screen.getByText('Ожидает настройки')).toBeVisible();
   await userEvent.click(screen.getByRole('link', { name: 'Продолжить первоначальную настройку' }));
-  await waitFor(() => expect(router.state.location.pathname).toBe('/setup/max'));
+  await waitFor(() => expect(router.state.location.pathname).toBe('/setup/max/network'));
 });
 it('unauthenticated visitors still require login even with dismissal recorded', async () => {
   session = { ...session, authenticated: false, setup_dismissed: true, mode: 'AUTH_REQUIRED' };
@@ -174,11 +178,10 @@ it('reload is guarded when configuration edits are unsaved', async () => {
 
 it('route configuration opens its focused editor instead of onboarding', async () => {
   const router = mount('/chats/settings');
-  expect(await screen.findByRole('heading', { name: 'MAX чаты' })).toBeVisible();
+  expect(await screen.findByRole('heading', { name: 'Telegram-группы' })).toBeVisible();
   expect(router.state.location.pathname).toBe('/chats/settings');
   expect(screen.queryByRole('list', { name: /Шаг/ })).not.toBeInTheDocument();
-  await userEvent.click(screen.getByRole('button', { name: 'Отмена / Назад' }));
-  await waitFor(() => expect(router.state.location.pathname).toBe('/chats'));
+  expect(await screen.findByRole('heading', { name: 'Подключить ещё одну группу' })).toBeVisible();
 });
 it('English in-product Help explains skip, resume and independent editing', async () => {
   await i18n.changeLanguage('en');

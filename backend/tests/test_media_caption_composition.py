@@ -55,6 +55,8 @@ class _MaxSpy:
 
 
 class _Shim:
+    from shmax.config import RuntimeMode
+    runtime_mode = RuntimeMode.TEST
     def __init__(self, tg, mx):
         self._tg = tg
         self._max = mx

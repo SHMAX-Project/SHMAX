@@ -172,7 +172,7 @@ async def test_real_adapter_callbacks_and_no_sms(tmp_path, monkeypatch):
         PyMaxAdapterConfig(phone=None, session_dir=tmp_path)
     )
     monkeypatch.setattr(module, "_PyMaxClient", Client)
-    monkeypatch.setattr(adapter, "_from_pymax_message", lambda x: x)
+    monkeypatch.setattr(adapter, "_from_pymax_message", lambda x, *args, **kwargs: x)
     first = adapter._build_client(saved_only=True)
     old = adapter._handle
     adapter._build_client(saved_only=True)

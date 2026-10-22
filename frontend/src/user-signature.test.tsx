@@ -47,16 +47,17 @@ it('renders alongside ACL controls and keeps Telegram admin distinct', async () 
   const { MemoryRouter } = await import('react-router-dom');
   const { UsersPage } = await import('./pages');
   mock.mockImplementation(async (url: string, options?: RequestInit) => {
-    if (url === '/api/telegram/users') return { users: [{ ...user, role: 'read_only', approved: false, blocked: false, membership: 'administrator', is_admin: true }] } as any;
+    if (url === '/api/telegram/groups') return {groups:[{id:1,chat_id:'-1',title:'Fixture',is_active:true}]} as any;
+    if (url === '/api/telegram/groups/1/users') return { users: [{ ...user, role: 'read_only', approved: false, blocked: false, membership: 'administrator', is_admin: true }] } as any;
     if (url === '/api/telegram/member-sync') return { configured: false, running: false, last_sync_at: 0, status: 'not_configured' } as any;
     return {} as any;
   });
   render(<MemoryRouter><UsersPage /></MemoryRouter>);
   await screen.findByLabelText('Подпись в MAX');
-  expect(screen.getByText('Telegram: administrator · администратор группы')).toBeInTheDocument();
+  expect(screen.getByText('administrator · администратор Telegram')).toBeInTheDocument();
   expect(screen.getByLabelText('Роль')).toHaveValue('read_only');
-  fireEvent.click(screen.getByLabelText('Одобрить'));
-  await waitFor(() => expect(mock).toHaveBeenCalledWith('/api/telegram/users/42/approval', {
-    method: 'PATCH', body: JSON.stringify({ approved: true, role: 'operator' }),
+  fireEvent.click(screen.getByLabelText('Разрешён в этой группе'));
+  await waitFor(() => expect(mock).toHaveBeenCalledWith('/api/telegram/groups/1/users/42', {
+    method: 'PUT', body: JSON.stringify({ approved: true, role: 'operator', blocked: false }),
   }));
 });

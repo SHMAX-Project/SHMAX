@@ -267,7 +267,7 @@ class XrayRuntimeManager:
                           "DNSFailure" if "dns" in text or "resolve" in text else
                           "TimeoutError" if "timeout" in text or "timed out" in text else "TransportUnavailable")
                 journal=getattr(self,"journal",None)
-                if journal:journal.emit("xray.transport_failure",component="xray",error_class=category,aggregate=True)
+                if journal:journal.emit("xray.transport_failure",component=getattr(self,"journal_component","xray"),error_class=category,aggregate=True)
                 if time.monotonic()-last_log>30:
                     logger.warning("xray diagnostic category=%s",category);last_log=time.monotonic()
         except asyncio.CancelledError:raise
@@ -281,7 +281,7 @@ class XrayRuntimeManager:
             raise XrayError(f"xray binary not found: {self.binary_path!r}")
 
         journal=getattr(self,"journal",None)
-        if journal:journal.emit("xray.starting",component="xray")
+        if journal:journal.emit("xray.starting",component=getattr(self,"journal_component","xray"))
         config_path = self._write_ephemeral_config(config)
         # NO shell=True: fixed argv, binary path from config.
         argv = [str(self.binary_path), "run", "-c", str(config_path)]
@@ -333,7 +333,7 @@ class XrayRuntimeManager:
                 f"xray local SOCKS 127.0.0.1:{self.socks_port} "
                 "did not become ready in time"
             )
-        if journal:journal.emit("xray.ready",component="xray")
+        if journal:journal.emit("xray.ready",component=getattr(self,"journal_component","xray"))
         logger.info(
             "xray started pid=%s socks=127.0.0.1:%s",
             self._process.pid, self.socks_port,

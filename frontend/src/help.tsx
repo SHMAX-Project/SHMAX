@@ -40,6 +40,10 @@ export const WIZARD_HELP: Partial<Record<WizardStepId, { title: string; body: Re
       </>
     ),
   },
+  'max-network': {
+    title: 'Сеть MAX до входа в аккаунт',
+    body: <><p>Оставьте прямое подключение, если сервер видит MAX. Если сервер находится за границей и MAX недоступен, выберите подходящий прокси или узел Xray с доступом к MAX.</p><p>Сохраните настройку, затем нажмите «Проверить сохранённое подключение». Успешная проверка сети не означает вход в аккаунт. Настройки Telegram не меняются.</p></>,
+  },
   max: {
     title: 'Вход в MAX',
     body: (
@@ -57,7 +61,7 @@ export const WIZARD_HELP: Partial<Record<WizardStepId, { title: string; body: Re
     title: 'Выбор сети для Telegram',
     body: (
       <>
-        <p>MAX подключается напрямую; выбранная сеть применяется только к Telegram.</p>
+        <p>Эта сеть применяется только к Telegram. Подключение MAX настраивается отдельно на шаге «Сеть MAX».</p>
         <p><strong>Direct</strong> — используйте, если Telegram API доступен напрямую.</p>
         <p><strong>SOCKS5 / HTTP</strong> — используйте внешний прокси для доступа к Telegram.</p>
         <p><strong>Xray подписка</strong> — вставьте URL подписки VLESS/Trojan. SHMAX сам запустит локальный Xray и направит через него только Telegram.</p>
@@ -172,7 +176,7 @@ export function WizardHelpCard({ stepId }: { stepId: WizardStepId }) {
 export const TROUBLESHOOTING: Array<[string, React.ReactNode]> = [
   ['SMS MAX долго не приходит', <>Подождите 2–3 минуты. Не нажимайте «Отправить снова» несколько раз подряд — это сбрасывает очередь SMS.</>],
   ['MAX требует 2FA', <>Сначала включите двухфакторную защиту в официальном приложении MAX, затем повторите вход в SHMAX.</>],
-  ['Внешний сервис недоступен', <>Для Telegram проверьте Direct, SOCKS5/HTTP или Xray на шаге «Telegram сеть». MAX подключается напрямую: проверьте его доступность и сессию отдельно.</>],
+  ['Внешний сервис недоступен', <>Для Telegram проверьте Direct, SOCKS5/HTTP или Xray на шаге «Telegram сеть». Для MAX отдельно проверьте выбранный режим на странице «Сеть MAX» и состояние сессии.</>],
   ['Telegram bot не проверяется', <>Проверьте выбранную сеть, корректность token и доступность прокси/Xray.</>],
   ['Группа не подключается', <>Проверьте: включены ли Темы (Forum), бот — администратор, есть права «отправка сообщений» и «управление темами».</>],
   ['SHMAX не видит /shmax_connect', <>Проверьте сеть, живой слушатель, действующий код в General, права бота и /setprivacy → Disable в BotFather. Отсутствие команды само по себе не доказывает включённый Privacy Mode.</>],
@@ -191,7 +195,7 @@ export function HelpPage() {
         <h3>Быстрый старт</h3>
         <p className="muted">Пройдите мастер настройки по шагам: администратор → MAX → сеть → бот → группа → чаты → пользователи → проверка → готово.</p>
       </div>
-      {(['max', 'telegram-network', 'telegram-bot', 'telegram-group', 'max-chats', 'users', 'test'] as WizardStepId[]).map((id) => {
+      {(['max-network', 'max', 'telegram-network', 'telegram-bot', 'telegram-group', 'max-chats', 'users', 'test'] as WizardStepId[]).map((id) => {
         const h = WIZARD_HELP[id];
         return h ? (
           <div className="card" key={id} data-testid={`help-section-${id}`}>

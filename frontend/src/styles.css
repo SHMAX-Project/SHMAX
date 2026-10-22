@@ -112,6 +112,7 @@ small { color: var(--fg-muted); }
 ::selection { background: rgba(53, 208, 186, 0.3); }
 
 /* ---------- 3. primitives ---------- */
+button:not([class]),
 .btn,
 button.btn,
 .btn-primary,
@@ -172,6 +173,9 @@ button:not(.btn-primary):not(.btn-ghost):not(.btn-danger):not(.card-radio):not(.
   background: var(--panel-3);
 }
 
+input:not([type]),
+input[type="url"],
+input[type="email"],
 input[type="text"],
 input[type="tel"],
 input[type="password"],
@@ -885,3 +889,17 @@ a.brand:focus-visible { outline: 2px solid var(--accent, #78b7ff); outline-offse
 .journal-filters { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:12px; padding:16px; }
 .journal-filters label { display:flex; flex-direction:column; gap:6px; min-width:0; }
 .journal-filters input { box-sizing:border-box; width:100%; min-width:0; padding:10px 12px; border:1px solid var(--border); border-radius:8px; background:var(--panel); color:var(--fg); }
+
+.resource-overview .grid > .card { margin: 0; min-width: 0; }
+.resource-overview table { overflow-wrap: anywhere; }
+.resource-overview h3 { display: flex; justify-content: space-between; gap: 8px; }
+
+/* Group and independent MAX network controls share accessible mobile sizing. */
+.settings-form label { display:block; margin:12px 0; }
+.settings-form input:not([type="checkbox"]), .settings-form select { display:block; width:100%; min-width:0; box-sizing:border-box; padding:10px 12px; border:1px solid var(--border); border-radius:8px; background:var(--panel); color:var(--fg); font:inherit; }
+.settings-form button { min-height:44px; padding:8px 14px; border:1px solid var(--border); border-radius:8px; font:inherit; max-width:100%; white-space:normal; margin:4px 6px 4px 0; }
+.settings-form li { overflow-wrap:anywhere; }
+.settings-form .user-row-controls select { width:auto; }
+
+.table-scroll { max-width:100%; overflow-x:auto; border-radius:var(--radius-sm); }
+.settings-form .user-row-controls label.row-check { color:var(--fg-muted); font-size:13px; flex-direction:row; align-items:center; }

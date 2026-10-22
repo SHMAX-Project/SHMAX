@@ -24,6 +24,6 @@ test('release demo screenshots and visible version',async({page},info)=>{
   await page.screenshot({path:path.join(out,name+'.png'),fullPage:!mobile});
  }
  await page.goto(s.backendURL+'/about');
- await expect(page.getByText('0.1.3',{exact:true})).toBeVisible();
+ await expect(page.getByText(JSON.parse(fs.readFileSync(path.resolve(here,'../package.json'),'utf8')).version,{exact:true})).toBeVisible();
  await expect(page.getByText('0.1.0-dev',{exact:true})).toHaveCount(0);
 });

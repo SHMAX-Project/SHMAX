@@ -237,6 +237,8 @@ async def test_real_photo_bridge_nickname_queue_to_pymax_attachment(env,tmp_path
     assert await bridge.handle_telegram_event(event)
     row=(await session.execute(select(DeliveryQueueItem))).scalars().one()
     assert row.payload['media_outcome']=='MEDIA_PENDING'
+    from shmax.config import RuntimeMode
+    runtime.runtime_mode=RuntimeMode.TEST
     await runtime._deliver(_payload_rec(row.payload))
     assert len(sent)==1 and sent[0]['text']=='[Роман]: Вот документ'
     await session.close()

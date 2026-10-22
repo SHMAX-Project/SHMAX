@@ -10,7 +10,7 @@ SHMAX — самостоятельный шлюз **MAX ↔ Telegram**. Прил
 | [overview.md](overview.md) | что такое SHMAX и зачем он нужен |
 | [quick-start.md](quick-start.md) | установка и первый запуск за 10 минут |
 | [installation.md](installation.md) | все режимы установщика |
-| [first-setup.md](first-setup.md) | мастер настройки: 9 шагов |
+| [first-setup.md](first-setup.md) | мастер настройки: 10 шагов |
 | [architecture.md](architecture.md) | архитектура: что, зачем, как общается |
 | [data-persistence.md](data-persistence.md) | карта файлов и персистентность |
 | [max.md](max.md) | вход в MAX, OTP, 2FA |
@@ -44,3 +44,7 @@ SHMAX — самостоятельный шлюз **MAX ↔ Telegram**. Прил
 - [Первый опыт эксплуатации](deployment-story.md)
 
 - [Постоянный журнал событий](event-journal.md) — фильтры, хранение и приватность v0.1.2.
+
+- [Сеть MAX](max-network.md)
+- [Группы и админский обзор](multi-group.md)
+- [Графики ресурсов и группы](dashboard.md)

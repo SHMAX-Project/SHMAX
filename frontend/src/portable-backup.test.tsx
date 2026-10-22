@@ -10,7 +10,7 @@ vi.mock('./api',()=>({api:vi.fn(),apiBlob:vi.fn(),ApiError:class extends Error{s
 beforeEach(()=>{cleanup();vi.mocked(api).mockReset();vi.mocked(apiBlob).mockReset();});
 it('offers fresh setup or encrypted restore immediately after owner creation',()=>{
  render(<MemoryRouter><SetupChoice/></MemoryRouter>);
- expect(screen.getByRole('link',{name:'Начать настройку'})).toHaveAttribute('href','/setup/max');
+ expect(screen.getByRole('link',{name:'Начать настройку'})).toHaveAttribute('href','/setup/max/network');
  expect(screen.getByRole('link',{name:'Восстановить из резервной копии'})).toHaveAttribute('href','/setup/restore');
 });
 it('requires matching passwords and clears secrets after export failure',async()=>{

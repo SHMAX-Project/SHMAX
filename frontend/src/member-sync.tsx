@@ -4,24 +4,25 @@ import { Link } from 'react-router-dom';
 import { api } from './api';
 
 interface State { configured: boolean; running: boolean; api_id: number | null; api_hash_saved: boolean; status: string; last_sync_at: number; found: number; new: number; updated: number }
-export function MemberSync({ settings = false, onSync }: { settings?: boolean; onSync?: () => void }) {
+export function MemberSync({ settings = false, onSync, groupId }: { settings?: boolean; onSync?: () => void; groupId?: string }) {
   const { markDirty, markSaved } = useNavigationSafety();
   const [state, setState] = React.useState<State | null>(null);
   const [id, setId] = React.useState('');
   const [hash, setHash] = React.useState('');
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState('');
-  React.useEffect(() => { api<State>('/api/telegram/member-sync').then(s => { setState(s); setId(s.api_id ? String(s.api_id) : ''); }).catch(e => setError(e.message)); }, []);
+  const statusPath='/api/telegram/member-sync'+(groupId?'?group_id='+encodeURIComponent(groupId):'');
+  React.useEffect(() => { api<State>(statusPath).then(s => { setState(s); setId(s.api_id ? String(s.api_id) : ''); }).catch(e => setError(e.message)); }, [statusPath]);
   React.useEffect(() => {
     if (!state?.running) return;
     const timer = window.setTimeout(() => {
-      api<State>('/api/telegram/member-sync').then(s => {
+      api<State>(statusPath).then(s => {
         setState(s);
         if (!s.running) onSync?.();
       }).catch(e => setError(e.message));
     }, 2000);
     return () => window.clearTimeout(timer);
-  }, [state, onSync]);
+  }, [state, onSync,statusPath]);
   async function run(save: boolean) {
     setBusy(true); setError('');
     try {
@@ -30,8 +31,8 @@ export function MemberSync({ settings = false, onSync }: { settings?: boolean; o
         markSaved();
         setHash('');
       } else {
-        await api('/api/telegram/member-sync', { method: 'POST' });
-        setState(await api<State>('/api/telegram/member-sync'));
+        await api('/api/telegram/member-sync'+(groupId?'?group_id='+encodeURIComponent(groupId):''), { method: 'POST' });
+        setState(await api<State>(statusPath));
         onSync?.();
       }
     } catch (e: any) { setError(e.message); } finally { setBusy(false); }

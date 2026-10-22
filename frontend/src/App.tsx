@@ -1,3 +1,5 @@
+import { GroupsPage } from './groups';
+import { MaxNetworkPage } from './max-network';
 import { useTranslation } from 'react-i18next';
 import { ConfigurationEditor } from './configuration-editor';
 import { SetupChoice, PortableRestore } from "./portable-backup";
@@ -249,12 +251,13 @@ export default function App() {
     <Routes>
       <Route path="/setup" element={<SetupLayout authenticated={session.authenticated} />}>
         <Route index element={bootstrap ? <Admin onCreated={refreshSession} /> : <Navigate to="choice" replace />} />
-        <Route path="welcome" element={bootstrap ? <Admin onCreated={refreshSession} /> : <Navigate to="/setup/max" replace />} />
-        <Route path="admin" element={bootstrap ? <Admin onCreated={refreshSession} /> : <Navigate to="/setup/max" replace />} />
+        <Route path="welcome" element={bootstrap ? <Admin onCreated={refreshSession} /> : <Navigate to="/setup/max/network" replace />} />
+        <Route path="admin" element={bootstrap ? <Admin onCreated={refreshSession} /> : <Navigate to="/setup/max/network" replace />} />
         {!bootstrap && (
           <>
             <Route path="choice" element={<SetupChoice onDismissed={refreshSession} />} />
             <Route path="restore" element={<PortableRestore />} />
+            <Route path="max/network" element={<MaxNetworkPage onNext={() => nav('next')} onPrev={() => nav('prev')} />} />
             <Route path="max" element={<StepMax onNext={() => nav('next')} onPrev={() => nav('prev')} />} />
             <Route path="telegram" element={<StepTelegramBot onNext={() => nav('next')} onPrev={() => nav('prev')} />} />
             <Route path="telegram/network" element={<StepTelegramNetwork onNext={() => nav('next')} onPrev={() => nav('prev')} />} />
@@ -265,7 +268,7 @@ export default function App() {
             <Route path="finish" element={<StepFinish onPrev={() => nav('prev')} />} />
           </>
         )}
-        <Route path="*" element={<Navigate to={bootstrap ? '/setup' : '/setup/max'} replace />} />
+        <Route path="*" element={<Navigate to={bootstrap ? '/setup' : '/setup/max/network'} replace />} />
       </Route>
       {!bootstrap && session.authenticated && (
         <Route element={<AppShell status={status} username={session.username} onLogout={async () => { await logout(); window.location.assign('/login'); }} />}>
@@ -273,11 +276,12 @@ export default function App() {
           <Route path="dashboard" element={<Dashboard status={status} reload={reloadStatus} setupComplete={session.setup_complete} />} />
           <Route path="max" element={<MaxPage status={status?.max ?? null} reload={reloadStatus} />} />
           <Route path="max/settings" element={<ConfigurationEditor component="max" reload={reloadStatus} />} />
+          <Route path="max/network" element={<MaxNetworkPage />} />
           <Route path="telegram/settings" element={<ConfigurationEditor component="telegram-bot" reload={reloadStatus} />} />
           <Route path="telegram/network" element={<ConfigurationEditor component="telegram-network" reload={reloadStatus} />} />
-          <Route path="telegram/group" element={<ConfigurationEditor component="telegram-group" reload={reloadStatus} />} />
+          <Route path="telegram/group" element={<GroupsPage />} />
           <Route path="telegram" element={<TelegramPage status={status?.telegram ?? null} reload={reloadStatus} />} />
-          <Route path="chats/settings" element={<ConfigurationEditor component="max-chats" reload={reloadStatus} />} />
+          <Route path="chats/settings" element={<GroupsPage />} />
           <Route path="chats" element={<Chats routes={null} />} />
           <Route path="users" element={<UsersPage />} />
           <Route path="diagnostics" element={<Diagnostics />} />

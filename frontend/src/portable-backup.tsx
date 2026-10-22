@@ -18,7 +18,7 @@ export function SetupChoice({ onDismissed }: { onDismissed?: () => Promise<void>
   return <section className="card stack">
     <h1>{t('setupUx.welcome')}</h1>
     <p>{t('setupUx.choice')}</p>
-    <Link className="btn-primary" to="/setup/max">{t('setupUx.start')}</Link>
+    <Link className="btn-primary" to="/setup/max/network">{t('setupUx.start')}</Link>
     <Link className="btn-ghost" to="/setup/restore">{t('setupUx.restore')}</Link>
     <button className="btn-ghost" disabled={busy} onClick={skip}>{t('setupUx.skip')}</button>
     {error && <p role="alert">{error}</p>}
@@ -105,11 +105,13 @@ export function PortableRestore() {
     <p>После создания владельца можно восстановить готовую конфигурацию и перейти к панели управления, пропустив остальные шаги мастера. Внешние службы могут потребовать повторную авторизацию.</p>
     <p>Логин и пароль нового владельца сохранятся; прежние веб-администраторы и сеансы не импортируются. Привязка к IP нового сервера сохраняется.</p>
     <form className="stack" onSubmit={inspect} onChangeCapture={markDirty}>
-      <label>Выберите файл .shmax<input type="file" accept=".shmax" disabled={busy} onChange={e=>{setFile(e.target.files?.[0]||null);setPreview(null);setSourceStopped(false);}} required/></label>
-      <label>Пароль резервной копии<input type="password" autoComplete="off" minLength={10} maxLength={256} required disabled={busy} value={password} onChange={e=>setPassword(e.target.value)}/></label>
+      <label>Выберите файл .shmax<input type="file" accept=".shmax,.enc,.gz,.tar" disabled={busy} onChange={e=>{setFile(e.target.files?.[0]||null);setPreview(null);setSourceStopped(false);}} required/></label>
+      <label>Пароль резервной копии<input type="password" autoComplete="off" maxLength={256} disabled={busy} value={password} onChange={e=>setPassword(e.target.value)}/></label>
+      <p className="muted small">Поддерживаются переносимые .shmax и старые локальные копии v1 (.shmax, .shmax.enc, .tar.gz). Введите исходный пароль; для незашифрованной старой копии оставьте поле пустым. Старые пароли от 8 символов принимаются.</p>
       <button className="btn-primary" disabled={busy||!file}>Проверить резервную копию</button>
     </form>
     {preview&&<div className="stack">
+      {preview.source_format==='legacy-v1'&&<p>Старая локальная копия проверена и подготовлена для восстановления. Рабочие данные ещё не изменены.</p>}
       <p>Версия SHMAX: {preview.application_version}. Создана: {new Date(preview.created_at*1000).toLocaleString()}.</p>
       <p>Содержимое: {preview.contents.join(', ')}. Совместимость проверена.</p>
       {preview.warnings.map((warning:string)=><p key={warning}>{warning}</p>)}

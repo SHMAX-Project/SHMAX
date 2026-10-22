@@ -12,6 +12,7 @@ import json
 from dataclasses import asdict, dataclass
 
 from sqlalchemy.dialects.sqlite import insert
+from sqlalchemy import select
 
 from ..active_target import get_active_target
 from ..database.models import Setting
@@ -33,6 +34,7 @@ class SyncStats:
     new: int = 0
     updated: int = 0
     status: str = "not_checked"
+    group_id: str | None = None
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -52,6 +54,7 @@ class MemberSyncService:
         self._closed = False
         self._runs: set[asyncio.Task] = set()
         self._reschedule = False
+        self._pending_groups = set()
 
     def configured(self) -> bool:
         return all(self._secrets.has_secret(k) for k in
@@ -62,9 +65,9 @@ class MemberSyncService:
         if api_hash:
             self._secrets.set_secret(API_HASH_KEY, api_hash)
 
-    async def state(self) -> dict:
+    async def state(self, group_id: str | None = None) -> dict:
         async with self._db.session() as s:
-            row = await s.get(Setting, STATE_KEY)
+            row = await s.get(Setting, STATE_KEY+(':'+group_id if group_id else ''))
             stats = json.loads(row.value) if row else SyncStats().to_dict()
         return {**stats, "configured": self.configured(), "running": self._lock.locked(),
                 "api_id": int(self._secrets.get_secret(API_ID_KEY))
@@ -76,11 +79,15 @@ class MemberSyncService:
             value = json.dumps(stats.to_dict())
             await s.execute(insert(Setting).values(key=STATE_KEY, value=value)
                             .on_conflict_do_update(index_elements=[Setting.key], set_={"value": value}))
+            if stats.group_id:
+                await s.execute(insert(Setting).values(key=STATE_KEY+':'+stats.group_id,value=value)
+                    .on_conflict_do_update(index_elements=[Setting.key],set_={'value':value}))
             await s.commit()
 
-    def schedule(self, delay: float = 0):
+    def schedule(self, delay: float = 0, *, group_id: str | None = None):
         if self._closed or not self.configured():
             return
+        self._pending_groups.add(group_id)
         if self._task and not self._task.done():
             self._reschedule = True
             return
@@ -90,11 +97,18 @@ class MemberSyncService:
             while not self._closed:
                 self._reschedule = False
                 try:
-                    await self.sync()
+                    pending=self._pending_groups.copy();self._pending_groups.clear()
+                    if None in pending:
+                        from ..database.models import TelegramTarget
+                        from ..group_access import target_ready
+                        async with self._db.session() as session:
+                            targets=(await session.scalars(select(TelegramTarget))).all()
+                        pending={t.chat_id for t in targets if target_ready(t)}
+                    for selected in sorted(pending):await self.sync(selected)
                 except Exception:
                     import logging
                     logging.getLogger(__name__).warning("Member sync could not persist its result")
-                if not self._reschedule:
+                if not self._reschedule and not self._pending_groups:
                     break
         self._task = asyncio.create_task(run(), name="telegram-member-sync")
 
@@ -216,6 +230,10 @@ class MemberSyncService:
             else:
                 target = await get_active_target(self._db)
                 group_id = group_id or (target.chat_id if target and target.validated_at else None)
+                from ..group_access import find_target, target_ready
+                target = await find_target(self._db,group_id) if group_id else None
+                if not target_ready(target):group_id=None
+                stats.group_id=group_id
                 if not group_id:
                     stats.status = "not_paired"
                 else:
@@ -223,12 +241,15 @@ class MemberSyncService:
                         async with asyncio.timeout(SYNC_TIMEOUT_SECONDS):
                             participants = await self._enumerate(group_id)
                             if target:
-                                current = await get_active_target(self._db)
+                                current = await find_target(self._db,group_id)
                                 if not current or str(current.chat_id) != str(group_id):
                                     raise MemberSyncError("target_changed")
                             repo = TelegramUsersRepository(self._db)
                             for participant in participants:
                                 _, created, changed = await repo.observe_member(**participant)
+                                from ..group_access import observe
+                                await observe(self._db,target.id,participant['user_id'],membership=participant['membership'],
+                                              is_admin=participant['is_admin'],source='sync')
                                 stats.found += 1
                                 stats.new += int(created)
                                 stats.updated += int(changed)
@@ -248,8 +269,9 @@ class MemberSyncService:
 
 async def observe_membership(db, *, chat_id: str, user_id: str, username,
                              display_name, status: str, is_member: bool = False):
-    target = await get_active_target(db)
-    if not target or str(target.chat_id) != str(chat_id):
+    from ..group_access import find_target, target_ready, observe
+    target = await find_target(db,str(chat_id))
+    if not target_ready(target):
         return
     membership = {"creator": "owner", "administrator": "admin", "member": "member",
                   "left": "left", "kicked": "kicked", "restricted": "member" if is_member else "left"}.get(status)
@@ -257,3 +279,4 @@ async def observe_membership(db, *, chat_id: str, user_id: str, username,
         await TelegramUsersRepository(db).observe_member(
             user_id=user_id, username=username, display_name=display_name,
             membership=membership, is_admin=membership in {"owner", "admin"}, source="event")
+        await observe(db,target.id,user_id,membership=membership,is_admin=membership in {'owner','admin'},source='event')

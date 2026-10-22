@@ -1,11 +1,4 @@
-"""P1 #6 — exactly ONE active Telegram target.
-
-Pairing group A then group B must leave ONLY B active:
-  * deactivate_other_targets() atomically deactivates A;
-  * the canonical resolver (active_target.get_active_target)
-    returns B deterministically;
-  * readiness / the wizard Test probe resolve B.
-"""
+"""Multiple enabled groups preserve validation and the initial default."""
 
 from __future__ import annotations
 
@@ -57,7 +50,7 @@ async def _pair(db, chat_id: str, title: str):
 
 
 @pytest.mark.asyncio
-async def test_pair_b_replaces_a(db):
+async def test_pair_b_preserves_a(db):
     await _pair(db, "-100AAA", "Group A")
     active = await get_active_target(db)
     assert active is not None and active.chat_id == "-100AAA"
@@ -65,7 +58,7 @@ async def test_pair_b_replaces_a(db):
     await _pair(db, "-100BBB", "Group B")
     active = await get_active_target(db)
     assert active is not None
-    assert active.chat_id == "-100BBB", "group B must be the active target"
+    assert active.chat_id == "-100AAA", "initial group remains the compatibility default"
 
     from sqlalchemy import func
 
@@ -74,16 +67,11 @@ async def test_pair_b_replaces_a(db):
     assert len(rows) == 2, "A is kept for diagnostics"
     a = next(r for r in rows if r.chat_id == "-100AAA")
     b = next(r for r in rows if r.chat_id == "-100BBB")
-    # A is deactivated: flag off, no validated facts, marker recorded.
-    assert a.is_active is False
-    assert a.validated_at is None
-    assert "деактивирована" in (a.missing_permissions or "")
-    # B is the ONLY active row, fully validated.
-    assert b.is_active is True
-    assert b.validated_at is not None
-    assert (b.missing_permissions or "[]") == "[]"
-    active_rows = [r for r in rows if r.is_active]
-    assert len(active_rows) == 1, "exactly one active target"
+    assert a.is_active and a.validated_at is not None
+    assert (a.missing_permissions or '[]') == '[]'
+    assert b.is_active and b.validated_at is not None
+    assert len([r for r in rows if r.is_active]) == 2
+
 
 
 @pytest.mark.asyncio
@@ -106,9 +94,7 @@ async def test_repair_of_deactivated_target_not_possible_via_active_lookup(db):
 
     await _pair(db, "-100BBB", "Group B")
     active = await get_active_target(db)
-    assert active.chat_id == "-100BBB", (
-        "validated_at-first ordering must win over stale cached_at"
-    )
+    assert active.chat_id == "-100AAA", "cache timestamps must not change the compatibility default"
 
 
 @pytest.mark.asyncio
@@ -140,14 +126,14 @@ async def test_wizard_readiness_uses_active_target(db, monkeypatch):
     readiness = await wizard_readiness(_ShimRuntime())
     tg_group = readiness["telegram_group"]
     assert tg_group.ready is True
-    assert "Group B" in tg_group.reason
+    assert "Group A" in tg_group.reason
 
 
 # ----------------------------------------------------------------------
 # P1 #5 (surgical) — concurrent replacement atomicity
 # ----------------------------------------------------------------------
 @pytest.mark.asyncio
-async def test_concurrent_pairing_leaves_exactly_one_active(db):
+async def test_concurrent_pairing_preserves_both_groups(db):
     """Concurrent pair A and B (interleaved tasks on the serialized
     transaction): after both complete — exactly ONE active target,
     the resolver returns an ACTIVE row, never 0, never inactive."""
@@ -177,12 +163,9 @@ async def test_concurrent_pairing_leaves_exactly_one_active(db):
         rows = (await s.execute(select(TelegramTarget))).scalars().all()
     active = [r for r in rows if r.is_active]
     assert len(rows) == 2
-    assert len(active) == 1, (
-        f"exactly one active target required, got {len(active)}: "
-        f"{[(r.chat_id, r.is_active) for r in rows]}"
-    )
+    assert len(active) == 2
 
     resolver = await get_active_target(db)
     assert resolver is not None
     assert resolver.is_active is True
-    assert resolver.chat_id == active[0].chat_id
+    assert resolver.id == min(r.id for r in active)

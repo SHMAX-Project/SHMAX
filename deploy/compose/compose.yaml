@@ -14,7 +14,7 @@ name: shmax
 
 services:
   web:
-    image: ${SHMAX_IMAGE:-shmax:0.1.3}
+    image: ${SHMAX_IMAGE:-shmax:0.2.0}
     restart: unless-stopped
     ports:
       # P0 #14 appliance model: default bind is loopback so the
@@ -25,13 +25,16 @@ services:
     environment:
       SHMAX_HOSTD_SOCKET: /run/shmax/hostd/hostd.sock
       SHMAX_DEPLOYMENT_ID: "${SHMAX_DEPLOYMENT_ID:-}"
+      SHMAX_XRAY_SOCKS_PORT: "${SHMAX_XRAY_SOCKS_PORT:-10808}"
+      SHMAX_MAX_XRAY_SOCKS_PORT: "${SHMAX_MAX_XRAY_SOCKS_PORT:-}"
+      SHMAX_MAX_XRAY_HTTP_PORT: "${SHMAX_MAX_XRAY_HTTP_PORT:-}"
       SHMAX_DATA_DIR: /data
       SHMAX_HOST: 0.0.0.0
       SHMAX_PORT: "8787"
       SHMAX_LOG_LEVEL: ${SHMAX_LOG_LEVEL:-info}
       # Pinned in the bake file; surface here so the operator
       # can confirm at a glance.
-      SHMAX_VERSION: ${SHMAX_VERSION:-0.1.3}
+      SHMAX_VERSION: ${SHMAX_VERSION:-0.2.0}
     volumes:
       # Persistent layout created by the installer. Each
       # subdir gets explicit permissions in the installer.

@@ -1095,7 +1095,7 @@ def _build_telegram_command_handler(
                     logger.exception("pairing on_paired hook failed")
 
             if member_sync is not None:
-                member_sync.schedule()
+                member_sync.schedule(group_id=str(chat_id))
 
             bound_note = (
                 f"Связан чат MAX «{claim.max_chat_title or claim.max_chat_id}»."
@@ -1113,11 +1113,11 @@ def _build_telegram_command_handler(
         await observe_membership(db, **kwargs)
 
     async def message_listener(*, chat_id, user_id, username, display_name):
-        from ..active_target import get_active_target
-        target = await get_active_target(db)
-        if target and str(target.chat_id) == str(chat_id):
-            await users.register_or_update(user_id=user_id, username=username,
-                                           display_name=display_name)
+        from ..group_access import find_target, observe, target_ready
+        target=await find_target(db,str(chat_id))
+        if target_ready(target):
+            await users.register_or_update(user_id=user_id,username=username,display_name=display_name)
+            await observe(db,target.id,user_id,membership='member',source='message')
 
     _handler.message_listener = message_listener
     _handler.membership_listener = membership_listener
@@ -1196,6 +1196,9 @@ def create_app(
             getattr(settings, "debug_max_pymax", False)
         )
         app.state.runtime = runtime
+        from ..dashboard import ResourceHistory
+        runtime.resource_history=ResourceHistory(layout.root)
+        await runtime.resource_history.start()
         app.state.host = production_hostd
         # Mirror the legacy state keys so existing API handlers
         # and tests continue to function. AppRuntime is the
@@ -1214,6 +1217,7 @@ def create_app(
             await runtime.start()
         except Exception:
             logger.exception("AppRuntime.start() failed")
+            await runtime.resource_history.close()
             await db.dispose()
             raise
 
@@ -1234,6 +1238,16 @@ def create_app(
         app.state.xray_manager = xstate.build_manager()
         app.state.xray_manager.journal=runtime.journal
         runtime.xray_manager_ref = app.state.xray_manager
+
+        from ..max_network import MaxNetwork, build_manager as build_max_xray_manager
+        runtime.max_network = MaxNetwork(runtime=runtime,db=db,secrets=secret_store,
+            manager=build_max_xray_manager())
+        runtime.max_network.manager.journal=runtime.journal
+        runtime.max_network.manager.journal_component="max"
+        try:
+            await runtime.max_network.restore()
+        except Exception:
+            logger.warning('MAX network unavailable; selected transport retained for recovery')
 
         restore_handler = _build_telegram_command_handler(
             member_sync=member_sync,
@@ -1395,6 +1409,13 @@ def create_app(
         supplied = request.headers.get(CSRF_HEADER) or request.headers.get("X-Shmax-CSRF") or request.headers.get("X-CSRF")
         if not supplied or supplied != sess.csrf_token:
             raise HTTPException(status.HTTP_403_FORBIDDEN, "csrf")
+
+    async def require_group_admin(username: str = Depends(require_admin)) -> str:
+        async with db.session() as session:
+            user=await session.scalar(select(AdminUser).where(AdminUser.username==username))
+            if not user or user.role not in {'owner','admin'}:
+                raise HTTPException(403, 'Настройка групп и прав доступна администратору')
+        return username
 
     # -----------------------------------------------------------------
     # Health
@@ -1561,30 +1582,20 @@ def create_app(
             counts = await DeliveryQueueRepository(s).counts_by_state()
         return counts
 
-    @app.post("/api/queue/{queue_id}/retry", dependencies=[Depends(require_admin), Depends(require_csrf)])
+    @app.post("/api/queue/{queue_id}/retry", dependencies=[Depends(require_group_admin), Depends(require_csrf)])
     async def retry_queue_item(queue_id: int) -> dict:
-        from sqlalchemy import update
-        from ..database.models import DeliveryQueueItem
+        async with db.session() as session:
+            ok=await DeliveryQueueRepository(session).reset_for_retry(queue_id=queue_id)
+        if not ok:raise HTTPException(409,'Доставку нельзя повторить: проверьте её состояние и исходное сообщение.')
+        await app.state.runtime.wakeup()
+        return {"ok":True,"queue_id":queue_id}
 
-        async with db.session() as s:
-            await s.execute(
-                update(DeliveryQueueItem)
-                .where(DeliveryQueueItem.id == queue_id)
-                .where(DeliveryQueueItem.status.in_(["failed", "retry"]))
-                .values(status="pending", attempts=0, last_error=None, next_attempt_at=_dt.datetime.now(_dt.timezone.utc))
-            )
-            await s.commit()
-        return {"ok": True, "queue_id": queue_id}
-
-    @app.post("/api/queue/{queue_id}/purge", dependencies=[Depends(require_admin), Depends(require_csrf)])
+    @app.post("/api/queue/{queue_id}/purge", dependencies=[Depends(require_group_admin), Depends(require_csrf)])
     async def purge_queue_item(queue_id: int) -> dict:
-        from sqlalchemy import delete
-        from ..database.models import DeliveryQueueItem
-
-        async with db.session() as s:
-            await s.execute(delete(DeliveryQueueItem).where(DeliveryQueueItem.id == queue_id))
-            await s.commit()
-        return {"ok": True, "queue_id": queue_id}
+        async with db.session() as session:
+            ok=await DeliveryQueueRepository(session).purge(queue_id=queue_id)
+        if not ok:raise HTTPException(409,'Доставку нельзя удалить: она отсутствует или обрабатывается.')
+        return {"ok":True,"queue_id":queue_id}
 
     # -----------------------------------------------------------------
     # Routes
@@ -1608,7 +1619,7 @@ def create_app(
             for r in rows
         ]
 
-    @app.post("/api/routes", dependencies=[Depends(require_admin), Depends(require_csrf)])
+    @app.post("/api/routes", dependencies=[Depends(require_group_admin), Depends(require_csrf)])
     async def create_route(req: CreateRouteRequest) -> dict:
         async with db.session() as s:
             repo = RoutesRepository(s)
@@ -1625,7 +1636,7 @@ def create_app(
 
     @app.post(
         "/api/routes/from-chat",
-        dependencies=[Depends(require_admin), Depends(require_csrf)],
+        dependencies=[Depends(require_group_admin), Depends(require_csrf)],
     )
     async def create_route_from_chat(
         req: Annotated[RouteCreateFromChatRequest, Body()], request: Request
@@ -1694,7 +1705,7 @@ def create_app(
             "label": req.max_chat_title,
         }
 
-    @app.post("/api/routes/{route_id}/toggle", dependencies=[Depends(require_admin), Depends(require_csrf)])
+    @app.post("/api/routes/{route_id}/toggle", dependencies=[Depends(require_group_admin), Depends(require_csrf)])
     async def toggle_route(route_id: int, req: ToggleRequest) -> dict:
         async with db.session() as s:
             repo = RoutesRepository(s)
@@ -1703,7 +1714,7 @@ def create_app(
 
     @app.post(
         "/api/routes/{route_id}/recreate-topic",
-        dependencies=[Depends(require_admin), Depends(require_csrf)],
+        dependencies=[Depends(require_group_admin), Depends(require_csrf)],
     )
     async def recreate_topic(route_id: int, request: Request) -> dict:
         """Drop the existing Telegram topic and create a fresh
@@ -1794,7 +1805,13 @@ def create_app(
         runtime = request.app.state.runtime
         if runtime.max_auth is None:
             raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "max auth unavailable")
-        snap = await runtime.max_auth.start(phone=req.phone)
+        network=getattr(runtime,'max_network',None)
+        if network is not None:
+            async with network._lock:
+                try:await network.ensure()
+                except Exception:raise HTTPException(503,'Выбранное подключение MAX недоступно') from None
+                snap=await runtime.max_auth.start(phone=req.phone)
+        else:snap = await runtime.max_auth.start(phone=req.phone)
         return _auth_public(snap)
 
     @app.post(
@@ -2131,7 +2148,7 @@ def create_app(
 
     @app.post(
         "/api/telegram/system-topic",
-        dependencies=[Depends(require_admin), Depends(require_csrf)],
+        dependencies=[Depends(require_group_admin), Depends(require_csrf)],
     )
     async def telegram_system_topic(chat_id: str = Body(..., embed=True)) -> dict:
         """Create the ``🔧 SHMAX`` topic inside the operator's
@@ -2217,7 +2234,7 @@ def create_app(
 
     @app.get(
         "/api/telegram/group",
-        dependencies=[Depends(require_admin), Depends(require_csrf)],
+        dependencies=[Depends(require_group_admin), Depends(require_csrf)],
     )
     async def telegram_group_info(request: Request) -> dict:
         """Return the operator's chosen Telegram target (group
@@ -2263,7 +2280,7 @@ def create_app(
 
     @app.post(
         "/api/telegram/group/pair",
-        dependencies=[Depends(require_admin), Depends(require_csrf)],
+        dependencies=[Depends(require_group_admin), Depends(require_csrf)],
     )
     async def telegram_group_pair(req: Annotated[TelegramPairRequest, Body()], request: Request) -> dict:
         """Legacy operator-driven manual pairing endpoint.
@@ -2315,7 +2332,7 @@ def create_app(
 
     @app.post(
         "/api/telegram/group/pair-code",
-        dependencies=[Depends(require_admin), Depends(require_csrf)],
+        dependencies=[Depends(require_group_admin), Depends(require_csrf)],
     )
     async def telegram_pair_code() -> dict:
         """Issue a fresh pairing code for the Telegram group flow.
@@ -2464,7 +2481,7 @@ def create_app(
 
     @app.get(
         "/api/telegram/users",
-        dependencies=[Depends(require_admin), Depends(require_csrf)],
+        dependencies=[Depends(require_group_admin), Depends(require_csrf)],
     )
     async def telegram_users(request: Request) -> dict:
         """Return discovered users, membership metadata and explicit SHMAX ACL.
@@ -2501,11 +2518,11 @@ def create_app(
             "phone_note": "Telegram не передаёт номер телефона ботам.",
         }
 
-    @app.get("/api/telegram/member-sync", dependencies=[Depends(require_admin), Depends(require_csrf)])
-    async def member_sync_status() -> dict:
-        return await member_sync.state()
+    @app.get("/api/telegram/member-sync", dependencies=[Depends(require_group_admin), Depends(require_csrf)])
+    async def member_sync_status(group_id:Optional[str]=None) -> dict:
+        return await member_sync.state(group_id)
 
-    @app.put("/api/telegram/member-sync", dependencies=[Depends(require_admin), Depends(require_csrf)])
+    @app.put("/api/telegram/member-sync", dependencies=[Depends(require_group_admin), Depends(require_csrf)])
     async def member_sync_config(request: Request) -> dict:
         # Validate privately: FastAPI's default 422 includes rejected input,
         # which would echo an API hash. Never return the submitted secret.
@@ -2520,13 +2537,13 @@ def create_app(
         member_sync.schedule()
         return await member_sync.state()
 
-    @app.post("/api/telegram/member-sync", dependencies=[Depends(require_admin), Depends(require_csrf)])
-    async def member_sync_run() -> dict:
-        return (await member_sync.sync()).to_dict()
+    @app.post("/api/telegram/member-sync", dependencies=[Depends(require_group_admin), Depends(require_csrf)])
+    async def member_sync_run(group_id: Optional[str] = None) -> dict:
+        return (await member_sync.sync(group_id)).to_dict()
 
     @app.patch(
         "/api/telegram/users/{user_id}/approval",
-        dependencies=[Depends(require_admin), Depends(require_csrf)],
+        dependencies=[Depends(require_group_admin), Depends(require_csrf)],
     )
     async def telegram_user_set_approval(user_id: str, req: UserApprovalRequest) -> dict:
         """Set ``approved`` and ``role`` for a Telegram user.
@@ -2549,11 +2566,21 @@ def create_app(
                     status.HTTP_404_NOT_FOUND,
                     f"unknown Telegram user {user_id}",
                 )
+        from ..active_target import get_active_target
+        from ..database.models import TelegramGroupAccess
+        from sqlalchemy.dialects.sqlite import insert as group_insert
+        target=await get_active_target(db)
+        if target:
+            async with db.session() as session:
+                await session.execute(group_insert(TelegramGroupAccess).values(target_id=target.id,user_id=user_id,
+                    approved=row.approved,role=row.role,blocked=False).on_conflict_do_update(
+                    index_elements=['target_id','user_id'],set_={'approved':row.approved,'role':row.role}))
+                await session.commit()
         return {"ok": True, "user_id": row.user_id, "approved": row.approved, "role": row.role}
 
     @app.patch(
         "/api/telegram/users/{user_id}/blocked",
-        dependencies=[Depends(require_admin), Depends(require_csrf)],
+        dependencies=[Depends(require_group_admin), Depends(require_csrf)],
     )
     async def telegram_user_set_blocked(user_id: str, req: UserBlockedRequest) -> dict:
         """Toggle ``blocked`` for a Telegram user.
@@ -2575,7 +2602,7 @@ def create_app(
 
     @app.patch(
         "/api/telegram/users/{user_id}/nickname",
-        dependencies=[Depends(require_admin), Depends(require_csrf)],
+        dependencies=[Depends(require_group_admin), Depends(require_csrf)],
     )
     async def telegram_user_set_nickname(user_id: str, req: UserNicknameRequest) -> dict:
         """Set operator-chosen nickname (persists across renames,
@@ -2594,7 +2621,7 @@ def create_app(
 
     @app.get(
         "/api/telegram/transport",
-        dependencies=[Depends(require_admin), Depends(require_csrf)],
+        dependencies=[Depends(require_group_admin), Depends(require_csrf)],
     )
     async def telegram_transport_get(request: Request) -> dict:
         """Current transport state. Proxy credentials NEVER leave the
@@ -2660,7 +2687,7 @@ def create_app(
 
     @app.post(
         "/api/telegram/transport",
-        dependencies=[Depends(require_admin), Depends(require_csrf)],
+        dependencies=[Depends(require_group_admin), Depends(require_csrf)],
     )
     async def telegram_transport_set(req: Annotated[TelegramProxyRequest, Body()], request: Request) -> dict:
         from ..adapters.telegram.config import (
@@ -2819,7 +2846,7 @@ def create_app(
 
     @app.post(
         "/api/telegram/transport/probe",
-        dependencies=[Depends(require_admin), Depends(require_csrf)],
+        dependencies=[Depends(require_group_admin), Depends(require_csrf)],
     )
     async def telegram_transport_probe(request: Request) -> dict:
         """Probe the configured Telegram transport by issuing
@@ -3167,6 +3194,22 @@ def create_app(
     # -----------------------------------------------------------------
     # Backups
     # -----------------------------------------------------------------
+    from .groups import install_routes as install_group_routes
+    install_group_routes(app, db=db, require_group_admin=require_group_admin, require_csrf=require_csrf)
+    from .max_network import install_routes as install_max_network_routes
+    install_max_network_routes(app,require_group_admin=require_group_admin,require_csrf=require_csrf)
+
+    @app.get('/api/dashboard',dependencies=[Depends(require_group_admin),Depends(require_csrf)])
+    async def dashboard_overview():
+        from ..dashboard import group_summary
+        from ..startup_restore import load_telegram_transport
+        runtime=app.state.runtime
+        transport=await load_telegram_transport(db,secret_store)
+        return {**await group_summary(db),'resources':runtime.resource_history.snapshot(),
+            'max_network':await runtime.max_network.status(),
+            'telegram_network':{'mode':(transport or {}).get('mode','not_configured'),
+                'xray':app.state.xray_manager.status().to_dict()}}
+
     from .portable import install_routes as install_portable_routes
     install_portable_routes(app, db=db, layout=layout, settings=settings,
                             require_admin=require_admin, require_csrf=require_csrf, limiter=limiter)
