@@ -1,5 +1,7 @@
 # SHMAX Documentation (English)
 
+**Start here:** [Workflows: personal conversations, teams and administrator overview](use-cases.md).
+
 English mirrors [canonical Russian documentation](../ru/README.md).
 
 - [architecture ](architecture.md)

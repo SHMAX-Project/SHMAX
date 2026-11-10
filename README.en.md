@@ -1,278 +1,133 @@
-# SHMAX
+<p align="center"><img src="frontend/public/shmax-icon-256.png" width="96" height="96" alt="SHMAX mascot"></p>
 
-**MAX ↔ Telegram on your server.** Reply to MAX conversations from Telegram topics and manage connections and access through a web dashboard.
+<h1 align="center">SHMAX</h1>
+<p align="center"><strong>Messages in MAX. Your workspace in Telegram.</strong></p>
+<p align="center">Bring MAX conversations into topics in your Telegram group.<br>Reply there — SHMAX sends your response back to MAX.</p>
+<p align="center"><a href="#quick-start">Install</a> · <a href="docs/en/use-cases.md">Choose a workflow</a> · <a href="#interface">See the interface</a> · <a href="README.md">Русский</a></p>
+
+<p align="center">
+<a href="https://github.com/SHMAX-Project/SHMAX/releases/latest"><img src="https://img.shields.io/github/v/release/SHMAX-Project/SHMAX?color=2563eb" alt="Stable release"></a>
+<a href="https://github.com/SHMAX-Project/SHMAX/actions/workflows/ci.yml"><img src="https://github.com/SHMAX-Project/SHMAX/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI"></a>
+<a href="docs/en/installation.md"><img src="https://img.shields.io/badge/Debian_13-amd64-A81D33" alt="Debian 13 · amd64"></a>
+<a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0%2B-059669" alt="AGPL-3.0-or-later"></a>
+</p>
+
+![How it works: a message in MAX → a Telegram topic → a reply in MAX](docs/assets/message-flow.en.svg)
+
+*The diagram uses fictional messages. Screenshots below show the actual interface with demonstration data.*
+
+## Where SHMAX fits
+
+**People message you in MAX; you prefer Telegram.** Connect the chats you need, give each its own topic and reply from the app you already use. Your contacts keep using MAX.
+
+**You have several teams.** Route chats into separate private Telegram groups: support gets its conversations, another team gets theirs. Permissions to send to MAX are assigned per group.
+
+**You need an overview.** Use a trusted administrator group: SHMAX can automatically create topics for new MAX chats and show incoming messages and confirmed replies.
+
+**It runs on your server.** You control SHMAX connections, access, stored data and backups. Use the web dashboard for configuration; keep everyday conversations in Telegram.
+
+[Explore workflows step by step →](docs/en/use-cases.md)
+
+## Interface
+
+The dashboard shows MAX and Telegram connectivity, groups, the queue and server resources.
+
+![SHMAX dashboard: connections, working groups, queue and resource graphs](docs/assets/screenshots/dashboard-desktop.png)
+
+<details>
+<summary><strong>Explore chat routing, permissions and the mobile interface</strong></summary>
+
+### Which chat goes where
+
+![MAX chats mapped to Telegram topics](docs/assets/screenshots/chat-routing.png)
+
+### Who can reply
+
+![SHMAX participants, roles and permissions](docs/assets/screenshots/users.png)
+
+### Networking and event history
+
+| Independent MAX connection | Investigate delivery issues |
+|---|---|
+| ![MAX networking settings](docs/assets/screenshots/max-network.png) | ![SHMAX event journal](docs/assets/screenshots/event-journal-desktop.png) |
+
+<p align="center"><img src="docs/assets/screenshots/mobile-dashboard.png" width="320" alt="SHMAX dashboard on a phone"></p>
+
+Screenshots use demonstration connections, not customer conversations. [Screenshot provenance](docs/assets/screenshots/README.md).
+
+</details>
+
+## Quick start
+
+You need a **Debian 13 amd64 server**, root/sudo access, one regular MAX account and your own Telegram bot. Create a private Telegram group with **topics** enabled. Give the bot message-sending and topic-management permissions and disable Privacy Mode.
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/SHMAX-Project/SHMAX/main/install.sh | sudo bash
 ```
 
-Debian 13 amd64 · [One-line installation](docs/en/installation.md#one-line-installation) · [Manual archive installation](docs/en/installation.md#manual-archive-installation).
-**Latest stable release: [SHMAX v0.2.0](https://github.com/SHMAX-Project/SHMAX/releases/latest).**
-The installer selects the latest stable release and verifies its signature and integrity.
-[v0.2.0 release notes](release/v0.2.0/RELEASE_NOTES.en.md) · [Changelog](CHANGELOG.md).
+The installer downloads the latest stable release, verifies the package signature and integrity, prepares Docker/Compose and prints the setup link.
 
-![SHMAX — MAX ↔ Telegram, self-hosted messaging bridge](docs/assets/shmax-social.png)
+1. **Open the link and create the SHMAX owner.** This is a local dashboard account.
+2. **Connect MAX and Telegram in the wizard.** Their network settings are independent. The wizard guides you through MAX sign-in, the bot and group pairing.
+3. **Select MAX chats and approve senders.** Each chat gets a topic. Send a message from MAX and reply from Telegram to check both directions.
 
-[![Version](https://img.shields.io/badge/version-0.2.0-2563eb)](backend/shmax/VERSION)
-[![CI](https://github.com/SHMAX-Project/SHMAX/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/SHMAX-Project/SHMAX/actions/workflows/ci.yml)
-[![License: AGPL v3+](https://img.shields.io/badge/license-AGPL--3.0--or--later-059669)](LICENSE)
-[![MAX ↔ Telegram](https://img.shields.io/badge/MAX-%E2%86%94%20Telegram-229ED9?logo=telegram&logoColor=white)](docs/en/architecture.md)
+[Installation guide](docs/en/installation.md) · [Step-by-step wizard](docs/en/first-setup.md) · [Manual installation with signature verification](docs/en/installation.md#manual-archive-installation) · [Troubleshooting](docs/en/troubleshooting.md)
 
-[![Debian 13](https://img.shields.io/badge/Debian-13-A81D33?logo=debian&logoColor=white)](docs/en/installation.md)
-[![Docker](https://img.shields.io/badge/deploy-Docker-2496ED?logo=docker&logoColor=white)](Dockerfile)
-[![Build targets: amd64, arm64, arm/v7](https://img.shields.io/badge/build_targets-amd64%20%7C%20arm64%20%7C%20arm%2Fv7-7C3AED)](Dockerfile)
-[![Self-hosted](https://img.shields.io/badge/hosting-self--hosted-475569)](docs/en/architecture.md)
+## What the current version does
 
-SHMAX connects conversations in MAX and Telegram. Messages from selected MAX
-chats appear in topics within a private Telegram group; replies from Telegram
-return to the corresponding MAX chats. The gateway runs on your server and
-provides a web interface for connections, routing and user access.
-
-[Русский](README.md) · [Documentation](docs/en/README.md) ·
-[Installation](docs/en/installation.md) · [Releases](https://github.com/SHMAX-Project/SHMAX/releases) ·
-[Report an issue](https://github.com/SHMAX-Project/SHMAX/issues) · [Security](SECURITY.md)
-
-![SHMAX dashboard](docs/assets/screenshots/dashboard-desktop.png)
-
-## Follow a message through the bridge
-
-![Illustration: MAX → Telegram topic → reply in MAX](docs/assets/message-flow.en.svg)
-
-The diagram uses fictional messages to illustrate routing. Actual SHMAX screenshots appear below.
-
-## New in v0.2.0
-
-Separate team groups, administrator overview and independent MAX/Telegram connections. [Changes and validation](release/v0.2.0/RELEASE_NOTES.en.md).
-
-- [Multiple groups and administrator overview](docs/en/multi-group.md), explicit group grants, automatic topics and both directions of conversation.
-- [Independent MAX direct/proxy/Xray networking](docs/en/max-network.md).
-- [Resource graphs and group status](docs/en/dashboard.md).
-- [Ten-step setup](docs/en/first-setup.md), preserved in-place configuration and import of old v1 backups alongside portable v2.
-
-
-## New in v0.1.3
-
-- Fixed captionless MAX albums failing before enqueue when the sender display name is unavailable. All photos enter the durable queue and retain the Telegram topic.
-- Incoming-message processing failures now appear as ERROR events with direction and correlation ID. Message bodies and exception text are excluded from the journal.
-- Messages that failed before enqueue in older versions are not recovered automatically. A journal error does not create a separate Telegram notification.
-
-[v0.1.3 changes and validation](release/v0.1.3/RELEASE_NOTES.en.md).
-
-## Changes in v0.1.2
-
-- MAX reconnects after temporary disconnects using its saved session, without automatic SMS or logout.
-- Xray switching no longer fails with TransportConfig; failed switches attempt to restore the previous node, and Telegram recovers its connection.
-- A persistent [event journal](docs/en/event-journal.md) shows incoming messages, delivery attempts/results, connection failures and administrator actions. Search, filters and refresh are included; message text and credentials are excluded.
-- Temporary MAX verification failures are distinct from revoked authentication. Empty requests and permanent Telegram errors no longer retry indefinitely.
-
-![SHMAX event journal](docs/assets/screenshots/event-journal-desktop.png)
-
-[Full changes and limitations](release/v0.1.2/RELEASE_NOTES.en.md).
-
-## Use cases
-
-- **One team workspace.** Reply to MAX conversations from Telegram topics while keeping chats separate.
-- **Multiple operators.** Approve participants, assign roles and control who can send messages.
-- **Your own infrastructure.** Manage the SHMAX server, connections, stored data and backups yourself.
-
-## Supported workflows
-
-| Task | v0.2.0 capabilities |
+| You want to… | SHMAX provides… |
 |---|---|
-| MAX ↔ Telegram | Bidirectional messages and reply mapping |
-| Multiple MAX chats | Topics across multiple groups; each chat may have several destinations |
-| Administrator overview | Automatic topics for new MAX chats and both sides of conversations |
-| MAX and Telegram networking | Independent direct, HTTP, SOCKS5 or Xray selection |
-| Attachments | MAX → Telegram albums of 2–10 photos, documents and supported video; [details and limits](docs/en/media.md) |
-| Team access | Per-group send grants, global blocking and sender attribution |
-| Server operations | Resource graphs, groups, event journal, historical backup import and updates with rollback |
-| One-line installation | Verified on clean Debian 13 amd64; manual installation also supported |
-| Other architectures | Docker build targets: arm64 and arm/v7; [platform details](docs/en/architecture.md) |
+| Reply to MAX from Telegram | Bidirectional messages, reply mapping and sender labels |
+| Keep conversations separate | MAX chats mapped to individual topics; a chat can reach multiple groups |
+| Work as a team | Per-group send permissions, roles and global user blocking |
+| Share attachments | MAX → Telegram photo albums of 2–10 images, documents and supported video; [limits](docs/en/media.md) |
+| Configure different connections | Independent direct, HTTP, SOCKS5 and managed Xray networking for MAX and Telegram |
+| Investigate an outage | Connection status, queue, event journal and resource graphs |
+| Update or move servers | Signed updates, backups and encrypted migration; [update and rollback procedure](docs/en/updates.md) |
 
-### Example workflow
+**Stable release: [v0.2.0](https://github.com/SHMAX-Project/SHMAX/releases/latest).** Multiple working groups, administrator overview, independent MAX networking and resource graphs are available now. [Release notes](release/v0.2.0/RELEASE_NOTES.en.md) · [Changelog](CHANGELOG.md).
 
-1. Connect your MAX account and your own Telegram bot in the setup wizard.
-2. Map a selected MAX chat to a topic in a private Telegram group.
-3. Receive messages in that topic and reply from Telegram — SHMAX sends replies back to the MAX chat.
+## Know before you deploy
 
-## Stable release validation
+- **One MAX account per instance.** Multiple Telegram groups are supported; multiple MAX accounts are not yet supported.
+- **Privacy spans the whole delivery chain.** SHMAX stores its data on your server, but messages also pass through MAX and Telegram. Group members can read history according to Telegram rules. Use separate private groups to separate visibility; SHMAX permissions control sending to MAX.
+- **Keep administrator overview private.** It may include personal chats from the connected account. Existing MAX history is not automatically imported.
+- **The server needs access to both services.** Check status and the journal during an outage. An uncertain external API response cannot guarantee exactly-once delivery.
+- **Validated platform: Debian 13 amd64.** ARM64 and ARMv7 are experimental Docker build targets without completed physical acceptance. Resource history is kept in memory for up to one hour.
 
-**v0.2.0:** 58 frontend tests, desktop/mobile setup and layout checks, 74 album/media/fanout regressions, and 8 historical backup formats passed. Debian acceptance: 164 passed, 1 environment skip; signed upgrade, component restart and full VM reboot verified. [Evidence and limits](release/v0.2.0/VALIDATION.md).
+[FAQ](docs/en/faq.md) · [Security](SECURITY.md) · [Roadmap](docs/en/roadmap.md)
 
-**v0.1.2:** 1002 backend tests passed, 9 skipped locally; 51 frontend tests and 26 desktop/mobile Playwright scenarios passed. Debian 13 amd64: 38 recovery/journal/queue regressions and 5 real-Xray checks; signed clean install, v0.1.1 → v0.1.2 upgrade, cold rollback and journal persistence after restart passed. [Details](release/v0.1.2/RELEASE_NOTES.en.md).
+## Updates and persistent data
 
-**v0.1.1:** 985 backend tests passed, 4 skipped; 46 frontend tests passed; typecheck — PASS. Validation covers 24 album regression scenarios, the 0.1.0 → 0.1.1 upgrade and rollback in an isolated Debian 13 amd64 VM. Public v0.1.1 download, signature and integrity were verified.
+Configuration, the database and sessions live in `/var/lib/shmax`, outside the container. Run `sudo shmax update`: SHMAX verifies the package, creates a cold backup, checks the candidate and rolls back on failure. Keep a verified backup before upgrading; reverting an older schema requires a pre-upgrade backup.
 
-**v0.1.0 baseline checks:**
+Use a password-encrypted `.shmax` export to migrate. Stop the original instance before starting the new one: two gateways must not serve the same account and bot simultaneously.
 
-- **Clean installation:** Debian 13 amd64, automatic Docker/Compose setup, systemd and readiness checks.
-- **Data preservation:** installer reruns and updates preserve synthetic settings, secrets, session files and SQLite.
-- **Rollback:** a forced candidate rejection restores the previous image and cold data backup.
-- **Package authenticity:** public stable download and the pinned signature were verified after publication.
+[Backups](docs/en/backups.md) · [Migration and restore](docs/en/restore.md) · [First deployment experience](docs/en/deployment-story.md)
 
-[Debian VM acceptance](https://github.com/SHMAX-Project/SHMAX/actions/runs/38054225801) ·
-[Release CI: 957 backend / 46 frontend tests](https://github.com/SHMAX-Project/SHMAX/actions/runs/38054452388).
-VM data-preservation checks used synthetic settings and session files.
-[First deployment experience](docs/en/deployment-story.md).
-
-## Before installing
-
-**What do I need?** A regular MAX account, your own Telegram bot and a private supergroup with topics enabled. The bot needs message sending and topic management permissions; disable Privacy Mode.
-
-**Do I need a separate MAX account?** v0.2.0 connects one regular MAX account. Administrators may choose a dedicated work account.
-
-**Where is my data?** On your server in `/var/lib/shmax`. Updates preserve it; keep backups to protect against disk failure.
-
-**What happens after reboot?** Services restart the application. Delivery requires MAX and Telegram connectivity; the local dashboard can start without internet.
-
-**Which attachments work?** Photos, documents and supported video. Animated stickers may become static images or text fallbacks. [Media limits](docs/en/media.md).
-
-**Does MAX support proxies?** v0.2.0 supports independent direct, HTTP, SOCKS5 and Xray connections for MAX. Multiple MAX accounts remain on the [roadmap](docs/en/roadmap.md).
-
-[Full FAQ](docs/en/faq.md) · [Contribute](CONTRIBUTING.md).
-
-## Features
-
-- **Bidirectional messaging.** Text, photos, documents and supported video,
-  with reply mapping and sender attribution.
-- **Topic routing.** Each connected MAX chat maps to a separate Telegram forum topic.
-- **Access management.** User approval, roles, blocking and operator signatures.
-  SHMAX permissions are managed separately from Telegram administrator permissions.
-- **Network configuration.** Direct connections, SOCKS5, HTTP proxies and managed
-  Xray transport for Telegram access.
-- **Connection monitoring.** Integration status, diagnostics, logs and automatic
-  recovery of saved Telegram transport.
-- **Backups and migration.** Local backups and encrypted exports for moving
-  configuration and data to another server.
-- **Updates with rollback.** Checksum verification, backups before installation,
-  application health checks and automatic rollback on failure.
-- **Web interface.** Initial setup wizard, separate MAX and Telegram settings,
-  unsaved-change protection and mobile layouts.
-
-See [media documentation](docs/en/media.md) for attachment and sticker handling.
-
-## How it works
+<details>
+<summary><strong>Architecture and release validation</strong></summary>
 
 ```mermaid
 flowchart LR
-    MAX["MAX account"] <-->|PyMax| CORE["SHMAX: bridge, queue, message mapping, ACL"]
-    CORE <-->|aiogram| XRAY{"Xray"}
-    XRAY <-->|"Loopback SOCKS"| TG["Telegram Bot API"]
-    CORE <-->|"Direct / SOCKS5 / HTTP"| TG
-    TG <--> FORUM["Private Telegram group topics"]
+    MAX["MAX account"] <--> CORE["SHMAX on your server"]
+    CORE <--> TG["Telegram bot"]
+    TG <--> A["Working group: chat topics"]
+    TG <--> B["Another team"]
+    TG <--> ADMIN["Trusted administrator overview"]
+    WEB["Dashboard: network, routing, access"] --> CORE
 ```
 
-## Deployment architecture
+v0.2.0 validation includes a signed Debian 13 amd64 upgrade, data migration, component restarts and a full VM reboot. Separate runs cover frontend, albums, group delivery and historical backup formats. No real test messages were sent during that acceptance; coverage of every external provider/media combination is not claimed.
 
-```mermaid
-flowchart TD
-    HOST["Debian 13 server"] --> DK["Docker: SHMAX container"]
-    HOST --> HOSTD["shmax-hostd: updates and backups"]
-    HOST --> BOOT["shmax-boot.service: startup after reboot"]
-    HOST --> OPT["/opt/shmax: application files"]
-    HOST --> VAR["/var/lib/shmax: persistent data"]
-    HOSTD -->|"Update checks and rollback"| DK
-    BOOT -->|"Startup recovery"| DK
-    DK -->|"Configuration, database, credentials"| VAR
-```
+[Validation report and limits](release/v0.2.0/VALIDATION.md) · [Architecture](docs/en/architecture.md) · [Groups and permissions](docs/en/multi-group.md)
 
-### Build architectures
+</details>
 
-The same SHMAX source is used to build containers for `amd64`, `arm64` and `arm/v7`.
-The Dockerfile selects the platform-specific Xray binary and image dependencies;
-application data is stored outside the container.
+## Documentation and help
 
-```mermaid
-flowchart LR
-    SRC["SHMAX source"] --> BUILD["Docker: target-platform build"]
-    BUILD --> AMD64["amd64 · x86-64"]
-    BUILD --> ARM64["arm64 · ARM 64-bit"]
-    BUILD --> ARMV7["arm/v7 · ARM 32-bit"]
-    AMD64 --> APP["SHMAX container"]
-    ARM64 --> APP
-    ARMV7 --> APP
-    APP --> DATA["Persistent data: /var/lib/shmax"]
-```
+[English docs](docs/en/README.md) · [Документация RU](docs/ru/README.md) · [Report a bug](https://github.com/SHMAX-Project/SHMAX/issues/new/choose) · [Contribute](CONTRIBUTING.md) · [Agent instructions](docs/AI_ASSISTANT_GUIDE.en.md)
 
+If SHMAX is useful to you, star the project or share your workflow in [project issues](https://github.com/SHMAX-Project/SHMAX/issues). Keep credentials, sessions and customer conversations out of public reports.
 
-SHMAX requires an ordinary MAX account, your own Telegram bot and a private
-Telegram supergroup with topics enabled. Connections and chat mappings are
-configured through the web interface. Each SHMAX instance connects to one
-paired Telegram group.
-
-Optional [member synchronization](docs/en/telegram-group.md) uses the existing
-bot and Telegram API ID/API Hash. Discovering a participant does not grant
-messaging access; approval is required.
-
-## Requirements
-
-- Debian 13 on amd64.
-- Docker Engine, Docker Compose v2 and systemd.
-- Administrator access to the server for installation.
-- Server access to MAX, Telegram and dependency sources during installation.
-
-The application runs in a container. Configuration, the database and credentials
-are stored separately in `/var/lib/shmax` and persist across container replacement
-and updates. See [architecture](docs/en/architecture.md) for component details.
-
-## Installation
-
-The command at the top runs the bootstrap, verifies a signed stable package and
-installs the application. Open the printed setup link to configure your integrations.
-
-[Manual archive installation](docs/en/installation.md#manual-archive-installation)
-remains supported: download → verify signature and checksum → extract → run
-`sudo bash deploy/installer/install.sh --mode install`.
-
-Update with `sudo shmax update`, or use a local verified archive:
-`sudo shmax update /absolute/path/shmax-v0.2.0.tar.gz`.
-
-[Installation and modes](docs/en/installation.md) · [First setup](docs/en/first-setup.md) ·
-[Troubleshooting](docs/en/troubleshooting.md).
-
-## Updates and data
-
-Administrators control when updates are installed. SHMAX creates a backup,
-verifies the archive and checks application health after installation. If the
-update fails, it rolls back.
-
-Use a password-encrypted `.shmax` export to migrate to another server. Ordinary
-local backups contain authorization material and require secure storage.
-Stop the source gateway before starting the migrated instance.
-[Backups](docs/en/backups.md) · [Restore](docs/en/restore.md).
-
-## Interface
-
-Screenshots show the interface with demonstration data.
-
-| Telegram settings | Users |
-|---|---|
-| ![Telegram settings](docs/assets/screenshots/telegram-settings.png) | ![Users](docs/assets/screenshots/users.png) |
-
-| Chat routing | Mobile interface |
-|---|---|
-| ![Chat routing](docs/assets/screenshots/chat-routing.png) | ![Mobile interface](docs/assets/screenshots/mobile-dashboard.png) |
-
-## Security
-
-SHMAX encrypts its secret store, controls user access and protects web sessions.
-The web container does not receive the Docker socket. Protect access to the
-administration interface and store backups securely.
-
-Report vulnerabilities through the private GitHub channel described in the
-[security policy](SECURITY.md). Do not post credentials in issues.
-
-## Documentation and contributions
-
-[English documentation](docs/en/README.md) ·
-[Документация на русском](docs/ru/README.md) ·
-[AI assistant guide](docs/AI_ASSISTANT_GUIDE.en.md) · [Contributing](CONTRIBUTING.md)
-
-SHMAX is an independent open-source project and is not affiliated with the
-companies operating MAX or Telegram.
-
-## License
-
-SHMAX is licensed under [AGPL-3.0-or-later](LICENSE).
-[Third-party components and licenses](THIRD_PARTY_NOTICES.md) ·
-[Name and branding](TRADEMARKS.md).
+SHMAX is an independent project, unaffiliated with the companies operating MAX or Telegram. [AGPL-3.0-or-later](LICENSE) · [Third-party licenses](THIRD_PARTY_NOTICES.md) · [Name and branding](TRADEMARKS.md).
