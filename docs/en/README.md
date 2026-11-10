@@ -2,6 +2,8 @@
 
 **Start here:** [Workflows: personal conversations, teams and administrator overview](use-cases.md).
 
+[MAX without the app on participants’ phones: a server or VPS](max-without-phone.md).
+
 English mirrors [canonical Russian documentation](../ru/README.md).
 
 - [architecture ](architecture.md)

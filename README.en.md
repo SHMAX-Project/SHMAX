@@ -1,8 +1,8 @@
 <p align="center"><img src="frontend/public/shmax-icon-256.png" width="96" height="96" alt="SHMAX mascot"></p>
 
 <h1 align="center">SHMAX</h1>
-<p align="center"><strong>Messages in MAX. Your workspace in Telegram.</strong></p>
-<p align="center">Bring MAX conversations into topics in your Telegram group.<br>Reply there — SHMAX sends your response back to MAX.</p>
+<p align="center"><strong>MAX on your server. Telegram on your phone.</strong></p>
+<p align="center">Prefer not to install MAX on your personal phone?<br>SHMAX connects your account on a server or VPS.<br>Receive messages and reply from Telegram topics.</p>
 <p align="center"><a href="#quick-start">Install</a> · <a href="docs/en/use-cases.md">Choose a workflow</a> · <a href="#interface">See the interface</a> · <a href="README.md">Русский</a></p>
 
 <p align="center">
@@ -15,6 +15,14 @@
 ![How it works: a message in MAX → a Telegram topic → a reply in MAX](docs/assets/message-flow.en.svg)
 
 *The diagram uses fictional messages. Screenshots below show the actual interface with demonstration data.*
+
+## Keep MAX off participants’ phones
+
+**For personal use:** bring selected MAX chats into your private Telegram group. Read and reply from Telegram — everyday messaging does not require the MAX app on your main phone.
+
+**For a company:** connect a work MAX account on a server or VPS and route chats to your teams. Staff do not need to install MAX on personal phones or share the account session: they work through Telegram with SHMAX send permissions.
+
+**Initial sign-in is a separate step.** The owner needs a MAX account, access to its phone number and the provider’s authentication checks. MAX may require setting up 2FA in an official app on an already authorized device. SHMAX does not bypass these requirements. [How this works and where the data goes →](docs/en/max-without-phone.md)
 
 ## Where SHMAX fits
 
