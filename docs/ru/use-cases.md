@@ -1,5 +1,7 @@
 # Три способа использовать SHMAX
 
+[MAX без приложения на телефонах участников: сервер или VPS](max-without-phone.md).
+
 [Установить](installation.md) · [Мастер настройки](first-setup.md) · [English](../en/use-cases.md)
 
 SHMAX соединяет **один аккаунт MAX** с вашим Telegram-ботом и одной или

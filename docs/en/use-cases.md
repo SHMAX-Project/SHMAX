@@ -1,5 +1,7 @@
 # Three ways to use SHMAX
 
+[Keep MAX off participants’ phones with a server or VPS](max-without-phone.md).
+
 [Install](installation.md) · [Setup wizard](first-setup.md) · [Русский](../ru/use-cases.md)
 
 SHMAX connects **one MAX account** to your Telegram bot and one or more private
