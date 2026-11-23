@@ -242,22 +242,24 @@ label.form-row, .form-row {
   font-weight: 650;
   letter-spacing: 0.03em;
   padding: 2px 9px;
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--border);
   color: var(--fg-muted);
   background: var(--panel-2);
-  white-space: nowrap;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 .badge::before, .tag.ok::before {
   content: "";
+  flex: 0 0 6px;
   width: 6px; height: 6px;
   border-radius: 50%;
   background: currentColor;
 }
 .badge.ok, .tag.ok { color: var(--ok); background: var(--ok-soft); border-color: transparent; }
-.badge.warn { color: var(--warn); background: var(--warn-soft); border-color: transparent; }
-.badge.error { color: var(--error); background: var(--error-soft); border-color: transparent; }
-.badge.info { color: var(--info); background: var(--info-soft); border-color: transparent; }
+.badge.warn, .tag.warn { color: var(--warn); background: var(--warn-soft); border-color: transparent; }
+.badge.error, .tag.error { color: var(--error); background: var(--error-soft); border-color: transparent; }
+.badge.info, .tag.info { color: var(--info); background: var(--info-soft); border-color: transparent; }
 .badge.brand { color: var(--brand); background: var(--brand-soft); border-color: transparent; }
 .badge.idle::before { display: none; }
 .tag:not(.ok):not(.warn):not(.error):not(.info):not(.not-configured)::before { display: none; }
@@ -455,7 +457,7 @@ label.form-row, .form-row {
   background: var(--panel-2) !important;
   border: 1px solid var(--border) !important;
   border-radius: var(--radius-sm);
-  width: 34px; height: 34px;
+  width: 44px; height: 44px;
   font-size: 15px;
   cursor: pointer;
 }
@@ -463,11 +465,19 @@ label.form-row, .form-row {
 .mobile-drawer {
   position: fixed;
   inset: 0;
-  z-index: 40;
-  background: rgba(4, 6, 10, 0.6);
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--fg);
 }
+.mobile-drawer::backdrop { background: rgba(4, 6, 10, 0.6); }
 .mobile-drawer .sheet {
-  width: 250px;
+  width: min(280px, calc(100% - 42px));
   height: 100%;
   background: var(--panel);
   border-right: 1px solid var(--border);
@@ -477,6 +487,8 @@ label.form-row, .form-row {
   gap: 6px;
   overflow-y: auto;
 }
+.mobile-drawer-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.mobile-drawer-header button { width: 44px; height: 44px; flex-shrink: 0; font-size: 20px; }
 .mobile-drawer nav { display: flex; flex-direction: column; gap: 2px; }
 .mobile-drawer nav a {
   color: var(--fg-muted);
@@ -488,7 +500,17 @@ label.form-row, .form-row {
 
 .grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); margin: 14px 0; }
 .cards-grid { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); margin: 14px 0; }
+.grid > .card, .cards-grid > .card { margin-top: 0; min-width: 0; }
 .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 12px 0; }
+
+.watchdog-card h3 { margin: 0 0 10px; }
+.watchdog-controls { display: flex; align-items: stretch; flex-wrap: wrap; gap: 8px; }
+.watchdog-controls > * { max-width: 100%; }
+.watchdog-status { display: flex; }
+.watchdog-status .badge { padding: 7px 11px; font-size: 13px; letter-spacing: 0; }
+.watchdog-controls .badge, .watchdog-controls .btn-ghost { min-height: 40px; }
+.watchdog-probe { min-width: 148px; }
+.watchdog-card > .alert { margin: 10px 0 0; }
 
 .kv { display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; font-size: 13.5px; }
 .kv .k { color: var(--fg-dim); }
@@ -888,9 +910,28 @@ a.brand:focus-visible { outline: 2px solid var(--accent, #78b7ff); outline-offse
 /* Bounded event journal controls; shared brand/theme stays intact. */
 .journal-filters { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:12px; padding:16px; }
 .journal-filters label { display:flex; flex-direction:column; gap:6px; min-width:0; }
+.journal-event-table td:last-child { overflow-wrap: anywhere; }
+.journal-event-table time { white-space: nowrap; }
+.journal-event-meta { display: none; }
+.diagnostics-table td { overflow-wrap: anywhere; }
+@media (max-width: 600px) {
+  .journal-event-table :is(th, td):nth-child(-n+3) { display: none; }
+  .journal-event-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px 10px;
+    color: var(--fg-muted);
+    font-size: 12px;
+    margin-top: 4px;
+  }
+  .diagnostics-table { table-layout: fixed; }
+  .diagnostics-table th:first-child { width: 28%; }
+  .diagnostics-table th:nth-child(2) { width: 28%; }
+  .diagnostics-table :is(th, td) { padding-inline: 5px; }
+  .diagnostics-table .tag { white-space: normal; }
+}
 .journal-filters input { box-sizing:border-box; width:100%; min-width:0; padding:10px 12px; border:1px solid var(--border); border-radius:8px; background:var(--panel); color:var(--fg); }
 
-.resource-overview .grid > .card { margin: 0; min-width: 0; }
 .resource-overview table { overflow-wrap: anywhere; }
 .resource-overview h3 { display: flex; justify-content: space-between; gap: 8px; }
 

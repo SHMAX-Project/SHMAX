@@ -3,7 +3,7 @@ import { MaxNetworkPage } from './max-network';
 import { useTranslation } from 'react-i18next';
 import { ConfigurationEditor } from './configuration-editor';
 import { SetupChoice, PortableRestore } from "./portable-backup";
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, Navigate, NavLink, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { api, login, logout, SessionStatus, setUnauthorizedObserver, StatusSnapshot } from './api';
 import { setCsrfToken } from './csrf';
@@ -77,6 +77,21 @@ function BridgeChip({ status }: { status: StatusSnapshot | null }) {
 
 function AppShell({ status, username, onLogout }: { status: StatusSnapshot | null; username: string | null; onLogout: () => void }) {
   const [drawer, setDrawer] = useState(false);
+  const drawerRef = useRef<HTMLDialogElement>(null);
+  const menuButton = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    const dialog = drawerRef.current;
+    if (drawer && dialog && !dialog.open) dialog.showModal();
+    return () => { if (dialog?.open) dialog.close(); };
+  }, [drawer]);
+
+  const closeDrawer = () => {
+    drawerRef.current?.close();
+    setDrawer(false);
+    menuButton.current?.focus();
+  };
+
   return (
     <div className="app-shell" data-testid="app-shell">
       <aside className="sidebar" data-testid="sidebar">
@@ -96,24 +111,33 @@ function AppShell({ status, username, onLogout }: { status: StatusSnapshot | nul
       </aside>
       <div className="main">
         <header className="topbar">
-          <button type="button" className="nav-burger" aria-label="Открыть меню" onClick={() => setDrawer(true)}>☰</button>
+          <button ref={menuButton} type="button" className="nav-burger" aria-label="Открыть меню"
+            aria-expanded={drawer} aria-controls={drawer ? 'mobile-nav' : undefined}
+            onClick={() => setDrawer(true)}>☰</button>
           <Brand compact />
           <BridgeChip status={status} />
         </header>
         {drawer && (
-          <div className="mobile-drawer" onClick={() => setDrawer(false)}>
-            <div className="sheet" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Меню">
-              <Brand onNavigate={() => setDrawer(false)} />
-              <NavLinks onNavigate={() => setDrawer(false)} />
+          <dialog id="mobile-nav" ref={drawerRef} className="mobile-drawer" aria-label="Меню"
+            onCancel={(event) => { event.preventDefault(); closeDrawer(); }}
+            onClick={(event) => { if (event.currentTarget === event.target) closeDrawer(); }}>
+            <div className="sheet">
+              <div className="mobile-drawer-header">
+                <Brand onNavigate={closeDrawer} />
+                <button className="btn-ghost btn-sm" type="button" aria-label="Закрыть меню"
+                  onClick={closeDrawer} autoFocus>×</button>
+              </div>
+              <NavLinks onNavigate={closeDrawer} />
               <div className="sidebar-footer">
                 <div className="account">
                   <span className="avatar" aria-hidden>{(username || '?').slice(0, 1).toUpperCase()}</span>
                   <span>{username || '—'}</span>
                 </div>
-                <button type="button" className="btn-ghost btn-sm" onClick={onLogout}>Выйти</button>
+                <button type="button" className="btn-ghost btn-sm"
+                  onClick={() => { closeDrawer(); onLogout(); }}>Выйти</button>
               </div>
             </div>
-          </div>
+          </dialog>
         )}
         <div className="page">
           <Outlet />
@@ -286,7 +310,7 @@ export default function App() {
           <Route path="users" element={<UsersPage />} />
           <Route path="diagnostics" element={<Diagnostics />} />
           <Route path="logs" element={<Logs />} />
-          <Route path="backups" element={<Backups backups={null} setBackups={() => {}} />} />
+          <Route path="backups" element={<Backups />} />
           <Route path="updates" element={<Updates />} />
           <Route path="settings" element={<Settings />} />
           <Route path="help" element={<HelpPage />} />

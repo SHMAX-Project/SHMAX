@@ -2,6 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { api, IntegrationStatus } from '../api';
 import { Link } from 'react-router-dom';
+import { StatusBadge } from '../ui';
 
 /**
  * WatchdogCard — renders one adapter's health state plus
@@ -21,12 +22,49 @@ export interface WatchdogSnapshot {
   last_error_detail: string | null;
 }
 
-export function WatchdogCard({adapter,label,canonical,reload}: {adapter:'max'|'telegram';label:string;canonical:IntegrationStatus|null;reload?:()=>void}) {
-  const [busy,setBusy]=React.useState(false);
-  const [error,setError]=React.useState('');
-  const state=canonical?.state;
-  const labels:Record<string,string>={RECONNECTING:'Переподключаем…',VERIFICATION_UNAVAILABLE:'Проверка сессии временно недоступна',NOT_CONFIGURED:'⚪ Не настроен',CONFIGURED:'Настроен, не проверен',CONNECTING:'Подключаем…',HEALTHY:'🟢 Работает',DEGRADED:'🟡 Деградация',DOWN:'🔴 Недоступен',AUTH_REQUIRED:'Требуется вход',ERROR:'Ошибка'};
-  return <div className="card" data-testid={`${adapter}-status`}><h3>{label}</h3><span className={`tag ${state==='HEALTHY'?'healthy':state==='NOT_CONFIGURED'?'not-configured':'not-tested'}`}>{state?labels[state]:'Проверяем…'}</span>{state==='NOT_CONFIGURED'?<p><Link to={adapter === "max" ? "/max/settings" : "/telegram/network"}>Настроить {label}</Link></p>:state&&<button disabled={busy} onClick={async()=>{setBusy(true);setError('');try{await api(`/api/watchdogs/${adapter}/probe`,{method:'POST'});reload?.();}catch(e:any){setError(e.message);}finally{setBusy(false);}}}>Проверить сейчас</button>}{error&&<p role="alert">{error}</p>}</div>;
+export function WatchdogCard({ adapter, label, canonical, reload }: {
+  adapter: 'max' | 'telegram';
+  label: string;
+  canonical: IntegrationStatus | null;
+  reload?: () => Promise<void> | void;
+}) {
+  const [busy, setBusy] = React.useState(false);
+  const [error, setError] = React.useState('');
+  const state = canonical?.state;
+
+  async function probe() {
+    setBusy(true);
+    setError('');
+    try {
+      await api(`/api/watchdogs/${adapter}/probe`, { method: 'POST' });
+      await reload?.();
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Не удалось проверить соединение.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="card watchdog-card" data-testid={`${adapter}-status`}>
+      <h3>{label}</h3>
+      <div className="watchdog-controls">
+        <span className="watchdog-status" role="status">
+          {state ? <StatusBadge state={state} /> : <span className="badge idle">Проверяем…</span>}
+        </span>
+        {state === 'NOT_CONFIGURED' ? (
+          <Link className="btn-ghost" to={adapter === 'max' ? '/max/settings' : '/telegram/network'}>
+            Настроить {label}
+          </Link>
+        ) : state && (
+          <button className="btn-ghost watchdog-probe" type="button" disabled={busy} onClick={probe}>
+            {busy ? 'Проверяем…' : 'Проверить сейчас'}
+          </button>
+        )}
+      </div>
+      {error && <p className="alert alert-error" role="alert">{error}</p>}
+    </div>
+  );
 }
 
 /**
@@ -35,12 +73,11 @@ export function WatchdogCard({adapter,label,canonical,reload}: {adapter:'max'|'t
  * here.
  */
 export interface StorageInfo {
-  database_bytes: number;
+  db_bytes: number;
   sessions_bytes: number;
   backups_bytes: number;
   cache_bytes: number;
   logs_bytes: number;
-  total_bytes: number;
 }
 
 export function StorageManager() {
@@ -65,7 +102,8 @@ export function StorageManager() {
     finally { setBusy(false); }
   };
 
-  const fmt = (b: number | undefined) => b == null ? '—' : `${(b / 1024 / 1024).toFixed(2)} MB`;
+  const fmt = (b: number) => `${(b / 1024 ** 2).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} МБ`;
+  const total = info ? info.db_bytes + info.sessions_bytes + info.backups_bytes + info.cache_bytes + info.logs_bytes : 0;
   return (
     <div className="card">
       <h3>{t('storage.title', 'Хранилище')}</h3>
@@ -73,20 +111,20 @@ export function StorageManager() {
         <div className="table-scroll" role="region" aria-label="Таблица данных" tabIndex={0}><table>
           <thead><tr><th>Подсистема</th><th>Размер</th></tr></thead>
           <tbody>
-            <tr><td>Database</td><td>{fmt(info.database_bytes)}</td></tr>
-            <tr><td>Sessions</td><td>{fmt(info.sessions_bytes)}</td></tr>
-            <tr><td>Backups</td><td>{fmt(info.backups_bytes)}</td></tr>
-            <tr><td>Cache</td><td>{fmt(info.cache_bytes)}</td></tr>
-            <tr><td>Logs</td><td>{fmt(info.logs_bytes)}</td></tr>
-            <tr><td><strong>Total</strong></td><td><strong>{fmt(info.total_bytes)}</strong></td></tr>
+            <tr><td>База данных</td><td>{fmt(info.db_bytes)}</td></tr>
+            <tr><td>Сессии</td><td>{fmt(info.sessions_bytes)}</td></tr>
+            <tr><td>Резервные копии</td><td>{fmt(info.backups_bytes)}</td></tr>
+            <tr><td>Кэш</td><td>{fmt(info.cache_bytes)}</td></tr>
+            <tr><td>Технические логи</td><td>{fmt(info.logs_bytes)}</td></tr>
+            <tr><td><strong>Всего</strong></td><td><strong>{fmt(total)}</strong></td></tr>
           </tbody>
         </table></div>
-      ) : <div className="muted">Загрузка…</div>}
+      ) : !err && <div className="muted">Загрузка…</div>}
       <div className="row" style={{ marginTop: '0.75rem' }}>
-        <button onClick={clearCache} disabled={busy}>{t('storage.clearCache', 'Очистить кэш')}</button>
+        <button onClick={clearCache} disabled={busy || !info}>{t('storage.clearCache', 'Очистить кэш')}</button>
         <span className="muted">Не затрагивает сессии и базу данных.</span>
       </div>
-      {err && <div className="tag warn" style={{ marginTop: '0.5rem' }}>{err}</div>}
+      {err && <div className="alert alert-error" role="alert">{err}</div>}
     </div>
   );
 }

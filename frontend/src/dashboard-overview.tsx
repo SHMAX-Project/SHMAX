@@ -3,6 +3,20 @@ import {Link} from 'react-router-dom';
 import {api} from './api';
 type Sample={at:number;cpu_percent:number|null;memory_percent:number|null;memory_used:number|null;memory_total:number|null;disk_percent:number|null;disk_used:number|null;disk_total:number|null;load_1:number|null;container_memory_used:number|null;container_memory_limit:number|null;container_cpu_percent:number|null};
 type Overview={resources:{samples:Sample[];scope:string;interval_seconds:number;history_since:number|null};groups:Array<{id:number;chat_id:string;title:string|null;enabled:boolean;validated:boolean;admin_hub:boolean;auto_add_chats:boolean;routes:number;disabled_routes:number}>;max_network:{mode:string;xray:{state:string}};telegram_network?:{mode:string;xray:{state:string}};queue:Record<string,number>};
+const connectionLabels: Record<string, string> = {
+  direct: 'Напрямую', bot_api_direct: 'Напрямую', mtproto_direct: 'MTProto напрямую',
+  socks5: 'SOCKS5', bot_api_socks5: 'SOCKS5', mtproto_socks: 'MTProto через SOCKS5',
+  http: 'HTTP-прокси', bot_api_http: 'HTTP-прокси', mtproto_proxy: 'MTProto-прокси',
+  xray: 'Xray', xray_subscription: 'Подписка Xray', auto: 'Автоматически',
+  not_configured: 'Не настроена',
+};
+const xrayLabels: Record<string, string> = {
+  running: 'работает', failed: 'ошибка', stopped: 'остановлен', not_configured: 'не настроен',
+};
+function networkSummary(network?: Overview['max_network']) {
+  if (!network) return 'Не настроена';
+  return `${connectionLabels[network.mode] ?? 'Режим не определён'} · Xray: ${xrayLabels[network.xray.state] ?? 'состояние неизвестно'}`;
+}
 function bytes(value:number|null|undefined){if(value==null)return '—';return `${(value/1024**3).toFixed(2)} ГБ`;}
 function Chart({title,points,field,detail,unavailable=false}:{title:string;points:Sample[];unavailable?:boolean;field:'cpu_percent'|'memory_percent'|'disk_percent'|'container_cpu_percent';detail:string}){
  const available=points.filter(p=>p[field]!=null),last=available.at(-1)?.[field];
@@ -35,6 +49,6 @@ export function DashboardOverview(){
  <p className="muted">Проверка группы подтверждает настройки и права бота. Текущее соединение Telegram показано выше.</p>
  {data.groups.length?<div style={{overflowX:'auto'}}><table><thead><tr><th>Группа</th><th>Состояние</th><th>Чаты MAX</th><th>Режим</th></tr></thead><tbody>{data.groups.map(g=><tr key={g.id}><td>{g.title||g.chat_id}<br/><span className="muted small">{g.chat_id}</span></td><td>{!g.enabled?'Отключена':g.validated?'Проверена':'Требует проверки'}</td><td>{g.routes}{g.disabled_routes?` · отключено ${g.disabled_routes}`:''}</td><td>{g.admin_hub?`Админский обзор${g.auto_add_chats?' · автодобавление':''}`:'Привязанные чаты'}</td></tr>)}</tbody></table></div>:<p>Группы ещё не подключены.</p>}
  <div className="row"><Link to="/telegram/group">Настроить группы и привязки</Link><Link to="/users">Права пользователей</Link></div></div>
- <div className="grid"><div className="card"><h2>Сеть MAX</h2><p>{data.max_network.mode} · Xray: {data.max_network.xray.state}</p><Link to="/max/network">Настроить подключение MAX</Link></div><div className="card"><h2>Сеть Telegram</h2><p>{data.telegram_network?.mode||'не настроена'} · Xray: {data.telegram_network?.xray.state||'не настроен'}</p><Link to="/telegram/network">Настроить подключение Telegram</Link></div></div>
+ <div className="grid"><div className="card"><h2>Сеть MAX</h2><p>{networkSummary(data.max_network)}</p><Link to="/max/network">Настроить подключение MAX</Link></div><div className="card"><h2>Сеть Telegram</h2><p>{networkSummary(data.telegram_network)}</p><Link to="/telegram/network">Настроить подключение Telegram</Link></div></div>
  </div>;
 }

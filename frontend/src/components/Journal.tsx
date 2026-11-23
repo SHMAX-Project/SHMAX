@@ -27,7 +27,38 @@ export function Journal(){
  </div>
  {error&&<div className="alert alert-error" role="alert">{error}</div>}
  {page&&<><p className="muted">Хранение: {(page.storage.bytes/1048576).toFixed(2)} / {(page.storage.max_bytes/1048576).toFixed(0)} MiB · {page.storage.retention_days} дней · до {page.storage.max_records.toLocaleString('ru-RU')} записей. {page.storage.dropped>0&&`Пропущено при перегрузке: ${page.storage.dropped}.`} {page.storage.write_failures>0&&`Ошибки записи журнала: ${page.storage.write_failures}.`}</p>
- <div style={{overflowX:'auto'}}><table><thead><tr><th>Время</th><th>Уровень</th><th>Категория</th><th>Событие</th></tr></thead><tbody>{page.events.map(row=><tr key={row.id}><td style={{whiteSpace:'nowrap'}}>{format(row.timestamp)}</td><td>{row.severity}</td><td>{row.category}<br/><small>{row.direction==='max_to_telegram'?'MAX → Telegram':row.direction==='telegram_to_max'?'Telegram → MAX':''}</small></td><td><details><summary>{row.description}{row.occurrences>1&&` · повторено ${row.occurrences} раз`}</summary><dl>{[['Тип',row.event_type],['Correlation ID',row.correlation_id],['Попытка',row.attempt],['Результат',row.result],['Класс ошибки',row.error_class],['Первое событие',format(row.first_timestamp)]].filter(([,v])=>v!==null).map(([k,v])=><React.Fragment key={String(k)}><dt>{k}</dt><dd>{v}</dd></React.Fragment>)}</dl></details></td></tr>)}</tbody></table></div>
+ <div className="table-scroll" role="region" aria-label="События журнала" tabIndex={0}>
+  <table className="journal-event-table">
+   <thead><tr><th>Время</th><th>Уровень</th><th>Категория</th><th>Событие</th></tr></thead>
+   <tbody>{page.events.map(row => {
+     const direction = row.direction === 'max_to_telegram' ? 'MAX → Telegram'
+       : row.direction === 'telegram_to_max' ? 'Telegram → MAX' : null;
+     const time = <time dateTime={row.timestamp}>{format(row.timestamp)}</time>;
+     return (
+       <tr key={row.id}>
+         <td>{time}</td>
+         <td>{row.severity}</td>
+         <td>{row.category}{direction && <><br /><small>{direction}</small></>}</td>
+         <td>
+           <details>
+             <summary>{row.description}{row.occurrences > 1 && ` · повторено ${row.occurrences} раз`}</summary>
+             <dl>{[
+               ['Тип', row.event_type], ['Correlation ID', row.correlation_id],
+               ['Попытка', row.attempt], ['Результат', row.result],
+               ['Класс ошибки', row.error_class], ['Первое событие', format(row.first_timestamp)],
+             ].filter(([,value]) => value !== null).map(([key,value]) =>
+               <React.Fragment key={String(key)}><dt>{key}</dt><dd>{value}</dd></React.Fragment>)}</dl>
+           </details>
+           <div className="journal-event-meta">
+             {time}<span>{row.severity} · {row.category}</span>
+             {direction && <span>{direction}</span>}
+           </div>
+         </td>
+       </tr>
+     );
+   })}</tbody>
+  </table>
+ </div>
  {!page.events.length&&<p>Событий по выбранным фильтрам нет.</p>}
  <div style={{display:'flex',gap:12,marginTop:16}}><button className="btn" disabled={!history.length} onClick={()=>{setCursor(history[history.length-1]);setHistory(history.slice(0,-1));}}>Назад</button><button className="btn" disabled={!page.next_cursor} onClick={()=>{setHistory([...history,cursor]);setCursor(page.next_cursor||'');}}>Следующая страница</button></div></>}
  </>;

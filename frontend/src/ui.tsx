@@ -7,8 +7,8 @@ import type { IntegrationState, IntegrationStatus } from './api';
 
 /** Status chip for the canonical integration states. */
 const STATE_TONE: Record<string, { cls: string; label: string }> = {
-  HEALTHY: { cls: 'ok', label: 'Здоров' },
-  DEGRADED: { cls: 'warn', label: 'Деградация' },
+  HEALTHY: { cls: 'ok', label: 'Работает' },
+  DEGRADED: { cls: 'warn', label: 'Нестабильно' },
   DOWN: { cls: 'error', label: 'Недоступен' },
   AUTH_REQUIRED: { cls: 'warn', label: 'Требуется вход' },
   NOT_CONFIGURED: { cls: 'idle', label: 'Не настроен' },

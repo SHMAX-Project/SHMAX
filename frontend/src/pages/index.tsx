@@ -258,9 +258,12 @@ export function Diagnostics() {
       } catch (e: any) { setError(e.message); }
     })();
   }, []);
-  const tone: Record<string, string> = {
-    ok: 'ok', warning: 'warn', error: 'error',
-    not_configured: 'not-configured', not_tested: 'not-configured',
+  const states: Record<string, { tone: string; label: string }> = {
+    ok: { tone: 'ok', label: 'В норме' },
+    warning: { tone: 'warn', label: 'Внимание' },
+    error: { tone: 'error', label: 'Ошибка' },
+    not_configured: { tone: 'not-configured', label: 'Не настроено' },
+    not_tested: { tone: 'not-configured', label: 'Не проверено' },
   };
   return (
     <>
@@ -268,13 +271,13 @@ export function Diagnostics() {
       {error && <div className="alert alert-error" role="alert">{error}</div>}
       {!items && <Spinner label="Запускаем проверки…" />}
       {items && (
-        <div className="table-scroll" role="region" aria-label="Таблица данных" tabIndex={0}><table>
+        <div className="table-scroll" role="region" aria-label="Результаты диагностики" tabIndex={0}><table className="diagnostics-table">
           <thead><tr><th>Проверка</th><th>Статус</th><th>Детали</th></tr></thead>
           <tbody>
             {items.map((it, i) => (
               <tr key={i}>
                 <td>{it.name}</td>
-                <td><span className={`tag ${tone[it.status] || ''}`}>{it.status}</span></td>
+                <td><span className={`tag ${states[it.status]?.tone ?? ''}`}>{states[it.status]?.label ?? it.status}</span></td>
                 <td className="muted">{it.detail}</td>
               </tr>
             ))}
@@ -288,16 +291,29 @@ export function Diagnostics() {
 
 export { Journal as Logs } from "../components/Journal";
 
-export function Backups({ backups, setBackups }: { backups: any[] | null; setBackups: (b: any[]) => void }) {
+type LocalBackup = {
+  id?: string;
+  name: string;
+  version?: string;
+  shmax_version?: string;
+  created_at?: string | number;
+  size?: number;
+  encrypted?: boolean;
+  format?: string;
+  error?: string;
+};
+
+export function Backups() {
+  const [backups, setBackups] = React.useState<LocalBackup[] | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [busy, setBusy] = React.useState(false);
-  const refresh = async () => {
+  const refresh = React.useCallback(async () => {
     try {
-      setBackups(await api<any[]>('/api/backups'));
+      setBackups(await api<LocalBackup[]>('/api/backups'));
       setError(null);
     } catch (e: any) { setError(e.message); }
-  };
-  React.useEffect(() => { refresh(); }, []);
+  }, []);
+  React.useEffect(() => { void refresh(); }, [refresh]);
   const create = async () => {
     setError(null); setBusy(true);
     try {
@@ -306,7 +322,11 @@ export function Backups({ backups, setBackups }: { backups: any[] | null; setBac
       await refresh();
     } catch (e: any) { setError(e.message); } finally { setBusy(false); }
   };
-  const fmt = (b: any) => b == null ? '—' : `${(b / 1024 / 1024).toFixed(2)} MB`;
+  const fmt = (size: number | undefined) => size == null ? '—' : `${(size / 1024 ** 2).toFixed(2)} МБ`;
+  const backupDate = (value: LocalBackup['created_at']) => {
+    const date = typeof value === 'number' ? new Date(value * 1000) : new Date(value ?? '');
+    return Number.isNaN(date.getTime()) ? '—' : date.toLocaleString();
+  };
   return (
     <>
       <PageHeader title="Резервные копии">
@@ -321,7 +341,8 @@ export function Backups({ backups, setBackups }: { backups: any[] | null; setBac
       {backups && backups.length === 0 && (
         <EmptyState glyph="⌸" title="Резервных копий пока нет." hint="Создайте первую копию перед важными изменениями." />
       )}
-{backups && backups.length > 0 && (
+      {!backups && !error && <Spinner label="Загружаем локальные копии…" />}
+      {backups && backups.length > 0 && (
         <div className="table-scroll" role="region" aria-label="Таблица данных" tabIndex={0}><table>
           <thead><tr><th>Копия</th><th>Версия</th><th>Создана</th><th>Размер</th><th>Формат</th></tr></thead>
           <tbody>
@@ -329,7 +350,7 @@ export function Backups({ backups, setBackups }: { backups: any[] | null; setBac
               <tr key={b.name}>
                 <td className="mono small">{b.name}<br /><span className="muted">{b.id ?? ''}</span></td>
                 <td>{b.version || b.shmax_version || '—'}</td>
-                <td className="muted">{b.created_at ? new Date(b.created_at * 1000).toLocaleString() : '—'}</td>
+                <td className="muted">{backupDate(b.created_at)}</td>
                 <td>{fmt(b.size)}</td>
                 <td><span className="tag">{b.encrypted ? 'шифрованная' : (b.format || b.error)}</span></td>
               </tr>

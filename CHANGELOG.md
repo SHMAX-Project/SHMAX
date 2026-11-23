@@ -15,6 +15,9 @@ Format: Keep a Changelog; versioning: SemVer.
 - Group repeated Telegram transport warnings into one journal entry per outage.
 - Recover a missing success entry for an installed update after temporary SQLite contention.
 
+- Align dashboard status controls and improve mobile navigation, diagnostics and journal layout.
+- Display local backups and storage totals using the actual server values.
+
 No database migration is required.
 
 ## 0.2.0 — 2026-10-22
