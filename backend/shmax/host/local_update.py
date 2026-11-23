@@ -204,16 +204,38 @@ class LocalReleaseUpdater:
             time.sleep(2)
         return False
 
-    def journal_event(self,event_type):
+    def journal_event(self, event_type, *, deployment_id=None):
         # Metadata only; this must never affect update/rollback success.
         try:
-            try:from shmax.journal import EventJournal
-            except ImportError:from journal import EventJournal
-            j=EventJournal(self.data/'state'/'events.db');j._init()
-            owner=j.path.parent.stat();os.chown(j.path,owner.st_uid,owner.st_gid)
-            j.emit(event_type,component='system')
-            j._write([j.queue.get_nowait()])
-        except Exception:pass
+            try:
+                from shmax.journal import EventJournal
+            except ImportError:
+                from journal import EventJournal
+            journal = EventJournal(self.data / "state" / "events.db")
+            journal._init()
+            owner = journal.path.parent.stat()
+            os.chown(journal.path, owner.st_uid, owner.st_gid)
+            if deployment_id:
+                journal.record_installed_update(deployment_id, grace_seconds=0)
+            else:
+                journal.emit(event_type, component="system")
+                journal._write([journal.queue.get_nowait()])
+        except Exception:
+            print("SHMAX: update journal write deferred" if deployment_id
+                  else "SHMAX: update journal write failed", flush=True)
+
+    def _commit_deployment_id(self, stamp):
+        marker = self.data / "state" / "update-deployment-id"
+        with tempfile.NamedTemporaryFile(mode="w", dir=marker.parent, delete=False) as stream:
+            temporary = Path(stream.name)
+            try:
+                stream.write(stamp)
+                stream.flush()
+                os.fsync(stream.fileno())
+                temporary.chmod(0o644)
+                os.replace(temporary, marker)
+            finally:
+                temporary.unlink(missing_ok=True)
 
     def apply(self, archive: Path):
         if os.geteuid()!=0:raise LocalUpdateError('run with sudo on the SHMAX host')
@@ -290,8 +312,6 @@ class LocalReleaseUpdater:
                 with compose_target.open('x') as f:f.write(candidate_text)
                 os.chmod(compose_target,compose_stat.st_mode&0o7777);os.chown(compose_target,compose_stat.st_uid,compose_stat.st_gid)
                 os.replace(compose_target,self.opt/'compose.yaml')
-                (self.data/'state/update-deployment-id').write_text(stamp)
-                (self.data/'state/update-deployment-id').chmod(0o644)
                 # Persist only image/id settings; preserve all other bytes, ownership and mode.
                 text=old_env.decode();text=re.sub(r'^SHMAX_(?:IMAGE|DEPLOYMENT_ID)=.*\n?', '',text,flags=re.M)
                 target=self.opt/'.env.update.tmp'
@@ -313,7 +333,8 @@ class LocalReleaseUpdater:
                 wrapper=Path('/usr/local/bin/shmax.new')
                 wrapper.write_text('#!/bin/sh\nif [ "$1" = update ] && [ "$2" != check ] && [ "$2" != apply ]; then exec python3 /opt/shmax-updater/shmax.pyz "$@"; fi\nexec /opt/shmax-hostd/bin/shmax "$@"\n')
                 wrapper.chmod(0o755);os.replace(wrapper,Path('/usr/local/bin/shmax'))
-                self.journal_event('update.success')
+                self._commit_deployment_id(stamp)
+                self.journal_event('update.success', deployment_id=stamp)
                 print('UPDATE VERIFIED; report: '+str(self.report),flush=True)
                 return self.report
             except BaseException as exc:

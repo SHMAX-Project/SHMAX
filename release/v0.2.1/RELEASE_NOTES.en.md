@@ -5,5 +5,6 @@
 - Documents in a mixed set of MAX attachments are sent through Telegram's document endpoint.
 - Photo and voice URLs can be refreshed through the original MAX message when the required identifiers are present.
 - The queue and event journal record safe, specific media failure codes. Temporary failures still retry. A permanently invalid item is skipped so the rest of an album can proceed, with confirmed sends retained in the delivery checkpoint.
+- Repeated Telegram transport warnings are grouped by outage. Successful updates are recorded once even if the event journal was temporarily busy.
 
 The upgrade keeps the existing database schema. Previously failed entries remain in delivery history.

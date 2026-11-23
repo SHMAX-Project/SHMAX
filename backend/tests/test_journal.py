@@ -152,3 +152,63 @@ async def test_inbound_processing_failure_is_visible_without_exception_contents(
     assert row['direction'] == 'max_to_telegram'
     assert row['correlation_id']
     assert 'private-' not in json.dumps(rows)
+
+
+@pytest.mark.asyncio
+async def test_telegram_disconnects_are_counted_within_each_outage(tmp_path):
+    journal = EventJournal(tmp_path / "events.db")
+    await journal.start()
+    try:
+        for attempts in (4, 3):
+            for _ in range(attempts):
+                journal.emit(
+                    "telegram.disconnected", component="telegram",
+                    error_class="TransportUnavailable", aggregate=True,
+                )
+            journal.emit("telegram.recovery_success", component="telegram")
+        await journal.flush()
+        warnings = journal.query(search="telegram.disconnected")["events"]
+        assert sorted(event["occurrences"] for event in warnings) == [3, 4]
+    finally:
+        await journal.close()
+
+
+@pytest.mark.parametrize("legacy_written", [False, True])
+def test_committed_update_is_logged_once_after_contention(tmp_path, legacy_written):
+    import datetime as dt
+    import os
+
+    start = dt.datetime(2026, 11, 23, 8, 35, 35, tzinfo=dt.timezone.utc).timestamp()
+    now = start + 100
+    boot_id = "20261123T083535Z-0123456789"
+    journal = EventJournal(tmp_path / "events.db", clock=lambda: now)
+    journal._init()
+    marker = tmp_path / "update-deployment-id"
+
+    assert not journal.record_installed_update(boot_id)
+    marker.write_text("20261122T083535Z-0123456789")
+    assert not journal.record_installed_update(boot_id)
+    marker.write_text(boot_id)
+    os.utime(marker, (now - 10, now - 10))
+    assert not journal.record_installed_update(boot_id)
+    assert not journal.query(category="UPDATE")["events"]
+    os.utime(marker, (now - 31, now - 31))
+
+    if legacy_written:
+        journal.emit("update.success", component="system")
+        journal._write([journal.queue.get_nowait()])
+
+    # Simulate a separate overlapping SQLite writer, then retry from the same marker.
+    with sqlite3.connect(journal.path) as blocker:
+        blocker.execute("BEGIN EXCLUSIVE")
+        with pytest.raises(sqlite3.OperationalError, match="locked"):
+            journal.record_installed_update(boot_id)
+        blocker.rollback()
+
+    assert journal.record_installed_update(boot_id)
+    restarted = EventJournal(journal.path, clock=lambda: now)
+    assert restarted.record_installed_update(boot_id)
+    events = restarted.query(category="UPDATE")["events"]
+    assert len(events) == 1
+    assert events[0]["event_type"] == "update.success"
+    assert events[0]["occurrences"] == 1

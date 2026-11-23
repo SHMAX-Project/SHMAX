@@ -2,10 +2,13 @@
 import asyncio
 import json
 import os
+import sqlite3
 import time
 
 
 async def publish_readiness(runtime, path, boot_id):
+    journal = getattr(runtime, "journal", None)
+    recorded_update = journal is None
     while True:
         result = {'at': time.time(), 'boot_id': boot_id, 'integrations': {}}
         try:
@@ -33,4 +36,11 @@ async def publish_readiness(runtime, path, boot_id):
         fd = os.open(target, os.O_WRONLY|os.O_CREAT|os.O_TRUNC, 0o600)
         with os.fdopen(fd,'w') as f: json.dump(result,f)
         os.replace(target,path)
+        if not recorded_update:
+            try:
+                recorded_update = await asyncio.to_thread(journal.record_installed_update, boot_id)
+            except (OSError, sqlite3.Error):
+                # Readiness remains independent; a transient busy or missing journal
+                # is retried from the committed marker on a later iteration.
+                journal.failures += 1
         await asyncio.sleep(5)

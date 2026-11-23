@@ -12,6 +12,8 @@ Format: Keep a Changelog; versioning: SemVer.
 - Refresh photo and voice URLs through the source message when identifiers are available.
 - Record safe media failure reasons, keep temporary retries, and continue past permanent
   item failures in albums without repeating confirmed sends.
+- Group repeated Telegram transport warnings into one journal entry per outage.
+- Recover a missing success entry for an installed update after temporary SQLite contention.
 
 No database migration is required.
 

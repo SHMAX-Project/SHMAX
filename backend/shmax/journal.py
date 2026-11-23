@@ -210,7 +210,9 @@ class EventJournal:
             attempt = max(0, min(int(attempt), 1_000_000))
         # Recoveries split episodes without retaining one key per message.
         if (
-            event_type.endswith(("success", "connected", "switch_completed"))
+            event_type.rsplit(".", 1)[-1] in {
+                "success", "connected", "reconnect_success", "recovery_success", "switch_completed"
+            }
             and component
         ):
             self._episodes[component] = self._episodes.get(component, 0) + 1
@@ -320,6 +322,48 @@ class EventJournal:
                 )
             db.commit()
             self._prune(db)
+
+    def record_installed_update(self, boot_id: str, *, grace_seconds: float = 30) -> bool:
+        """Persist a successful update once, after its host commit marker exists."""
+        if not re.fullmatch(r"[0-9]{8}T[0-9]{6}Z-[0-9a-f]{10}", boot_id):
+            return False
+        marker = self.path.with_name("update-deployment-id")
+        try:
+            if marker.read_text().strip() != boot_id:
+                return False
+            committed_at = marker.stat().st_mtime
+            started_at = dt.datetime.strptime(boot_id[:16], "%Y%m%dT%H%M%SZ").replace(
+                tzinfo=dt.timezone.utc
+            ).timestamp()
+        except (FileNotFoundError, ValueError):
+            return False
+        now = self.clock()
+        if now - committed_at < grace_seconds:
+            return False
+        if committed_at < now - self.retention_days * 86400:
+            return True
+
+        key = f"installed:{boot_id}"
+        with self._connect() as db:
+            db.execute("BEGIN IMMEDIATE")
+            if db.execute("SELECT 1 FROM events WHERE aggregate_key=?", (key,)).fetchone():
+                return True
+            # Older launchers may already have written an unkeyed success.
+            existing = db.execute(
+                "SELECT id FROM events WHERE event_type='update.success' "
+                "AND aggregate_key IS NULL AND first_at>=? AND first_at<=? "
+                "ORDER BY first_at DESC LIMIT 1", (started_at, now),
+            ).fetchone()
+            if existing:
+                db.execute("UPDATE events SET aggregate_key=? WHERE id=?", (key, existing[0]))
+            else:
+                severity, category, description = CATALOG["update.success"]
+                db.execute(
+                    "INSERT INTO events(first_at,last_at,severity,category,event_type,description,"
+                    "component,result,aggregate_key) VALUES(?,?,?,?,'update.success',?,'system','success',?)",
+                    (committed_at, committed_at, severity, category, description, key),
+                )
+        return True
 
     def _maintenance(self):
         with self._connect() as db:
