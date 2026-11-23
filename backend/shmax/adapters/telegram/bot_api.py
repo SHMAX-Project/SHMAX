@@ -631,6 +631,7 @@ class TelegramBotApiAdapter(TelegramAdapter):
             else:
                 reason = "request_rejected" if permanent_delivery_error(exc) else "request_failed"
                 failure = MediaFailure("telegram.attachment_send", reason)
+            logger.warning("telegram media send failed: reason=%s outcome=MEDIA_FAILED", failure.safe_reason)
             raise failure from None
         return DeliveryResult(
             external_chat_id=str(msg.chat.id) if msg.chat else str(chat_id),
