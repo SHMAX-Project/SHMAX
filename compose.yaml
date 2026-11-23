@@ -31,7 +31,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: shmax:${SHMAX_VERSION:-0.2.0}
+    image: shmax:${SHMAX_VERSION:-0.2.1}
     container_name: shmax
     restart: unless-stopped
     init: true
@@ -51,7 +51,7 @@ services:
       SHMAX_MAX_XRAY_HTTP_PORT: "${SHMAX_MAX_XRAY_HTTP_PORT:-}"
       SHMAX_DATA_DIR: /data
       SHMAX_LOG_LEVEL: "${SHMAX_LOG_LEVEL:-INFO}"
-      SHMAX_VERSION: "${SHMAX_VERSION:-0.2.0}"
+      SHMAX_VERSION: "${SHMAX_VERSION:-0.2.1}"
     volumes:
       # Persistent subdirectories — bind mounts, NOT anonymous volumes,
       # so the operator can `ls /var/lib/shmax` outside the container.

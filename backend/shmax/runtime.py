@@ -1068,18 +1068,20 @@ class AppRuntime:
             return claimed[0] if claimed else None
 
     async def _drain_one(self, rec: Any) -> None:
-        if not rec.payload.get("media_items"):
+        if not any(rec.payload.get(key) for key in ("media_items", "lazy_attachment", "media_ref")):
             return await self._drain_one_owned(rec)
+
         async def heartbeat():
+            interval = min(10, self.config.queue_lease_seconds / 3)
             while True:
-                await asyncio.sleep(10)
+                await asyncio.sleep(interval)
                 async with self.db.session() as session:
                     await DeliveryQueueRepository(session).renew_lease(queue_id=rec.id, worker_id=rec.worker_id)
         delivery = asyncio.create_task(self._drain_one_owned(rec))
         renewal = asyncio.create_task(heartbeat())
         try:
-            done, pending = await asyncio.wait([delivery, renewal], return_when=asyncio.FIRST_COMPLETED)
-            for task in done: await task
+            done, _ = await asyncio.wait([delivery, renewal], return_when=asyncio.FIRST_COMPLETED)
+            await (delivery if delivery in done else renewal)
         finally:
             for task in (delivery, renewal): task.cancel()
             await asyncio.gather(delivery, renewal, return_exceptions=True)
@@ -1096,27 +1098,29 @@ class AppRuntime:
             from .queue.repository import LeaseOwnershipLostError
             if isinstance(e, LeaseOwnershipLostError):
                 raise
-            logger.exception("delivery failed for queue_id=%s", rec.id)
+            from .delivery_errors import permanent_delivery_error, safe_delivery_error
+            error = safe_delivery_error(e)
+            error_class = error if error.startswith("MediaFailure:") else type(e).__name__
+            logger.warning("delivery failed for queue_id=%s: %s", rec.id, error)
             async with self.db.session() as s:
                 repo = DeliveryQueueRepository(s)
                 attempts = rec.attempts + 1
                 from .adapters.max.errors import MaxUnsupportedError, MaxAuthError, MaxSessionError
-                from .delivery_errors import permanent_delivery_error, safe_delivery_error
                 if permanent_delivery_error(e) or isinstance(e, (MaxUnsupportedError, MaxAuthError, MaxSessionError)) or attempts >= policy.max_attempts:
-                    self.journal.emit("delivery.failed",correlation_id=payload.get("journal_correlation") or f"q-{rec.id}",direction=rec.direction,error_class=type(e).__name__,attempt=attempts,result="permanent")
+                    self.journal.emit("delivery.failed",correlation_id=payload.get("journal_correlation") or f"q-{rec.id}",direction=rec.direction,error_class=error_class,attempt=attempts,result="permanent")
                     await repo.mark_failed(
-                        queue_id=rec.id, last_error=safe_delivery_error(e)
+                        queue_id=rec.id, last_error=error
                     )
                 else:
                     next_at = (
                         _dt.datetime.now(_dt.timezone.utc)
                         + _dt.timedelta(seconds=max(policy.next_delay(attempts - 1), getattr(e, "retry_after", 0)))
                     )
-                    self.journal.emit("delivery.temporary_failure",correlation_id=payload.get("journal_correlation") or f"q-{rec.id}",direction=rec.direction,error_class=type(e).__name__,attempt=attempts,result="temporary")
+                    self.journal.emit("delivery.temporary_failure",correlation_id=payload.get("journal_correlation") or f"q-{rec.id}",direction=rec.direction,error_class=error_class,attempt=attempts,result="temporary")
                     self.journal.emit("delivery.retry",correlation_id=payload.get("journal_correlation") or f"q-{rec.id}",direction=rec.direction,attempt=attempts)
                     await repo.mark_retry(
                         queue_id=rec.id,
-                        last_error=safe_delivery_error(e),
+                        last_error=error,
                         next_attempt_at=next_at,
                     )
             return
@@ -1222,13 +1226,20 @@ class AppRuntime:
 
     async def _deliver(self, rec: Any) -> Any:
         payload = rec.payload
+        if not str(payload.get("text") or "").strip() and not any(
+            payload.get(key) for key in ("media_ref", "media_items", "lazy_attachment")
+        ):
+            from .delivery_errors import InvalidPayload
+            raise InvalidPayload("empty outbound payload")
         if payload.get('group_version') == 2 or self.runtime_mode.value == 'production':
             from .multi_group import prepare_destination, prepare_lazy_media
             await prepare_destination(self, rec)
         if payload.get('group_version') == 2:
             await prepare_lazy_media(self, rec)
         direction = Direction(rec.direction)
-        text = payload.get("text", "")
+        text = str(payload.get("text") or "")
+        if not text.strip():
+            text = ""
         target_chat_id = rec.target_chat_id
         thread_id = payload.get("target_thread_id", rec.target_thread_id)
         # Field names differ per direction (see BridgeEngine).
@@ -1678,13 +1689,19 @@ class AppRuntime:
                 await prepare_image(dest, sticker=sticker, native=sticker and source == "max")
             return dest.stat().st_size if sticker else written
 
-        stored = await self.media_pipeline.store_async(
-            filename,
-            validated_download,
-            kind=kind,
-            mime=mime,
-            duration_ms=payload.get("duration"),
-        )
+        from .media.diagnostics import MediaFailure
+        from .media.pipeline import MediaTooLarge
+
+        try:
+            stored = await self.media_pipeline.store_async(
+                filename,
+                validated_download,
+                kind=kind,
+                mime=mime,
+                duration_ms=payload.get("duration"),
+            )
+        except MediaTooLarge:
+            raise MediaFailure("media.validation", "file_too_large") from None
         if kind == "document":
             from dataclasses import replace
             safe_name=filename.replace("\\","/").rsplit("/",1)[-1]

@@ -600,7 +600,7 @@ class TelegramBotApiAdapter(TelegramAdapter):
             elif kind_str == "sticker":
                 kwargs.pop("caption", None)
                 msg = await self._bot.send_sticker(sticker=file, **kwargs)
-            elif kind_str == "file":
+            elif kind_str in {"file", "document"}:
                 msg = await self._bot.send_document(document=file, **kwargs)
             elif kind_str == "video":
                 msg = await self._bot.send_video(video=file, **kwargs)
@@ -621,9 +621,17 @@ class TelegramBotApiAdapter(TelegramAdapter):
             else:
                 raise ValueError(f"unknown media kind: {kind_str!r}")
         except Exception as exc:
+            from ...delivery_errors import permanent_delivery_error
             from ...media.diagnostics import MediaFailure
-            logger.warning("media direction=max_to_telegram category=%s operation=telegram.attachment_send exception=%s reason=request_failed outcome=MEDIA_FAILED", kind_str, type(exc).__name__)
-            raise MediaFailure("telegram.attachment_send", "request_failed") from None
+
+            delay = getattr(exc, "retry_after", None)
+            if isinstance(delay, (int, float)):
+                failure = MediaFailure("telegram.attachment_send", "rate_limited")
+                failure.retry_after = min(86400, max(1, delay))
+            else:
+                reason = "request_rejected" if permanent_delivery_error(exc) else "request_failed"
+                failure = MediaFailure("telegram.attachment_send", reason)
+            raise failure from None
         return DeliveryResult(
             external_chat_id=str(msg.chat.id) if msg.chat else str(chat_id),
             external_message_id=str(msg.message_id),

@@ -438,57 +438,98 @@ class PyMaxMaxAdapter(MaxAdapter):
         ``Client.get_file_by_id`` / ``Client.get_video_by_id``
         (the URL is only resolvable through those API calls).
         """
-        from pathlib import Path as _Path
+        from pathlib import Path
 
-        dest = _Path(dest)
+        from ...media.diagnostics import MediaFailure
+
+        dest = Path(dest)
         url = payload.get("url")
+        refresh_id = "photo_id" if payload.get("photo_id") is not None else "audio_id"
+        can_refresh = all(payload.get(key) is not None for key in (
+            refresh_id, "chat_id", "message_id"
+        ))
         if url and "://" in str(url):
             try:
                 return await self._download_url(str(url), dest)
-            except Exception as exc:
-                from ...media.diagnostics import MediaFailure
-                if not isinstance(exc, MediaFailure) or exc.reason != "http_response_failed" or payload.get("photo_id") is None:
+            except MediaFailure as exc:
+                if not can_refresh or exc.reason not in {"http_response_failed", "media_gone"}:
                     raise
-                if payload.get("chat_id") is None or payload.get("message_id") is None:
-                    raise
-                messages = await self._handle.client.get_messages(int(payload["chat_id"]), [int(payload["message_id"])])
-                for message in messages:
-                    for photo in message.attaches or []:
-                        if str(getattr(photo,"photo_id",None)) == str(payload["photo_id"]):
-                            fresh = getattr(photo,"base_url",None)
-                            if fresh: return await self._download_url(str(fresh), dest)
-                raise MediaFailure("max.download", "photo_reference_unavailable") from None
+
+        if can_refresh:
+            url = await self._refresh_attachment_url(payload, refresh_id)
+        else:
+            url = await self._resolve_attachment_url(payload)
+        return await self._download_url(url, dest)
+
+    async def _media_lookup(self, method: str, *args):
+        from pymax.exceptions import ApiError
+
+        from ...media.diagnostics import MediaFailure
+
+        if self._handle is None:
+            raise MediaFailure("max.media_lookup", "transport_failed")
+        try:
+            return await getattr(self._handle.client, method)(*args)
+        except ApiError:
+            # A MAX API rejection alone does not establish that the media is gone.
+            raise MediaFailure("max.media_lookup", "api_rejected") from None
+        except (TimeoutError, OSError):
+            raise MediaFailure("max.media_lookup", "transport_failed") from None
+
+    async def _refresh_attachment_url(self, payload: dict, id_key: str) -> str:
+        from ...media.diagnostics import MediaFailure
+
+        try:
+            chat_id, message_id = int(payload["chat_id"]), int(payload["message_id"])
+        except (TypeError, ValueError):
+            raise MediaFailure("max.media_lookup", "missing_media_reference") from None
+        messages = await self._media_lookup("get_messages", chat_id, [message_id])
+        url_attr = "base_url" if id_key == "photo_id" else "url"
+        for message in messages:
+            for attachment in message.attaches or []:
+                if str(getattr(attachment, id_key, None)) == str(payload[id_key]):
+                    url = getattr(attachment, url_attr, None)
+                    if url:
+                        return str(url)
+        reason = "photo_reference_unavailable" if id_key == "photo_id" else "media_url_unavailable"
+        raise MediaFailure("max.media_lookup", reason)
+
+    async def _resolve_attachment_url(self, payload: dict) -> str:
+        from ...media.diagnostics import MediaFailure
+
         kind = str(payload.get("pymax_type", "")).upper()
-        chat_id = payload.get("chat_id")
-        message_id = payload.get("message_id")
-        if chat_id is None or message_id is None:
-            raise ValueError("attachment payload lacks chat/message coordinates")
-        if "FILE" in kind and payload.get("file_id") is not None:
-            req = await self._handle.client.get_file_by_id(
-                int(chat_id), message_id, int(payload["file_id"])
-            )
-            url = getattr(req, "url", None)
-        elif "VIDEO" in kind and payload.get("video_id") is not None:
-            req = await self._handle.client.get_video_by_id(
-                int(chat_id), message_id, int(payload["video_id"])
-            )
-            url = getattr(req, "url", None)
-        elif "AUDIO" in kind and payload.get("token"):
-            # Audio tokens resolve via the same file endpoint family;
-            # without a direct URL we cannot fetch offline.
-            url = None
-        if not url or "://" not in str(url):
-            raise ValueError(f"no downloadable URL for {kind or 'attachment'}")
-        return await self._download_url(str(url), dest)
+        if "FILE" in kind:
+            method, id_key = "get_file_by_id", "file_id"
+        elif "VIDEO" in kind:
+            method, id_key = "get_video_by_id", "video_id"
+        else:
+            raise MediaFailure("max.media_lookup", "missing_media_reference")
+        if not all(payload.get(key) is not None for key in ("chat_id", "message_id", id_key)):
+            raise MediaFailure("max.media_lookup", "missing_media_reference")
+        try:
+            chat_id, media_id = int(payload["chat_id"]), int(payload[id_key])
+        except (TypeError, ValueError):
+            raise MediaFailure("max.media_lookup", "missing_media_reference") from None
+        request = await self._media_lookup(method, chat_id, payload["message_id"], media_id)
+        url = getattr(request, "url", None)
+        if url:
+            return str(url)
+        if method == "get_video_by_id" and getattr(request, "external", None):
+            raise MediaFailure("max.media_lookup", "external_video")
+        raise MediaFailure("max.media_lookup", "media_url_unavailable")
 
     async def _download_url(self, url: str, dest) -> int:
         import aiohttp
         from urllib.parse import urlsplit
         from ...media.diagnostics import MediaFailure
-        parsed = urlsplit(url)
-        host = (parsed.hostname or "").lower()
+        try:
+            parsed = urlsplit(url)
+            host = (parsed.hostname or "").lower()
+            port = parsed.port
+        except ValueError:
+            raise MediaFailure("max.download", "untrusted_media_url") from None
         trusted = ("max.ru", "oneme.ru", "okcdn.ru", "mycdn.me", "vkcdn.ru", "userapi.com")
-        if parsed.scheme != "https" or parsed.username or parsed.password or parsed.port not in (None, 443) or not any(host == domain or host.endswith("." + domain) for domain in trusted):
+        if parsed.scheme != "https" or parsed.username or parsed.password or port not in (None, 443) or not any(host == domain or host.endswith("." + domain) for domain in trusted):
             raise MediaFailure("max.download", "untrusted_media_url")
         written = 0
         try:
@@ -498,6 +539,8 @@ class PyMaxMaxAdapter(MaxAdapter):
                 connector=ProxyConnector.from_url(self._config.proxy_url,rdns=True)
             async with aiohttp.ClientSession(connector=connector,timeout=aiohttp.ClientTimeout(total=35)) as http:
                 async with http.get(url, allow_redirects=False) as resp:
+                    if resp.status == 410:
+                        raise MediaFailure("max.download", "media_gone")
                     if resp.status != 200:
                         raise MediaFailure("max.download", "http_response_failed")
                     with dest.open("wb") as fh:

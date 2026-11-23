@@ -256,3 +256,28 @@ async def test_replayed_max_update_cannot_duplicate_normalized_legacy_pending_jo
     assert len(await rows(rt))==1
     await drain(rt)
     assert len(rt._tg.sent)==1 and (await rows(rt))[0].status=='delivered'
+
+
+@pytest.mark.asyncio
+async def test_empty_and_control_only_max_events_create_no_queue_or_topic(rt, monkeypatch):
+    from pymax.types.domain.attachments.control import ControlAttachment
+
+    await seed(rt)
+    events = []
+    monkeypatch.setattr(rt.journal, "emit", lambda event_type, **kwargs: events.append(event_type))
+    control = ControlAttachment(type="CONTROL", event="synthetic_service_event")
+    raw = NS(attaches=[control])
+    for event in (
+        MaxEvent("empty", "new-chat", "42", " \n "),
+        MaxEvent("control", "new-chat", "42", "", raw=raw),
+    ):
+        await rt._on_inbound("max", event)
+    assert await rows(rt) == []
+    assert rt._tg.topics == []
+
+    await rt._on_inbound("max", MaxEvent("with-text", "max-A", "42", "keep me", raw=raw))
+    await drain(rt)
+    assert len(rt._tg.sent) == 2
+    assert all("keep me" in data["text"] for _, data in rt._tg.sent)
+    assert all("Неподдерживаемое" not in data["text"] for _, data in rt._tg.sent)
+    assert "attachment.unsupported" not in events

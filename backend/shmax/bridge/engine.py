@@ -217,6 +217,10 @@ class BridgeEngine:
 
     async def _handle_event(self, event: NormalizedMessage, *, direction: Direction) -> bool:
         body, marker = _strip_marker(event.text)
+        if not (body or "").strip():
+            if not event.attachments:
+                return False
+            body = ""
         if marker is not None:
             existing = await self._mapping.find_by_marker(marker)
             if existing is not None:

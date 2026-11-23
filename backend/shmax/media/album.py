@@ -8,6 +8,8 @@ from types import SimpleNamespace
 
 from ..domain.enums import AttachmentKind
 from ..domain.models import Attachment
+from ..delivery_errors import permanent_delivery_error, safe_delivery_error
+from .diagnostics import MediaGroupRejected
 
 
 async def deliver_album(*, payload, chat_id, thread_id, reply_to, adapter, fetch, save, terminal=False):
@@ -49,14 +51,17 @@ async def deliver_album(*, payload, chat_id, thread_id, reply_to, adapter, fetch
                     result = await adapter.send_media(chat_id=chat_id, media_ref=refs[0], kind=batch[0][1], thread_id=thread_id, caption=media_caption, **({'reply_to':reply_to} if reply_to else {}))
                     ids = [str(result.external_message_id)]
             except Exception as exc:
-                from .diagnostics import MediaGroupRejected
                 if isinstance(exc, MediaGroupRejected) and len(batch) >= 2:
                     progress['single_mode'] = True
                     await save(payload)
                     continue
-                if not terminal:
+                if not terminal and not permanent_delivery_error(exc):
                     raise
-                progress['failed'].extend(range(start, start+len(batch)))
+                failed = range(start, start + len(batch))
+                progress['failed'].extend(failed)
+                progress.setdefault('failure_reasons', {}).update(
+                    (str(index), safe_delivery_error(exc)) for index in failed
+                )
                 progress['next'] += len(batch)
                 await save(payload)
             else:
@@ -68,9 +73,10 @@ async def deliver_album(*, payload, chat_id, thread_id, reply_to, adapter, fetch
                 for ref in refs:
                     Path(ref.partition(':')[2]).unlink(missing_ok=True)
         if fault is not None:
-            if not terminal:
+            if not terminal and not permanent_delivery_error(fault):
                 raise fault
             progress['failed'].append(progress['next'])
+            progress.setdefault('failure_reasons', {})[str(progress['next'])] = safe_delivery_error(fault)
             progress['next'] += 1
             await save(payload)
     text = payload.get('text', '')

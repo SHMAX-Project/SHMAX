@@ -118,6 +118,8 @@ ERRORS = {
     "TLSFailure",
     "DNSFailure",
     "UnknownError",
+    "MediaFailure",
+    "ApiError",
 }
 
 
@@ -186,7 +188,15 @@ class EventJournal:
         if direction not in {"max_to_telegram", "telegram_to_max", None}:
             direction = None
         if error_class not in ERRORS:
-            error_class = "UnknownError" if error_class else None
+            media_reason = error_class.removeprefix("MediaFailure:") if isinstance(error_class, str) else None
+            valid_media_reason = False
+            if __package__ and error_class == f"MediaFailure:{media_reason}":
+                # The standalone update launcher also includes this module.
+                from .media.diagnostics import MEDIA_REASONS
+
+                valid_media_reason = media_reason in MEDIA_REASONS
+            if not valid_media_reason:
+                error_class = "UnknownError" if error_class else None
         if result not in {
             "success",
             "temporary",

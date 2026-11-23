@@ -43,6 +43,8 @@ async def destinations(db, max_chat_id, *, title=None):
 
 
 async def handle_inbound(runtime, source, event):
+    if not (event.text or '').strip() and not event.attachments:
+        return False
     if source=='max':
         targets=await destinations(runtime.db,event.chat.external_id,title=event.chat.title)
         if not targets:return False

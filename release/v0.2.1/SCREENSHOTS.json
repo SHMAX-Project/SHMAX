@@ -1,0 +1,119 @@
+[
+  {
+    "file": "backups.png",
+    "width": 1440,
+    "height": 900,
+    "sha256": "898f5b8ee1a44af8122af1dd6bc52aff49508b48ab39b546a0ee7fd721288b39",
+    "privacy": "Real isolated SPA capture; synthetic demo identities; external services mocked; no secrets or PNG metadata",
+    "mascot": "Original SHMAX duck; AGPL-3.0-or-later",
+    "provenance": "Fresh independent SHMAX-PUBLIC candidate; actual production SPA + real FastAPI; isolated MAX/Telegram mocks; Playwright Chromium desktop/mobile"
+  },
+  {
+    "file": "chat-routing.png",
+    "width": 1440,
+    "height": 1322,
+    "sha256": "09854813466a142950629855a4b362695f1da4e5192cb502499166de37eda0e6",
+    "privacy": "Explicitly watermarked synthetic demonstration data; no production credentials, sessions or messages; no PNG text/EXIF metadata",
+    "mascot": "Original SHMAX duck; AGPL-3.0-or-later",
+    "provenance": "v0.2.0 local Playwright Chromium; actual SHMAX SPA with mocked API responses for synthetic Linux metrics, groups and network settings"
+  },
+  {
+    "file": "dashboard-desktop.png",
+    "width": 1440,
+    "height": 1550,
+    "sha256": "b983d467619a636249e431bba2b14e2f4c9e9eb9e05ceeca59197c1171d9fa8d",
+    "privacy": "Explicitly watermarked synthetic demonstration data; no production credentials, sessions or messages; no PNG text/EXIF metadata",
+    "mascot": "Original SHMAX duck; AGPL-3.0-or-later",
+    "provenance": "v0.2.0 local Playwright Chromium; actual SHMAX SPA with mocked API responses for synthetic Linux metrics, groups and network settings"
+  },
+  {
+    "file": "diagnostics.png",
+    "width": 1440,
+    "height": 900,
+    "sha256": "7f5a37e17ac2615af45534cbe6a9f11130216c82c1b8e5c949953e6e5d9df96d",
+    "privacy": "Synthetic demonstration accounts and messages; no production credentials, session data or message content; no PNG text/EXIF metadata",
+    "mascot": "Original SHMAX duck; AGPL-3.0-or-later",
+    "provenance": "v0.1.2 local Playwright Chromium, real production SPA and FastAPI backend; controlled synthetic MAX/Telegram boundaries; desktop/mobile acceptance passed"
+  },
+  {
+    "file": "event-journal-desktop.png",
+    "width": 1440,
+    "height": 900,
+    "sha256": "0af3d684f4f5eada79edab6aac9a75f4b3a7b0559bab1a6245f6cf61228cefd5",
+    "privacy": "Synthetic demonstration accounts and messages; no production credentials, session data or message content; no PNG text/EXIF metadata",
+    "mascot": "Original SHMAX duck; AGPL-3.0-or-later",
+    "provenance": "v0.1.2 local Playwright Chromium, real production SPA and FastAPI backend; controlled synthetic MAX/Telegram boundaries; desktop/mobile acceptance passed"
+  },
+  {
+    "file": "event-journal-mobile.png",
+    "width": 750,
+    "height": 2096,
+    "sha256": "9a1c26ecbd664a006af929a0ce8aac33a77344b76651f7f9009c8c6a896fb9f1",
+    "privacy": "Synthetic demonstration accounts and messages; no production credentials, session data or message content; no PNG text/EXIF metadata",
+    "mascot": "Original SHMAX duck; AGPL-3.0-or-later",
+    "provenance": "v0.1.2 local Playwright Chromium, real production SPA and FastAPI backend; controlled synthetic MAX/Telegram boundaries; desktop/mobile acceptance passed"
+  },
+  {
+    "file": "initial-setup.png",
+    "width": 1440,
+    "height": 900,
+    "sha256": "63bcafafbc0a066f4fb13b1065d663018dc3d934858d769db46131a0f11403d7",
+    "privacy": "Real isolated SPA capture; synthetic demo identities; external services mocked; no secrets or PNG metadata",
+    "mascot": "Original SHMAX duck; AGPL-3.0-or-later",
+    "provenance": "v0.2.0 local Playwright Chromium; real FastAPI and SPA during full setup/export/restore; isolated synthetic accounts and external service mocks"
+  },
+  {
+    "file": "max-settings.png",
+    "width": 1440,
+    "height": 900,
+    "sha256": "6e277a8e56404628c949bbcc79966ef6d49071eb6ad1f0856039711250078a1b",
+    "privacy": "Synthetic demonstration accounts and messages; no production credentials, session data or message content; no PNG text/EXIF metadata",
+    "mascot": "Original SHMAX duck; AGPL-3.0-or-later",
+    "provenance": "v0.1.2 local Playwright Chromium, real production SPA and FastAPI backend; controlled synthetic MAX/Telegram boundaries; desktop/mobile acceptance passed"
+  },
+  {
+    "file": "mobile-dashboard.png",
+    "width": 750,
+    "height": 5900,
+    "sha256": "e694c31bcbf08390aacb0e33deb49f76c4a69059379163acb6eb53d7a73fe147",
+    "privacy": "Explicitly watermarked synthetic demonstration data; no production credentials, sessions or messages; no PNG text/EXIF metadata",
+    "mascot": "Original SHMAX duck; AGPL-3.0-or-later",
+    "provenance": "v0.2.0 local Playwright Chromium; actual SHMAX SPA with mocked API responses for synthetic Linux metrics, groups and network settings"
+  },
+  {
+    "file": "restore.png",
+    "width": 1440,
+    "height": 900,
+    "sha256": "8f7c37c61625f803efcee80ce6615d2a2b77797186cbac68ccbd2e46eb5d0428",
+    "privacy": "Real isolated SPA capture; synthetic demo identities; external services mocked; no secrets or PNG metadata",
+    "mascot": "Original SHMAX duck; AGPL-3.0-or-later",
+    "provenance": "v0.2.0 local Playwright Chromium; real FastAPI and SPA during full setup/export/restore; isolated synthetic accounts and external service mocks"
+  },
+  {
+    "file": "telegram-settings.png",
+    "width": 1440,
+    "height": 900,
+    "sha256": "bbba3ed5f6a5004bc2acb74d5fafd75da0ef1a17980dadf4db54eb97077b7fd0",
+    "privacy": "Synthetic demonstration accounts and messages; no production credentials, session data or message content; no PNG text/EXIF metadata",
+    "mascot": "Original SHMAX duck; AGPL-3.0-or-later",
+    "provenance": "v0.1.2 local Playwright Chromium, real production SPA and FastAPI backend; controlled synthetic MAX/Telegram boundaries; desktop/mobile acceptance passed"
+  },
+  {
+    "file": "users.png",
+    "width": 1440,
+    "height": 951,
+    "sha256": "278bddab5e0257914c1b55d02db2e7ddbac62f765e3fdbb498f4b98ef0f0f1f5",
+    "privacy": "Real isolated SPA capture; synthetic demo identities; external services mocked; no secrets or PNG metadata",
+    "mascot": "Original SHMAX duck; AGPL-3.0-or-later",
+    "provenance": "Fresh independent SHMAX-PUBLIC candidate; actual production SPA + real FastAPI; isolated MAX/Telegram mocks; Playwright Chromium desktop/mobile"
+  },
+  {
+    "file": "max-network.png",
+    "width": 1440,
+    "height": 900,
+    "sha256": "ae560e8e526a878b2be6d2a82d7437a6bb09864d4baa2efeb6a04414f94f44be",
+    "privacy": "Explicitly watermarked synthetic demonstration data; no production credentials, sessions or messages; no PNG text/EXIF metadata",
+    "mascot": "Original SHMAX duck; AGPL-3.0-or-later",
+    "provenance": "v0.2.0 local Playwright Chromium; actual SHMAX SPA with mocked API responses for synthetic Linux metrics, groups and network settings"
+  }
+]

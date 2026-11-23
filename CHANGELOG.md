@@ -3,6 +3,18 @@
 All notable changes to SHMAX are documented here.
 Format: Keep a Changelog; versioning: SemVer.
 
+## 0.2.1
+
+### Fixed
+- Ignore MAX service attachments of type CONTROL while preserving any accompanying text or media.
+- Skip empty inbound events before routing or creating delivery jobs.
+- Send documents in mixed MAX attachments through Telegram's document endpoint.
+- Refresh photo and voice URLs through the source message when identifiers are available.
+- Record safe media failure reasons, keep temporary retries, and continue past permanent
+  item failures in albums without repeating confirmed sends.
+
+No database migration is required.
+
 ## 0.2.0 — 2026-10-22
 
 - Route each MAX chat to one or more Telegram groups; preserve existing connected groups when pairing another.

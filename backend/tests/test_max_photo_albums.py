@@ -349,3 +349,98 @@ async def test_three_photos_without_sender_name_use_durable_queue(rt, tmp_path, 
     assert all(kw['thread_id'] == '52' for kind, kw in dest.calls)
     if not fits:
         assert ''.join(kw['text'] for kind, kw in dest.calls if kind == 'text') == text
+
+
+@pytest.mark.asyncio
+async def test_permanent_album_item_failure_skips_retries_and_keeps_other_photos(tmp_path):
+    from shmax.media.diagnostics import MediaFailure
+
+    _, payload, destination, fetch, save, states = await setup(3, tmp_path)
+
+    async def download(source, attachment):
+        if attachment.payload["photo_id"] == 2:
+            raise MediaFailure("media.validation", "invalid_image")
+        return await fetch(source, attachment)
+
+    result = await deliver_album(
+        payload=payload, chat_id="-100777", thread_id="52", reply_to=None,
+        adapter=destination, fetch=download, save=save,
+    )
+    assert result.state == "failed"
+    assert len(result.all_external_ids) == 2
+    assert states[-1]["album_progress"]["failure_reasons"] == {"1": "MediaFailure:invalid_image"}
+    assert [Path(data["media_ref"].partition(":")[2]).stem for _, data in destination.calls] == ["1", "3"]
+
+
+@pytest.mark.asyncio
+async def test_mixed_album_document_reaches_telegram_document_endpoint(tmp_path):
+    from shmax.adapters.telegram.bot_api import TelegramBotApiAdapter
+
+    adapter = object.__new__(TelegramBotApiAdapter)
+    adapter._started = True
+    calls = []
+
+    async def send_document(**kwargs):
+        calls.append(kwargs)
+        return NS(chat=NS(id=-100777), message_id=123, message_thread_id=52)
+
+    adapter._bot = NS(send_document=send_document)
+    result = await adapter.send_media(
+        chat_id="-100777", media_ref=f"document:{tmp_path / 'fixture.pdf'}",
+        thread_id="52", kind="document", caption=None,
+    )
+    assert result.external_message_id == "123"
+    assert calls[0]["message_thread_id"] == 52
+    assert calls[0]["document"].filename == "fixture.pdf"
+
+
+@pytest.mark.asyncio
+async def test_expired_voice_url_refreshes_by_audio_id_without_guessing(tmp_path):
+    from shmax.adapters.max.pymax_adapter import PyMaxMaxAdapter
+    from shmax.media.diagnostics import MediaFailure
+
+    adapter = object.__new__(PyMaxMaxAdapter)
+    calls = []
+
+    async def get_messages(chat_id, message_ids):
+        assert (chat_id, message_ids) == (0, [123])
+        return [NS(attaches=[
+            NS(audio_id=8, url="https://cdn.max.ru/other"),
+            NS(audio_id=9, url="https://cdn.max.ru/fresh"),
+        ])]
+
+    async def download(url, dest):
+        calls.append(url)
+        if url.endswith("old"):
+            raise MediaFailure("max.download", "media_gone")
+        return 3
+
+    adapter._handle = NS(client=NS(get_messages=get_messages))
+    adapter._download_url = download
+    assert await adapter.download_attachment(
+        {"audio_id": 9, "chat_id": 0, "message_id": "123", "url": "https://cdn.max.ru/old"},
+        tmp_path / "voice.ogg",
+    ) == 3
+    assert calls == ["https://cdn.max.ru/old", "https://cdn.max.ru/fresh"]
+
+
+@pytest.mark.asyncio
+async def test_max_media_lookup_error_is_sanitized_and_retried(tmp_path):
+    from pymax.exceptions import ApiError
+    from shmax.adapters.max.pymax_adapter import PyMaxMaxAdapter
+    from shmax.delivery_errors import permanent_delivery_error, safe_delivery_error
+    from shmax.media.diagnostics import MediaFailure
+
+    adapter = object.__new__(PyMaxMaxAdapter)
+    async def get_video(chat_id, message_id, video_id):
+        assert (chat_id, message_id, video_id) == (0, "123", 42)
+        raise ApiError(opcode=1, message="https://cdn.max.ru/?token=fixture")
+    adapter._handle = NS(client=NS(get_video_by_id=get_video))
+    with pytest.raises(MediaFailure) as error:
+        await adapter.download_attachment(
+            {"pymax_type": "ATTACHMENTTYPE.VIDEO", "chat_id": 0, "message_id": "123", "video_id": 42},
+            tmp_path / "video.mp4",
+        )
+    assert str(error.value) == "api_rejected"
+    assert safe_delivery_error(error.value) == "MediaFailure:api_rejected"
+    assert not permanent_delivery_error(error.value)

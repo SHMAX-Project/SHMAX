@@ -227,6 +227,10 @@ def _pymax_reply_to_id(raw: Any) -> str | None:
     return str(nested_id)
 
 
+def _is_max_control_type(kind: Any) -> bool:
+    return str(kind).upper() in {"CONTROL", "ATTACHMENTTYPE.CONTROL"}
+
+
 def _pymax_attachments_from_raw(raw: Any, event_id: str = "", chat_id: str = "") -> tuple[Attachment, ...]:
     """Attachments from a REAL PyMax 2.4.1 ``Message.attaches``.
 
@@ -240,9 +244,10 @@ def _pymax_attachments_from_raw(raw: Any, event_id: str = "", chat_id: str = "")
     * ``AudioAttachment``  — ``url`` (direct) / token, duration
     * ``StickerAttachment`` / ``ContactAttachment`` /
       ``ShareAttachment`` / ``PollAttachment`` /
-      ``ControlAttachment`` / ``InlineKeyboardAttachment`` /
+      ``InlineKeyboardAttachment`` /
       ``CallAttachment`` / ``UnknownAttachment`` — carried with
       their kind so the bridge can emit the controlled fallback.
+    * ``ControlAttachment`` describes a MAX service event and is not media.
     """
     if raw is None:
         return ()
@@ -250,6 +255,8 @@ def _pymax_attachments_from_raw(raw: Any, event_id: str = "", chat_id: str = "")
     out: list[Attachment] = []
     for att in attaches:
         att_type = str(getattr(att, "type", "")).upper()
+        if _is_max_control_type(att_type):
+            continue
         base = {
             "pymax_type": att_type or "UNKNOWN",
             # Id-based fetches (FILE / VIDEO) need the source
@@ -287,6 +294,7 @@ def _pymax_attachments_from_raw(raw: Any, event_id: str = "", chat_id: str = "")
             payload = {
                 **base,
                 "url": getattr(att, "url", None),
+                "audio_id": getattr(att, "audio_id", None),
                 "token": getattr(att, "token", None),
                 "duration": getattr(att, "duration", None),
             }
@@ -307,7 +315,7 @@ def _pymax_attachments_from_raw(raw: Any, event_id: str = "", chat_id: str = "")
             }
             out.append(Attachment(kind=AttachmentKind.CONTACT, payload=payload))
         else:
-            # SHARE / POLL / CONTROL / CALL / INLINE KEYBOARD /
+            # SHARE / POLL / CALL / INLINE KEYBOARD /
             # UNKNOWN — kind preserved for the controlled fallback.
             out.append(Attachment(kind=AttachmentKind.OTHER, payload=base))
     return tuple(out)
@@ -344,6 +352,12 @@ def normalize_max(event: Any) -> NormalizedMessage:
             )
     if not attachments:
         attachments = _pymax_attachments_from_raw(raw, str(event_id), str(chat_id))
+    else:
+        attachments = tuple(
+            attachment for attachment in attachments
+            if not (isinstance(attachment, Attachment) and
+                    _is_max_control_type((attachment.payload or {}).get("pymax_type")))
+        )
     timestamp = int(getattr(event, "timestamp", 0) or 0)
     metadata = dict(getattr(event, "metadata", {}) or {})
     display_name = _sender_display_name_from_raw(raw)

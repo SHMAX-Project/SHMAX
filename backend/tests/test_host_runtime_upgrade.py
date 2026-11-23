@@ -28,7 +28,8 @@ def test_existing_v013_host_runtime_receives_version_and_backup_migrations_and_c
         env={**os.environ,'PYTHONPATH':str(host),'PYTHONDONTWRITEBYTECODE':'1'}
         script="import json,shmax;from shmax.database.migrations import _make_alembic_config;from alembic.script import ScriptDirectory;import shmax.backup.portable as b;print(json.dumps([shmax.__version__,b.__version__,ScriptDirectory.from_config(_make_alembic_config('sqlite://')).get_heads()]))"
         return json.loads(subprocess.check_output([sys.executable,'-P','-B','-c',script],cwd=tmp_path,env=env,text=True))
-    assert probe()==['0.2.0','0.2.0',['0012_multi_group']]
+    version = (backend / 'shmax' / 'VERSION').read_text().strip()
+    assert probe() == [version, version, ['0012_multi_group']]
     restore_host_runtime(host,saved)
     assert inventory(host)==before
     assert probe()==['0.1.3','0.1.3',['0011_telegram_message_alias']]
