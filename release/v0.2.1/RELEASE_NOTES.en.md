@@ -9,4 +9,6 @@
 - Aligned dashboard statuses and actions. The mobile menu supports Escape, and journal and diagnostics content fits narrow screens.
 - Storage totals and the local backup list now use the server response.
 
+- Resource charts share a time axis that matches the selected period.
+
 The upgrade keeps the existing database schema. Previously failed entries remain in delivery history.

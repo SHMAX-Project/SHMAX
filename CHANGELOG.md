@@ -17,6 +17,7 @@ Format: Keep a Changelog; versioning: SemVer.
 
 - Align dashboard status controls and improve mobile navigation, diagnostics and journal layout.
 - Display local backups and storage totals using the actual server values.
+- Keep dashboard time axes aligned to the selected 15-minute or one-hour range.
 
 No database migration is required.
 
