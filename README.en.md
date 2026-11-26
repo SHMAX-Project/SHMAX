@@ -38,7 +38,7 @@
 
 ## Interface
 
-The dashboard shows MAX and Telegram connectivity, groups, the queue and server resources.
+The dashboard shows MAX and Telegram connectivity, groups, the queue and server resources.Resource charts share a 15-minute or one-hour time axis.
 
 ![SHMAX dashboard: connections, working groups, queue and resource graphs](docs/assets/screenshots/dashboard-desktop.png)
 
@@ -59,6 +59,8 @@ The dashboard shows MAX and Telegram connectivity, groups, the queue and server 
 |---|---|
 | ![MAX networking settings](docs/assets/screenshots/max-network.png) | ![SHMAX event journal](docs/assets/screenshots/event-journal-desktop.png) |
 
+[One-hour graphs](docs/assets/screenshots/dashboard-hour.png) · [Graphs on mobile](docs/assets/screenshots/mobile-resource-charts.png) · [Mobile event journal](docs/assets/screenshots/event-journal-mobile.png)
+
 <p align="center"><img src="docs/assets/screenshots/mobile-dashboard.png" width="320" alt="SHMAX dashboard on a phone"></p>
 
 Screenshots use demonstration connections, not customer conversations. [Screenshot provenance](docs/assets/screenshots/README.md).
@@ -74,6 +76,8 @@ curl -fsSL https://raw.githubusercontent.com/SHMAX-Project/SHMAX/main/install.sh
 ```
 
 The installer downloads the latest stable release, verifies the package signature and integrity, prepares Docker/Compose and prints the setup link.
+
+**Latest stable release — [SHMAX v0.2.1](https://github.com/SHMAX-Project/SHMAX/releases/latest).** [Release notes](release/v0.2.1/RELEASE_NOTES.en.md) · [Changelog](CHANGELOG.md).
 
 1. **Open the link and create the SHMAX owner.** This is a local dashboard account.
 2. **Connect MAX and Telegram in the wizard.** Their network settings are independent. The wizard guides you through MAX sign-in, the bot and group pairing.
@@ -92,8 +96,6 @@ The installer downloads the latest stable release, verifies the package signatur
 | Configure different connections | Independent direct, HTTP, SOCKS5 and managed Xray networking for MAX and Telegram |
 | Investigate an outage | Connection status, queue, event journal and resource graphs |
 | Update or move servers | Signed updates, backups and encrypted migration; [update and rollback procedure](docs/en/updates.md) |
-
-**Stable release: [v0.2.0](https://github.com/SHMAX-Project/SHMAX/releases/latest).** Multiple working groups, administrator overview, independent MAX networking and resource graphs are available now. [Release notes](release/v0.2.0/RELEASE_NOTES.en.md) · [Changelog](CHANGELOG.md).
 
 ## Know before you deploy
 

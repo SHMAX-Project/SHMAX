@@ -38,7 +38,7 @@
 
 ## Интерфейс
 
-Главная показывает подключения MAX и Telegram, группы, очередь и ресурсы сервера.
+Главная показывает подключения MAX и Telegram, группы, очередь и ресурсы сервера. Графики используют общую шкалу на 15 минут или час.
 
 ![Панель SHMAX: подключения, рабочие группы, очередь и графики ресурсов](docs/assets/screenshots/dashboard-desktop.png)
 
@@ -59,6 +59,8 @@
 |---|---|
 | ![Настройки сети MAX](docs/assets/screenshots/max-network.png) | ![Журнал событий SHMAX](docs/assets/screenshots/event-journal-desktop.png) |
 
+[Графики за час](docs/assets/screenshots/dashboard-hour.png) · [Графики на телефоне](docs/assets/screenshots/mobile-resource-charts.png) · [Журнал на телефоне](docs/assets/screenshots/event-journal-mobile.png)
+
 <p align="center"><img src="docs/assets/screenshots/mobile-dashboard.png" width="320" alt="Панель SHMAX на телефоне"></p>
 
 Снимки сделаны с демонстрационными подключениями, а не с перепиской пользователей. [Происхождение скриншотов](docs/assets/screenshots/README.md).
@@ -74,6 +76,8 @@ curl -fsSL https://raw.githubusercontent.com/SHMAX-Project/SHMAX/main/install.sh
 ```
 
 Установщик скачает последний стабильный выпуск, проверит подпись и целостность пакета, подготовит Docker/Compose и выведет ссылку настройки.
+
+**Стабильный выпуск — [SHMAX v0.2.1](https://github.com/SHMAX-Project/SHMAX/releases/latest).** [Что изменилось](release/v0.2.1/RELEASE_NOTES.ru.md) · [История версий](CHANGELOG.md).
 
 1. **Откройте ссылку и создайте владельца SHMAX.** Это локальная учётная запись панели.
 2. **Подключите MAX и Telegram в мастере.** Сеть каждого сервиса настраивается независимо; мастер проведёт через авторизацию MAX, бота и подключение группы.
@@ -92,8 +96,6 @@ curl -fsSL https://raw.githubusercontent.com/SHMAX-Project/SHMAX/main/install.sh
 | Настроить разные подключения | Direct, HTTP, SOCKS5 и управляемый Xray отдельно для MAX и Telegram |
 | Разобраться со сбоем | Показывает состояния подключений, очередь, журнал событий и графики ресурсов |
 | Обновиться или переехать | Подписанные обновления, резервные копии и зашифрованный перенос; [порядок обновления и отката](docs/ru/updates.md) |
-
-**Стабильный выпуск: [v0.2.0](https://github.com/SHMAX-Project/SHMAX/releases/latest).** Несколько рабочих групп, админский обзор, отдельная сеть MAX и графики ресурсов уже доступны. [Изменения](release/v0.2.0/RELEASE_NOTES.ru.md) · [История версий](CHANGELOG.md).
 
 ## Важно перед запуском
 
