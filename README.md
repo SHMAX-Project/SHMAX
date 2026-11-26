@@ -6,7 +6,7 @@
 <p align="center"><a href="#быстрый-старт">Установить</a> · <a href="docs/ru/use-cases.md">Выбрать сценарий</a> · <a href="#интерфейс">Посмотреть интерфейс</a> · <a href="README.en.md">English</a></p>
 
 <p align="center">
-<a href="https://github.com/SHMAX-Project/SHMAX/releases/latest"><img src="https://img.shields.io/github/v/release/SHMAX-Project/SHMAX?color=2563eb" alt="Стабильный выпуск"></a>
+<a href="https://github.com/SHMAX-Project/SHMAX/releases/tag/v0.2.1"><img src="https://img.shields.io/badge/release-v0.2.1-2563eb" alt="Стабильный выпуск v0.2.1"></a>
 <a href="https://github.com/SHMAX-Project/SHMAX/actions/workflows/ci.yml"><img src="https://github.com/SHMAX-Project/SHMAX/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI"></a>
 <a href="docs/ru/installation.md"><img src="https://img.shields.io/badge/Debian_13-amd64-A81D33" alt="Debian 13 · amd64"></a>
 <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0%2B-059669" alt="AGPL-3.0-or-later"></a>
@@ -128,9 +128,9 @@ flowchart LR
     WEB["Веб-панель: сеть, привязки, доступ"] --> CORE
 ```
 
-В v0.2.0 проверены подписанное обновление Debian 13 amd64, миграция данных, перезапуск компонентов и полный ребут VM. Отдельные прогоны охватывают frontend, альбомы, доставку по группам и старые форматы резервных копий. Живые тестовые сообщения при этой приёмке не отправлялись; все сочетания внешних сервисов и медиа не объявляются проверенными.
+Для v0.2.1 проверены подписанное обновление Debian 13 amd64, сохранность данных, принудительный откат на отдельном стенде и восстановление записи об обновлении после перезапуска. CI проверил код, сборку и документацию.
 
-[Протокол приёмки и ограничения](release/v0.2.0/VALIDATION.md) · [Архитектура](docs/ru/architecture.md) · [Группы и права](docs/ru/multi-group.md)
+[Как проверяли выпуск](docs/ru/testing.md) · [Архитектура](docs/ru/architecture.md) · [Группы и права](docs/ru/multi-group.md)
 
 </details>
 

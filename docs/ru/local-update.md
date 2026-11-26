@@ -3,7 +3,7 @@
 Обычная команда после установки нового updater:
 
 ```bash
-sudo shmax update /path/to/shmax-v0.2.0.tar.gz
+sudo shmax update /path/to/shmax-v0.2.1.tar.gz
 ```
 
 Старый CLI принимал только `update check` и `update apply`. Для первого перехода
@@ -11,7 +11,7 @@ sudo shmax update /path/to/shmax-v0.2.0.tar.gz
 системный Python и стандартную библиотеку. Выполните одну команду с полным путём:
 
 ```bash
-sudo /path/to/shmax update /path/to/shmax-v0.2.0.tar.gz
+sudo /path/to/shmax update /path/to/shmax-v0.2.1.tar.gz
 ```
 
 После успешного обновления он автоматически устанавливает обработчик обычной
@@ -20,9 +20,9 @@ host runtime. Это явный запуск владельцем; подгот�
 
 Updater проверяет inventory/SHA256 внутри production archive, безопасные пути,
 комплектность, место для backup/build/rollback и сериализует обновления lock.
-Локальный пакет выбирает владелец: embedded checksum проверяет целостность,
-но не является подписью издателя; используйте доверенный пакет и проверяйте
-его внешний SHA256 из доверенного канала.
+Перед обновлением из локального файла проверьте подпись и SHA-256 из официального
+выпуска по [инструкции установки](installation.md#ручная-установка-из-архива).
+Внутренний список контрольных сумм проверяет целостность файлов архива.
 
 Новый image строится под отдельным tag до остановки существующего. Далее
 объявляется короткий перерыв MAX/Telegram, web останавливается; полный cold
@@ -39,8 +39,9 @@ Telegram с активным polling; отсутствие конфигурац�
 При ошибке до rollback сохраняются protected container state, exit status,
 entrypoint, sanitized traceback/log и command stages в
 `/var/backups/shmax/update-<id>` (directory 0700). Затем запускается прежний
-exact image без rebuild и проверяется его health. Данные не восстанавливаются
-автоматически поверх текущих: application rollback сохраняет новые сообщения.
+образ без пересборки. Если холодная копия прошла проверку, updater перед запуском
+проверяет её контрольную сумму и восстанавливает данные из копии. Затем проверяется
+готовность прежнего приложения.
 Если предыдущий image также не готов, ошибка говорит UPDATE AND ROLLBACK FAILED.
 
 `.env` сохраняется с исходными owner/mode; меняются только image/deployment ID

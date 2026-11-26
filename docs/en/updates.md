@@ -15,13 +15,15 @@ recreate → HOST-visible readiness → success or automatic rollback
 to the retained previous deployment. /var/lib/shmax is never
 replaced by a release.
 
-## Standard v0.2.0 command
+## Updating from the command line
 
-`sudo shmax update` downloads the latest stable package and verifies its signature against the existing embedded key. For a verified local production archive use `sudo shmax update /path/to/shmax-v0.2.0.tar.gz`. UI/hostd still require an explicit administrator action.
+`sudo shmax update` downloads the latest stable package and verifies its signature against the existing embedded key. For a verified local production archive use `sudo shmax update /path/to/shmax-v0.2.1.tar.gz`. UI/hostd still require an explicit administrator action.
 
 The image builds before downtime. The updater then takes a cold persistent-data snapshot, verifies contents/ownership/permissions and SQLite integrity, starts the candidate and checks fresh configured MAX/Telegram readiness. Failure restores the exact previous image/deployment and verified cold data, retaining protected diagnostics. Release contents never replace the data directory; rollback restores its own cold snapshot. Keep complete backups away from a failing disk; configuration-only copies are insufficient. Historical failed deliveries are not replayed automatically.
 
-[v0.2.0 changes](../../release/v0.2.0/RELEASE_NOTES.en.md) · [Event journal](event-journal.md).
+[v0.2.1 changes](../../release/v0.2.1/RELEASE_NOTES.en.md) · [Event journal](event-journal.md).
+
+Upgrading from v0.2.0 to v0.2.1 keeps the existing database schema. After restart, SHMAX recovers the success entry if it could not write to the event journal immediately.
 
 ## Host address and automatic startup
 

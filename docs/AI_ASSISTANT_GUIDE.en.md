@@ -153,10 +153,10 @@ Configure components individually: MAX → MAX settings (`/max/settings`); Teleg
 Expired MAX sessions, invalid Telegram tokens and unavailable networks remain on their relevant settings/status pages and never automatically restart onboarding. All sections continue to require administrator authentication.
 
 
-## Release v0.2.0 / Публикация
+## Release process
 
 Debian 13 amd64: owner-confirmed live acceptance. ARMv7/ODROID-XU4: experimental; physical acceptance incomplete.
-Current stable release: v0.2.0. See [release notes](../release/v0.2.0/RELEASE_NOTES.en.md), [release process](en/release-process.md) and [event journal](en/event-journal.md). Publication and production deployment require explicit owner authorization.
+The current stable release is [v0.2.1](https://github.com/SHMAX-Project/SHMAX/releases/latest). See [release notes](../release/v0.2.1/RELEASE_NOTES.en.md), [release process](en/release-process.md) and [event journal](en/event-journal.md). Publication and production deployment require explicit owner authorization.
 
 ## Groups and networks in v0.2.0
 

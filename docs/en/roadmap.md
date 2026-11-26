@@ -4,7 +4,7 @@
 
 Multiple Telegram groups, explicit group grants, automatic administrator overview
 topics, both directions of conversation, independent MAX networking, resource
-graphs and ten-step onboarding. These capabilities are included in v0.2.0.
+graphs and ten-step onboarding. These capabilities were introduced in v0.2.0 and remain available in the current stable release.
 
 [Groups](multi-group.md) · [MAX network](max-network.md) · [Dashboard](dashboard.md).
 

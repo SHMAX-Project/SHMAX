@@ -1,4 +1,6 @@
-# Persistent event journal (v0.1.2–v0.2.0)
+# Persistent event journal
+
+In v0.2.1, repeated Telegram connection warnings are grouped by outage. SHMAX recovers the update success entry if the journal was temporarily busy.
 
 The administrator Journal page uses `/api/journal`, authenticated server-side,
 with 50-row cursor pagination (maximum 200), filters, bounded search, UTC storage

@@ -8,7 +8,8 @@ Please help us keep it safe.
 
 | Version | Supported |
 |---------|-----------|
-| 0.2.0 | latest stable release; reports accepted |
+| 0.2.1 | latest stable release; reports accepted |
+| 0.2.0 | previous stable release; reports accepted |
 | 0.1.3 | previous stable release; reports accepted |
 | 0.1.2 | previous stable release; reports accepted |
 | 0.1.1 | previous stable release; reports accepted |

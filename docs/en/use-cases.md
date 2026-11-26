@@ -83,5 +83,5 @@ the group or the relevant routes to stop them completely.
 - **Move servers:** use [encrypted export and restore](restore.md).
   Stop the old instance before starting the new one.
 
-See the [FAQ](faq.md) and [release validation report](../../release/v0.2.0/VALIDATION.md)
+See the [FAQ](faq.md) and [release validation report](testing.md)
 for external API and platform limits.

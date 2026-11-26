@@ -1,6 +1,8 @@
 # Тесты
 
-Текущий выпуск: [v0.2.0 — проверки и ограничения](../../release/v0.2.0/VALIDATION.md). Результаты старых выпусков ниже сохранены как история.
+Текущий выпуск — [SHMAX v0.2.1](https://github.com/SHMAX-Project/SHMAX/releases/tag/v0.2.1). Сведения о прогонах и проверке подписанных архивов доступны в [отчёте выпуска](https://github.com/SHMAX-Project/SHMAX/releases/download/v0.2.1/validation.json).
+
+Для v0.2.1 прошли 1067 тестов серверной части и 59 тестов интерфейса. На Debian 13 amd64 проверены обновление с v0.2.0, сохранность данных и откат при принудительном отказе. Браузерная проверка охватила главную и журнал на широком и узком экранах.
 
 - Backend: `cd backend && .venv/bin/python -m pytest` в одном процессе. Внешние границы контролируются: MAX test-fake, локальный Bot API, инъекция GitHub HTTP, tmp_path.
 - Frontend: `cd frontend && npm run test:unit && npm run build` (включает TypeScript).
@@ -13,3 +15,4 @@
 Закреплены MAX listener generations/cleanup/no-SMS recovery, Xray switch/rollback, один Telegram poller, journal privacy/retention/aggregation/disk failure, постоянные delivery errors, albums/checkpoints/replies/ACL, signed updates и wheel VERSION.
 
 [Заметки v0.1.2](../../release/v0.1.2/RELEASE_NOTES.ru.md).
+[Историческая проверка v0.2.0](../../release/v0.2.0/VALIDATION.md).

@@ -6,7 +6,7 @@
 <p align="center"><a href="#quick-start">Install</a> · <a href="docs/en/use-cases.md">Choose a workflow</a> · <a href="#interface">See the interface</a> · <a href="README.md">Русский</a></p>
 
 <p align="center">
-<a href="https://github.com/SHMAX-Project/SHMAX/releases/latest"><img src="https://img.shields.io/github/v/release/SHMAX-Project/SHMAX?color=2563eb" alt="Stable release"></a>
+<a href="https://github.com/SHMAX-Project/SHMAX/releases/tag/v0.2.1"><img src="https://img.shields.io/badge/release-v0.2.1-2563eb" alt="Stable release v0.2.1"></a>
 <a href="https://github.com/SHMAX-Project/SHMAX/actions/workflows/ci.yml"><img src="https://github.com/SHMAX-Project/SHMAX/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI"></a>
 <a href="docs/en/installation.md"><img src="https://img.shields.io/badge/Debian_13-amd64-A81D33" alt="Debian 13 · amd64"></a>
 <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0%2B-059669" alt="AGPL-3.0-or-later"></a>
@@ -128,9 +128,9 @@ flowchart LR
     WEB["Dashboard: network, routing, access"] --> CORE
 ```
 
-v0.2.0 validation includes a signed Debian 13 amd64 upgrade, data migration, component restarts and a full VM reboot. Separate runs cover frontend, albums, group delivery and historical backup formats. No real test messages were sent during that acceptance; coverage of every external provider/media combination is not claimed.
+The v0.2.1 checks covered a signed Debian 13 amd64 upgrade, data preservation, forced rollback on an isolated system and recovery of the update journal entry after restart. CI checked the code, build and documentation.
 
-[Validation report and limits](release/v0.2.0/VALIDATION.md) · [Architecture](docs/en/architecture.md) · [Groups and permissions](docs/en/multi-group.md)
+[Release validation](docs/en/testing.md) · [Architecture](docs/en/architecture.md) · [Groups and permissions](docs/en/multi-group.md)
 
 </details>
 

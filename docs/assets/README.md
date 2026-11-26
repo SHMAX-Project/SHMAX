@@ -5,12 +5,12 @@ project on 2026-10-10. It contains a diagram of the messaging workflow, not a
 screenshot or a claim of third-party endorsement. No stock imagery or third-party
 logos were used. The image is licensed under AGPL-3.0-or-later, like the project.
 
-The 1280 × 640 PNG is used in the README and as the GitHub social preview.
+The 1280 × 640 PNG serves as the GitHub social preview.
 Screenshot provenance is recorded separately in
-[`SCREENSHOTS.json`](../../release/v0.2.0/SCREENSHOTS.json).
+[`SCREENSHOTS.json`](../../release/v0.2.1/SCREENSHOTS.json).
 
 `message-flow.ru.svg` and `message-flow.en.svg` are original schematic diagrams
 with fictional messages. They are not screenshots of MAX or Telegram and use no
 third-party logos. They are licensed under AGPL-3.0-or-later.
 
-Historical v0.1.2 event journal screenshots retained in v0.2.0: [desktop](screenshots/event-journal-desktop.png), [mobile](screenshots/event-journal-mobile.png). Both use synthetic fixtures and real backend/SPA operations.
+Current v0.2.1 event journal screenshots: [desktop](screenshots/event-journal-desktop.png), [mobile](screenshots/event-journal-mobile.png). Both use synthetic fixtures and real backend/SPA operations.

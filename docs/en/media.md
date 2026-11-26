@@ -25,3 +25,7 @@ Transient failures retain bounded retries (eight attempts); unsupported schema a
 ## v0.2.0
 
 Routes, source/sender labels and send grants are configured per Telegram group. A MAX chat can have multiple destinations; administrator overview groups create topics automatically. Durable jobs and message mappings are destination-specific; albums retain their members and topic in each group. MAX networking is independent of Telegram. See [groups and access](multi-group.md), [MAX networking](max-network.md) and [media](media.md).
+
+## MAX → Telegram delivery in v0.2.1
+
+SHMAX skips MAX `CONTROL` service attachments and forwards any accompanying text and media. Documents in mixed attachments are sent as Telegram documents. SHMAX can refresh expired photo or voice URLs through the original MAX message when the required identifiers are available. The event journal shows failure codes and retries. The queue retains confirmed parts of an album.

@@ -1,6 +1,8 @@
 # Testing
 
-Current release: [v0.2.0 validation and limits](../../release/v0.2.0/VALIDATION.md). Older results below are retained as historical evidence.
+The current release is [SHMAX v0.2.1](https://github.com/SHMAX-Project/SHMAX/releases/tag/v0.2.1). See the [release validation report](https://github.com/SHMAX-Project/SHMAX/releases/download/v0.2.1/validation.json) for test and signed-package results.
+
+For v0.2.1, 1,067 backend tests and 59 frontend tests passed. Debian 13 amd64 checks covered the v0.2.0 upgrade, data preservation and forced rollback. Browser checks exercised the dashboard and journal at desktop and mobile widths.
 
 - Backend: `cd backend && .venv/bin/python -m pytest`, one process. Controlled boundaries: MAX test-fake, local Bot API, injected GitHub HTTP and tmp_path.
 - Frontend: `cd frontend && npm run test:unit && npm run build`, including TypeScript.
@@ -13,3 +15,4 @@ v0.1.2 results: 1002 backend passed / 9 local skips; 51 frontend passed; 26 brow
 Regressions cover MAX listener generations/cleanup/no-SMS recovery, Xray switch/rollback, one Telegram poller, journal privacy/retention/aggregation/disk failure, terminal delivery errors, albums/checkpoints/replies/ACL, signed updates and wheel VERSION.
 
 [v0.1.2 release notes](../../release/v0.1.2/RELEASE_NOTES.en.md).
+[Historical v0.2.0 validation](../../release/v0.2.0/VALIDATION.md).

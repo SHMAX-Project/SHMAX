@@ -205,10 +205,10 @@ Socket activation unit не нужен. Boot-unit имеет конкретны�
 Истёкшая сессия MAX, неверный токен Telegram и недоступная сеть показываются в соответствующем разделе и не запускают мастер автоматически. Все разделы по-прежнему требуют входа администратора.
 
 
-## Release v0.2.0 / Публикация
+## Публикация / Release process
 
 Debian 13 amd64: owner-confirmed live acceptance. ARMv7/ODROID-XU4: experimental; physical acceptance incomplete.
-Текущий стабильный выпуск — v0.2.0. [Изменения](../release/v0.2.0/RELEASE_NOTES.ru.md), [процесс релиза](ru/release-process.md), [журнал событий](ru/event-journal.md). Публикация и production deploy выполняются только по явному разрешению владельца.
+Текущий стабильный выпуск — [v0.2.1](https://github.com/SHMAX-Project/SHMAX/releases/latest). [Изменения](../release/v0.2.1/RELEASE_NOTES.ru.md), [процесс релиза](ru/release-process.md), [журнал событий](ru/event-journal.md). Публикация и production deploy выполняются только по явному разрешению владельца.
 
 ## Группы и сети v0.2.0
 
