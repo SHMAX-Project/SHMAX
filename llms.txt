@@ -1,19 +1,20 @@
 # llms.txt — SHMAX
 
-SHMAX — самостоятельный (self-hosted) шлюз MAX ↔ Telegram:
-обычный аккаунт MAX подключается к приватной Telegram-супергруппе
-с форум-темами в нескольких группах (один чат MAX может иметь несколько назначений, ответы в обе стороны,
-медиа, ACL). Живая приёмка владельца: Debian 13 amd64. ODROID-XU4 (ARMv7) — экспериментальная цель, физическая приёмка не завершена;
-приложение одноразово, данные постоянны в /var/lib/shmax.
+SHMAX — самостоятельно размещаемый мост MAX ↔ Telegram. Один аккаунт MAX
+может пересылать сообщения и вложения в темы нескольких закрытых супергрупп
+Telegram. Мост сохраняет ответы в обе стороны и проверяет права отправки
+по группам. Поддерживаемая платформа — Debian 13 amd64. ODROID-XU4 (ARMv7)
+остаётся экспериментальной целью. Данные хранятся в /var/lib/shmax отдельно
+от контейнера приложения.
 
 ## Карта
 
 - Быстрый старт: docs/ru/quick-start.md · docs/en/quick-start.md
-- Установка: docs/ru/installation.md
+- Установка: docs/ru/installation.md · docs/en/installation.md
 - Мастер настройки (10 шагов или restore после владельца): docs/ru/first-setup.md
 - Архитектура: docs/ru/architecture.md
 - Данные/файлы: docs/ru/data-persistence.md
-- Обновления: docs/ru/updates.md
+- Обновления: docs/ru/updates.md · docs/en/updates.md
 - Журнал событий: docs/ru/event-journal.md · docs/en/event-journal.md
 - Медиа/стикеры: docs/ru/media.md · docs/en/media.md
 - Бэкапы/восстановление: docs/ru/backups.md, docs/ru/restore.md
@@ -42,7 +43,7 @@ restore после создания нового владельца. Парол�
 ## Входные точки
 
 - Архитектура: docs/ru/architecture.md
-- Диагностика: docs/ru/troubleshooting.md → diagnostics.md
+- Диагностика: docs/ru/diagnostics.md · docs/en/diagnostics.md
 - Лицензия: AGPL-3.0-or-later (LICENSE); бренд — TRADEMARKS.md
 
 ## Участники Telegram
@@ -60,12 +61,17 @@ my.telegram.org, существующий BOT, без userbot/человечес
 
 ## Текущий выпуск
 
-v0.2.0: несколько Telegram-групп и отдельные права отправки, админский обзор
-обеих сторон переписки с автосозданием тем, подписи чата/реального автора,
-независимая сеть MAX, графики ресурсов и мастер из десяти шагов.
+Последний стабильный выпуск: https://github.com/SHMAX-Project/SHMAX/releases/latest
+История выпусков: CHANGELOG.md. Проверки: docs/ru/testing.md · docs/en/testing.md.
+
+В v0.2.1 мост пропускает служебные вложения MAX типа CONTROL, сохраняет
+подтверждённые отправки альбомов при повторах, записывает причины сбоев медиа
+и группирует предупреждения Telegram по обрывам связи. Графики на главной
+используют общую шкалу выбранного периода: 15 минут или час.
+Изменения v0.2.1: release/v0.2.1/RELEASE_NOTES.ru.md · release/v0.2.1/RELEASE_NOTES.en.md.
+
 Документы: docs/ru/multi-group.md, docs/ru/max-network.md, docs/ru/dashboard.md.
-Старые v1-копии преобразуются в приватном staging перед owner/hostd restore.
-Изменения: release/v0.2.0/RELEASE_NOTES.ru.md; проверки: release/v0.2.0/VALIDATION.md.
+Старые копии v1 проверяются и преобразуются во временной области перед восстановлением.
 Один аккаунт MAX; чтение определяется членством Telegram, отправка — правами
 конкретной группы; история метрик в памяти до часа. Автоматического повтора
 старых неудачных сообщений после обновления нет.
